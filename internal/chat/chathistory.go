@@ -1,15 +1,5 @@
 package chat
 
-type IPersistence interface {
-	save(history ChatHistory) error
-	load() (ChatHistory, error)
-}
-
-type Response struct {
-	Answer   string
-	Question string
-}
-
 type ChatHistory struct {
 	Responses   []Response
 	persistence IPersistence
