@@ -22,6 +22,10 @@ func NewClient() *HttpClient {
 func (c *HttpClient) Get(url string) ([]byte, error) {
 	res, err := c.request("GET", url, "")
 
+	if err != nil {
+		return nil, err
+	}
+
 	body, err := io.ReadAll(res.Body)
 
 	res.Body.Close()
