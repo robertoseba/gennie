@@ -6,6 +6,7 @@ import (
 
 	"github.com/robertoseba/gennie/internal/chat"
 	"github.com/robertoseba/gennie/internal/httpclient"
+	"github.com/robertoseba/gennie/internal/models/profile"
 )
 
 type OpenAIModel struct {
@@ -43,8 +44,8 @@ func NewModel(client *httpclient.HttpClient, modelName string) *OpenAIModel {
 	}
 }
 
-func (m *OpenAIModel) Ask(question string, history *chat.ChatHistory) (*chat.Chat, error) {
-	preparedQuestion, err := m.prepareQuestion(question)
+func (m *OpenAIModel) Ask(question string, profile *profile.Profile, history *chat.ChatHistory) (*chat.Chat, error) {
+	preparedQuestion, err := m.prepareQuestion(question, profile)
 	if err != nil {
 		return nil, err
 	}
@@ -72,15 +73,14 @@ func (m *OpenAIModel) sendQuestion(test string) string {
 	return ""
 }
 
-func (m *OpenAIModel) prepareQuestion(question string) (string, error) {
+func (m *OpenAIModel) prepareQuestion(question string, profile *profile.Profile) (string, error) {
 
-	//TODO: load preset here for system messages
 	p := prompt{
 		Model: "gpt-4o-mini",
 		Messages: []message{
 			{
 				Role:    roleSystem,
-				Content: "you are a helpful cli assistant expert in linux and programming. Please answer short and concise answers. ",
+				Content: profile.Data,
 			},
 			{
 				Role:    roleUser,

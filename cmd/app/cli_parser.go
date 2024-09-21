@@ -8,12 +8,14 @@ import (
 )
 
 type InputOptions struct {
-	Question   string
-	ConfigMode bool
+	Question      string
+	ConfigModel   bool
+	ConfigProfile bool
 }
 
 func ParseCliOptions() *InputOptions {
-	config := flag.Bool("config", false, "Activates configuration mode")
+	configModel := flag.Bool("model", false, "Activates configuration for model")
+	configProfile := flag.Bool("profile", false, "Activates configuration for profile")
 
 	if len(os.Args) <= 1 {
 		wrongUsage()
@@ -32,8 +34,9 @@ func ParseCliOptions() *InputOptions {
 	}
 
 	return &InputOptions{
-		Question:   question,
-		ConfigMode: *config,
+		Question:      question,
+		ConfigModel:   *configModel,
+		ConfigProfile: *configProfile,
 	}
 }
 

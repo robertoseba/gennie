@@ -8,24 +8,41 @@ import (
 	"github.com/robertoseba/gennie/internal/httpclient"
 	"github.com/robertoseba/gennie/internal/models"
 	"github.com/robertoseba/gennie/internal/output"
+	"github.com/robertoseba/gennie/internal/persistence"
 )
 
 func main() {
 	inputOptions := app.ParseCliOptions()
 
-	if inputOptions.ConfigMode {
+	currentPath, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	persistence := persistence.NewDiskPersistence(currentPath)
+
+	if inputOptions.ConfigModel {
 		model := app.ConfigModel()
-		fmt.Println(string(model))
-		//TODO: persist model selection
+		persistence.Cache.SetModel(string(model))
+		persistence.Save()
 		os.Exit(0)
 	}
 
-	//TODO: read model selection from config
+	if inputOptions.ConfigProfile {
+		profile := app.ConfigProfile()
+		persistence.Cache.SetProfile(string(profile))
+		persistence.Save()
+		os.Exit(0)
+	}
+
+	config := app.LoadConfig()
+
 	client := httpclient.NewClient()
 
-	model := models.NewModel(models.OpenAIMini, client)
+	model := models.NewModel(config.Model, client)
 
-	res, err := model.Ask(inputOptions.Question, nil)
+	res, err := model.Ask(inputOptions.Question, &config.Profile, nil)
 
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)

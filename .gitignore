@@ -4,3 +4,4 @@ csv_parser
 *.pprof
 *.csv
 .env
+.cache
