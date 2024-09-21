@@ -3,7 +3,6 @@ package openai
 import (
 	"encoding/json"
 	"os"
-	"time"
 
 	"github.com/robertoseba/gennie/internal/chat"
 	"github.com/robertoseba/gennie/internal/httpclient"
@@ -50,6 +49,9 @@ func (m *OpenAIModel) Ask(question string, history *chat.ChatHistory) (*chat.Res
 		return nil, err
 	}
 
+	finalResponse := chat.Response{}
+	finalResponse.AddQuestion(question)
+
 	postRes, err := m.client.Post(m.url, preparedQuestion)
 
 	if err != nil {
@@ -61,18 +63,9 @@ func (m *OpenAIModel) Ask(question string, history *chat.ChatHistory) (*chat.Res
 		return nil, err
 	}
 
-	return &chat.Response{
-		Question: chat.Input{
-			Role:      roleUser,
-			Content:   question,
-			Timestamp: time.Now(),
-		},
-		Answer: chat.Output{
-			Role:      roleAssistant,
-			Content:   parsedResponse,
-			Timestamp: time.Now(),
-		},
-	}, nil
+	finalResponse.AddAnswer(parsedResponse)
+
+	return &finalResponse, nil
 }
 
 func (m *OpenAIModel) sendQuestion(test string) string {

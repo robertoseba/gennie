@@ -33,7 +33,8 @@ func main() {
 		return
 	}
 
-	fmt.Println(res.Answer.Content)
+	fmt.Println(res.Answer())
+	fmt.Printf("Answered in: %0.2f seconds\n", res.DurationSeconds())
 
 	os.Exit(0)
 }
