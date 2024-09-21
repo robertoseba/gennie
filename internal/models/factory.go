@@ -8,17 +8,36 @@ import (
 type ModelEnum string
 
 const (
-	OpenAI   ModelEnum = "OpenAI"
-	Claude             = "Claude"
-	Maritaca           = "Maritaca"
+	OpenAIMini ModelEnum = "gpt-4o-mini"
+	OpenAI               = "gpt-4o"
+	Claude               = "claude"
+	Maritaca             = "maritaca"
 )
 
 const DefaultModel = OpenAI
 
+func (m *ModelEnum) String() string {
+	switch *m {
+	case OpenAIMini:
+		return "GPT-4o-mini (OPENAI)"
+	case OpenAI:
+		return "GPT-4o (OPENAI)"
+	case Claude:
+		return "Claude Opus (ANTHROPIC)"
+	case Maritaca:
+		return "Maritaca (USP-BR)"
+	default:
+		panic("Invalid model")
+	}
+}
+
 func NewModel(modelType ModelEnum, client *httpclient.HttpClient) IModel {
 	model := map[ModelEnum]func(*httpclient.HttpClient) IModel{
+		OpenAIMini: func(*httpclient.HttpClient) IModel {
+			return openai.NewModel(client, string(modelType))
+		},
 		OpenAI: func(*httpclient.HttpClient) IModel {
-			return openai.NewModel(client)
+			return openai.NewModel(client, string(modelType))
 		},
 		Claude: func(*httpclient.HttpClient) IModel {
 			panic("Model not implemented")
@@ -35,5 +54,5 @@ func NewModel(modelType ModelEnum, client *httpclient.HttpClient) IModel {
 }
 
 func ListModels() []ModelEnum {
-	return []ModelEnum{OpenAI, Claude, Maritaca}
+	return []ModelEnum{OpenAI, OpenAIMini, Claude, Maritaca}
 }

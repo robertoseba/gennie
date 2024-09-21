@@ -7,6 +7,7 @@ import (
 	"github.com/robertoseba/gennie/cmd/app"
 	"github.com/robertoseba/gennie/internal/httpclient"
 	"github.com/robertoseba/gennie/internal/models"
+	"github.com/robertoseba/gennie/internal/output"
 )
 
 func main() {
@@ -22,7 +23,7 @@ func main() {
 	//TODO: read model selection from config
 	client := httpclient.NewClient()
 
-	model := models.NewModel(models.OpenAI, client)
+	model := models.NewModel(models.OpenAIMini, client)
 
 	res, err := model.Ask(inputOptions.Question, nil)
 
@@ -33,8 +34,8 @@ func main() {
 		return
 	}
 
-	fmt.Println(res.Answer())
-	fmt.Printf("Answered in: %0.2f seconds\n", res.DurationSeconds())
+	output.PrintAnswer(res.Answer())
+	fmt.Printf("\nAnswered in: %0.2f seconds\n\n", res.DurationSeconds())
 
 	os.Exit(0)
 }

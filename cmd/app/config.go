@@ -8,7 +8,7 @@ import (
 func ConfigModel() models.ModelEnum {
 	menu := menu.NewMenu("Select a model:")
 	for _, model := range models.ListModels() {
-		menu.AddItem(string(model), string(model))
+		menu.AddItem(model.String(), string(model))
 	}
 	selection := menu.Display()
 

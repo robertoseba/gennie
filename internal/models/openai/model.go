@@ -34,11 +34,11 @@ type openAiResponse struct {
 	Choices []choice `json:"choices"`
 }
 
-func NewModel(client *httpclient.HttpClient) *OpenAIModel {
+func NewModel(client *httpclient.HttpClient, modelName string) *OpenAIModel {
 	client.SetBearerToken(os.Getenv("OPEN_API_KEY"))
 	return &OpenAIModel{
 		url:    "https://api.openai.com/v1/chat/completions",
-		model:  "gpt4o",
+		model:  modelName,
 		client: client,
 	}
 }
