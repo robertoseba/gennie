@@ -1,18 +1,18 @@
 package chat
 
 type ChatHistory struct {
-	Responses   []Response
+	Responses   []Chat
 	persistence IPersistence
 }
 
-func (c ChatHistory) lastResponse() Response {
+func (c ChatHistory) lastResponse() Chat {
 	if len(c.Responses) == 0 {
-		return Response{}
+		return Chat{}
 	}
 	return c.Responses[len(c.Responses)-1]
 }
 
-func (c *ChatHistory) addResponse(response Response) {
+func (c *ChatHistory) addResponse(response Chat) {
 	c.Responses = append(c.Responses, response)
 }
 

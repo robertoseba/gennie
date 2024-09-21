@@ -3,5 +3,5 @@ package models
 import "github.com/robertoseba/gennie/internal/chat"
 
 type IModel interface {
-	Ask(question string, history *chat.ChatHistory) (*chat.Response, error)
+	Ask(question string, history *chat.ChatHistory) (*chat.Chat, error)
 }

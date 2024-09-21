@@ -43,13 +43,13 @@ func NewModel(client *httpclient.HttpClient) *OpenAIModel {
 	}
 }
 
-func (m *OpenAIModel) Ask(question string, history *chat.ChatHistory) (*chat.Response, error) {
+func (m *OpenAIModel) Ask(question string, history *chat.ChatHistory) (*chat.Chat, error) {
 	preparedQuestion, err := m.prepareQuestion(question)
 	if err != nil {
 		return nil, err
 	}
 
-	finalResponse := chat.Response{}
+	finalResponse := chat.Chat{}
 	finalResponse.AddQuestion(question)
 
 	postRes, err := m.client.Post(m.url, preparedQuestion)
@@ -74,6 +74,7 @@ func (m *OpenAIModel) sendQuestion(test string) string {
 
 func (m *OpenAIModel) prepareQuestion(question string) (string, error) {
 
+	//TODO: load preset here for system messages
 	p := prompt{
 		Model: "gpt-4o-mini",
 		Messages: []message{

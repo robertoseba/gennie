@@ -20,17 +20,17 @@ type output struct {
 	timestamp time.Time
 }
 
-type Response struct {
+type Chat struct {
 	answer   output
 	question input
 	duration time.Duration
 }
 
-func (r *Response) Answer() string {
+func (r *Chat) Answer() string {
 	return r.answer.content
 }
 
-func (r *Response) AddQuestion(question string) {
+func (r *Chat) AddQuestion(question string) {
 	r.question = input{
 		content:   question,
 		role:      UserRole,
@@ -38,7 +38,7 @@ func (r *Response) AddQuestion(question string) {
 	}
 }
 
-func (r *Response) AddAnswer(answer string) {
+func (r *Chat) AddAnswer(answer string) {
 	r.answer = output{
 		content:   answer,
 		role:      AssistantRole,
@@ -47,6 +47,6 @@ func (r *Response) AddAnswer(answer string) {
 	r.duration = r.answer.timestamp.Sub(r.question.timestamp)
 }
 
-func (r *Response) DurationSeconds() float64 {
+func (r *Chat) DurationSeconds() float64 {
 	return r.duration.Seconds()
 }
