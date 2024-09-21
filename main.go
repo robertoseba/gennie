@@ -4,32 +4,36 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/robertoseba/gennie/internal/output/menu"
+	"github.com/robertoseba/gennie/cmd/app"
+	"github.com/robertoseba/gennie/internal/httpclient"
+	"github.com/robertoseba/gennie/internal/models"
 )
 
 func main() {
-	menu := menu.NewMenu("Select a model")
-	menu.AddItem("OpenAI", "openai")
-	menu.AddItem("ClaudeAI", "claudeai")
-	res := menu.Display()
-	fmt.Println(res)
+	inputOptions := app.ParseCliOptions()
+
+	if inputOptions.ConfigMode {
+		model := app.ConfigModel()
+		fmt.Println(string(model))
+		//TODO: persist model selection
+		os.Exit(0)
+	}
+
+	//TODO: read model selection from config
+	client := httpclient.NewClient()
+
+	model := models.NewModel(models.OpenAI, client)
+
+	res, err := model.Ask(inputOptions.Question, nil)
+
+	if err != nil {
+		fmt.Fprint(os.Stderr, err)
+		fmt.Println()
+		os.Exit(1)
+		return
+	}
+
+	fmt.Printf(res.Answer.Content)
+
 	os.Exit(0)
-	// client := httpclient.NewClient()
-
-	// inputOptions := app.ParseCliOptions()
-
-	// model := models.NewModel(inputOptions.Model, client)
-
-	// res, err := model.Ask(inputOptions.Question, nil)
-
-	// if err != nil {
-	// 	fmt.Fprint(os.Stderr, err)
-	// 	fmt.Println()
-	// 	os.Exit(1)
-	// 	return
-	// }
-
-	// fmt.Printf(res.Answer.Content)
-
-	// os.Exit(0)
 }
