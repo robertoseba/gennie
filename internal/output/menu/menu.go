@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/robertoseba/gennie/internal/output"
 	"golang.org/x/term"
 )
 
@@ -16,18 +17,8 @@ var escape byte = 27
 var enter byte = 13
 var ctrlC byte = 3
 
-var Reset = "\033[0m"
-var Red = "\033[31m"
-var Green = "\033[32m"
-var Yellow = "\033[33m"
-var Blue = "\033[34m"
-var Magenta = "\033[35m"
-var Cyan = "\033[36m"
-var Gray = "\033[37m"
-var White = "\033[97m"
-
-var arrowOn = fmt.Sprintf(" %s>%s", Cyan, Reset)
-var arrowOff = fmt.Sprintf(" %s %s", Cyan, Reset)
+var arrowOn = fmt.Sprintf(" %s>%s", output.Cyan, output.Reset)
+var arrowOff = fmt.Sprintf(" %s %s", output.Cyan, output.Reset)
 
 var keys = map[byte]bool{
 	up:   true,
@@ -83,7 +74,7 @@ func (m *Menu) renderMenuItems(redraw bool) {
 
 		menuItemText := menuItem.Text
 		if index == m.CursorPos {
-			fmt.Printf("\r%s %s%s%s%s", arrowOn, Cyan, menuItemText, Reset, newline)
+			fmt.Printf("\r%s %s%s%s%s", arrowOn, output.Cyan, menuItemText, output.Reset, newline)
 			continue
 		}
 
@@ -96,7 +87,7 @@ func (m *Menu) Display() string {
 	defer showCursor()
 
 	fmt.Println()
-	fmt.Printf(" %s%s%s\n", Yellow, m.Prompt, Reset)
+	fmt.Printf(" %s%s%s\n", output.Yellow, m.Prompt, output.Reset)
 
 	m.renderMenuItems(false)
 
