@@ -4,12 +4,20 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/robertoseba/gennie/cmd/app"
 	"github.com/robertoseba/gennie/internal/httpclient"
+	"github.com/robertoseba/gennie/internal/models"
 )
 
 func main() {
 	client := httpclient.NewClient()
-	res, err := client.Get("http://localhost:8080")
+
+	inputOptions := app.ParseCliOptions()
+
+	model := models.NewModel(inputOptions.Model, client)
+
+	res, err := model.Ask(inputOptions.Question, nil)
+
 	if err != nil {
 		fmt.Fprint(os.Stderr, err)
 		fmt.Println()
@@ -17,6 +25,7 @@ func main() {
 		return
 	}
 
-	fmt.Println(string(res))
+	fmt.Printf(res.Answer.Content)
+
 	os.Exit(0)
 }

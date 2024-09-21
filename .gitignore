@@ -1,5 +1,6 @@
-/build
+/bin
 data.csv
 csv_parser
 *.pprof
 *.csv
+.env

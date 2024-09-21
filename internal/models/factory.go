@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/robertoseba/gennie/internal/httpclient"
 	"github.com/robertoseba/gennie/internal/models/openai"
 )
 
@@ -12,16 +13,17 @@ const (
 	Maritaca           = "Maritaca"
 )
 
-func NewModel(modelType ModelEnum) IModel {
-	switch modelType {
-	case OpenAI:
-		return openai.NewModel()
+func NewModel(modelType ModelEnum, client *httpclient.HttpClient) IModel {
+	return openai.NewModel(client)
+	// switch modelType {
+	// case OpenAI:
+	// 	return openai.NewModel(client)
 
-	// case Claude:
-	// 	return NewClaude()
-	// case Maritaca:
-	// 	return NewMaritaca()
-	default:
-		return openai.NewModel()
-	}
+	// // case Claude:
+	// // 	return NewClaude()
+	// // case Maritaca:
+	// // 	return NewMaritaca()
+	// default:
+	// 	return openai.NewModel(client)
+	// }
 }
