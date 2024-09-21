@@ -33,7 +33,7 @@ func main() {
 		return
 	}
 
-	fmt.Printf(res.Answer.Content)
+	fmt.Println(res.Answer.Content)
 
 	os.Exit(0)
 }

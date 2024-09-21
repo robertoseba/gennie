@@ -13,6 +13,8 @@ const (
 	Maritaca           = "Maritaca"
 )
 
+const DefaultModel = OpenAI
+
 func NewModel(modelType ModelEnum, client *httpclient.HttpClient) IModel {
 	model := map[ModelEnum]func(*httpclient.HttpClient) IModel{
 		OpenAI: func(*httpclient.HttpClient) IModel {
@@ -23,12 +25,10 @@ func NewModel(modelType ModelEnum, client *httpclient.HttpClient) IModel {
 		},
 	}
 
-	defaultModel := openai.NewModel
-
 	activeModel, ok := model[modelType]
 
 	if !ok {
-		return defaultModel(client)
+		return model[DefaultModel](client)
 	}
 
 	return activeModel(client)
