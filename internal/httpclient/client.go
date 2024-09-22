@@ -1,6 +1,7 @@
 package httpclient
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"strings"
@@ -49,6 +50,14 @@ func (c *HttpClient) Post(url string, body string) ([]byte, error) {
 
 	if err != nil {
 		return nil, err
+	}
+
+	if res.StatusCode == http.StatusUnauthorized || res.StatusCode == http.StatusForbidden {
+		return nil, errors.New("Unauthorized request. Please make sure you have set the correct API key in your environment variables")
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return nil, errors.New("Unknown error in request. Status code: " + res.Status + "\nBody: " + string(resBody))
 	}
 
 	return resBody, nil
