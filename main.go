@@ -61,7 +61,8 @@ func main() {
 	}
 
 	output.PrintAnswer(res.Answer())
-	fmt.Printf("\nAnswered in: %0.2f seconds\n\n", res.DurationSeconds())
+	fmt.Printf("\n\n%sModel: %s, Profile: %s%s\n", output.Gray, c.Model, c.Profile.Name, output.Reset)
+	fmt.Printf("%sAnswered in: %0.2f seconds%s\n\n", output.Gray, res.DurationSeconds(), output.Reset)
 }
 
 func configModel(c *cache.Cache) error {

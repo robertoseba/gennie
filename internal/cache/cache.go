@@ -1,8 +1,7 @@
 package cache
 
 import (
-	"encoding/json"
-	"io"
+	"encoding/gob"
 	"os"
 	"path"
 
@@ -24,12 +23,14 @@ func (c *Cache) SetProfile(profile *profile.Profile) {
 }
 
 func (c *Cache) Save() error {
-	err := writeTo(c.filePath, c)
-
+	file, err := os.Create(c.filePath)
 	if err != nil {
 		return err
 	}
-
+	encoder := gob.NewEncoder(file)
+	if err := encoder.Encode(c); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -50,20 +51,12 @@ func Load() (*Cache, error) {
 		}, nil
 	}
 
-	content, err := readFrom(filePath)
+	cache, err := readFrom(filePath)
 	if err != nil {
 		return nil, err
 	}
-
-	cache := &Cache{}
-
-	err = json.Unmarshal(content, cache)
 
 	cache.filePath = filePath
-
-	if err != nil {
-		return nil, err
-	}
 
 	return cache, nil
 }
@@ -95,38 +88,18 @@ func getCacheFolderPath() (string, error) {
 	return path.Join(systemCacheFolder, cacheFolder), nil
 }
 
-func readFrom(filename string) ([]byte, error) {
+func readFrom(filename string) (*Cache, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	content, err := io.ReadAll(file)
-
-	if err != nil {
+	var cache Cache
+	decoder := gob.NewDecoder(file)
+	if err := decoder.Decode(&cache); err != nil {
 		return nil, err
 	}
 
-	return content, nil
-}
-
-func writeTo(filename string, cache *Cache) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	content, err := json.Marshal(cache)
-	if err != nil {
-		return err
-	}
-	_, err = file.Write(content)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return &cache, nil
 }
