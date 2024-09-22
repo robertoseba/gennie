@@ -60,8 +60,10 @@ func main() {
 		exitWithError(err)
 	}
 
+	output.PrintLine()
 	output.PrintAnswer(res.Answer())
-	fmt.Printf("\n\n%sModel: %s, Profile: %s%s\n", output.Gray, c.Model, c.Profile.Name, output.Reset)
+	output.PrintLine()
+	fmt.Printf("\n%sModel: %s, Profile: %s%s\n", output.Gray, c.Model, c.Profile.Name, output.Reset)
 	fmt.Printf("%sAnswered in: %0.2f seconds%s\n\n", output.Gray, res.DurationSeconds(), output.Reset)
 }
 
