@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/robertoseba/gennie/cmd/app"
 	"github.com/robertoseba/gennie/internal/cache"
@@ -43,7 +44,7 @@ func main() {
 		}
 	}
 
-	if c.Profile == nil || c.Profile.Slug == "" {
+	if c.Profile == nil {
 		err := configProfile(c)
 		if err != nil {
 			exitWithError(err)
@@ -77,15 +78,19 @@ func configModel(c *cache.Cache) error {
 }
 
 func configProfile(c *cache.Cache) error {
-	profileSlug := app.ConfigProfile()
+	profiles, err := profile.LoadProfiles()
+	if err != nil {
+		exitWithError(err)
+	}
+	profileIdx := app.ConfigProfile(&profiles)
 
-	//TODO: load Profile from slug and set it in cache
-	c.SetProfile(&profile.Profile{
-		Name:        "Default",
-		Description: "Generic default profile",
-		Slug:        profileSlug,
-		Data:        "You are a cli assistant. You're expert in Linux and programming. You're answer always concise and to the point. If the question is unclear you ask for more information.",
-	})
+	idx, err := strconv.Atoi(profileIdx)
+
+	if err != nil {
+		return err
+	}
+
+	c.SetProfile(&profiles[idx])
 
 	return c.Save()
 }

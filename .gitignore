@@ -5,3 +5,4 @@ csv_parser
 *.csv
 .env
 .cache
+.profiles
