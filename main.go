@@ -15,90 +15,77 @@ import (
 func main() {
 	inputOptions := app.ParseCliOptions()
 
-	currentPath, err := os.Getwd()
+	c, err := cache.Load()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	c, err := cache.LoadCache(currentPath)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	if c.Model == "" {
-		err := configModel(c, currentPath)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-	}
-
-	if c.Profile.Slug == "" {
-		err := configProfile(c, currentPath)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		exitWithError(err)
 	}
 
 	if inputOptions.ConfigModel {
-		err := configModel(c, currentPath)
+		err := configModel(c)
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			exitWithError(err)
 		}
 		os.Exit(0)
 	}
 
 	if inputOptions.ConfigProfile {
-		err := configProfile(c, currentPath)
+		err := configProfile(c)
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			exitWithError(err)
 		}
 		os.Exit(0)
+	}
+
+	if c.Model == "" {
+		err := configModel(c)
+		if err != nil {
+			exitWithError(err)
+		}
+	}
+
+	if c.Profile.Slug == "" {
+		err := configProfile(c)
+		if err != nil {
+			exitWithError(err)
+		}
 	}
 
 	client := httpclient.NewClient()
 
 	model := models.NewModel(models.ModelEnum(c.Model), client)
 
-	res, err := model.Ask(inputOptions.Question, &c.Profile, nil)
+	res, err := model.Ask(inputOptions.Question, c.Profile, nil)
 
 	if err != nil {
-		fmt.Fprint(os.Stderr, err)
-		fmt.Println()
-		os.Exit(1)
-		return
+		exitWithError(err)
 	}
 
 	output.PrintAnswer(res.Answer())
 	fmt.Printf("\nAnswered in: %0.2f seconds\n\n", res.DurationSeconds())
-
-	os.Exit(0)
 }
 
-func configModel(c *cache.Cache, path string) error {
+func configModel(c *cache.Cache) error {
 	model := app.ConfigModel()
 	c.SetModel(string(model))
-	err := cache.SaveCache(path, c)
-	return err
+	return c.Save()
 }
 
-func configProfile(c *cache.Cache, path string) error {
+func configProfile(c *cache.Cache) error {
 	profileSlug := app.ConfigProfile()
 
 	//TODO: load Profile from slug and set it in cache
-
-	c.SetProfile(profile.Profile{
+	c.SetProfile(&profile.Profile{
 		Name:        "Default",
 		Description: "Generic default profile",
 		Slug:        profileSlug,
 		Data:        "You are a cli assistant. You're expert in Linux and programming. You're answer always concise and to the point. If the question is unclear you ask for more information.",
 	})
 
-	err := cache.SaveCache(path, c)
-	return err
+	return c.Save()
+}
+
+func exitWithError(err error) {
+	fmt.Fprint(os.Stderr, err)
+	fmt.Println()
+	os.Exit(1)
 }
