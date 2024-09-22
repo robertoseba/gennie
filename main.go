@@ -43,7 +43,7 @@ func main() {
 		}
 	}
 
-	if c.Profile.Slug == "" {
+	if c.Profile == nil || c.Profile.Slug == "" {
 		err := configProfile(c)
 		if err != nil {
 			exitWithError(err)
