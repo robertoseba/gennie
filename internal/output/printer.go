@@ -11,26 +11,26 @@ import (
 
 const codePrefix = "```"
 
-func PrintAnswer(answer string) {
-	scanner := bufio.NewScanner(strings.NewReader(answer))
-	isCodeBlock := false
+type Printer struct {
+	width      int
+	height     int
+	marginSize int
+	margin     string
+}
 
-	fmt.Println()
+func NewPrinter() *Printer {
+	width, height := GetTermSize()
+	var margin int = 5
 
-	for scanner.Scan() {
-		line := scanner.Text()
+	if width < 100 {
+		margin = 1
+	}
 
-		if strings.HasPrefix(strings.Trim(line, " "), codePrefix) {
-			isCodeBlock = !isCodeBlock
-			continue
-		}
-
-		if isCodeBlock {
-			fmt.Printf("\t%s%s%s\n", Yellow, line, Reset)
-			continue
-		}
-
-		fmt.Println(line)
+	return &Printer{
+		width:      width,
+		height:     height,
+		marginSize: margin,
+		margin:     strings.Repeat(" ", margin),
 	}
 }
 
@@ -43,12 +43,72 @@ func GetTermSize() (int, int) {
 	return width, height
 }
 
-func PrintLine() {
-	lineChar := "\u2014"
-	w, _ := GetTermSize()
+func (p *Printer) PrintAnswer(answer string) {
+	scanner := bufio.NewScanner(strings.NewReader(answer))
+	isCodeBlock := false
 
-	for i := 0; i < w; i++ {
-		fmt.Print(lineChar)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.HasPrefix(strings.Trim(line, " "), codePrefix) {
+			isCodeBlock = !isCodeBlock
+			continue
+		}
+
+		if isCodeBlock {
+			p.Print(line, Yellow)
+			continue
+		}
+
+		p.Print(line, "")
 	}
-	fmt.Println()
+}
+
+func (p *Printer) PrintLine(color Color) {
+	if color == "" {
+		color = Gray
+	}
+
+	lineChar := "\u2014"
+
+	for i := 0; i < p.width; i++ {
+		fmt.Printf("%s%s%s", color, lineChar, Reset)
+	}
+	fmt.Print("\n")
+}
+
+func (p *Printer) PrintDetails(details string) {
+	p.Print(details, Cyan)
+}
+
+func (p *Printer) Print(message string, color Color) {
+	fullMessage := fmt.Sprintf("%s%s%s", color, message, Reset)
+
+	lines := p.splitLine(fullMessage, []string{})
+
+	fmt.Printf("%s", color)
+	for _, text := range lines {
+		fmt.Printf("%s%s%s\n", p.margin, text, p.margin)
+	}
+	fmt.Printf("%s", Reset)
+}
+
+func (p *Printer) splitLine(text string, initial []string) []string {
+	if len(text)+p.marginSize*2 <= p.width {
+		return append(initial, text)
+	}
+
+	cut := text[:p.width-p.marginSize*2]
+
+	if cut[len(cut)-1] != ' ' {
+		idx := strings.LastIndex(cut, " ")
+		if idx == -1 {
+			idx = len(cut)
+		}
+		initial = append(initial, cut[:idx])
+		return p.splitLine(text[idx+1:], initial)
+	}
+
+	initial = append(initial, cut)
+	return p.splitLine(text[p.width-p.marginSize*2:], initial)
 }
