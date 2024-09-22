@@ -14,7 +14,7 @@ const (
 	Maritaca             = "maritaca"
 )
 
-const DefaultModel = OpenAI
+const DefaultModel = OpenAIMini
 
 func (m *ModelEnum) String() string {
 	switch *m {
