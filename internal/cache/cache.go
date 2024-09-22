@@ -67,7 +67,7 @@ func getCacheFolderPath() (string, error) {
 		return "", err
 	}
 
-	cacheFolder := "ginnie"
+	cacheFolder := "gennie"
 
 	if _, err := os.Stat(systemCacheFolder); os.IsNotExist(err) {
 		curr, err := os.Getwd()

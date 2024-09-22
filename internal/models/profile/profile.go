@@ -16,7 +16,7 @@ type Profile struct {
 }
 
 func LoadProfiles() ([]Profile, error) {
-	const profileDir = "ginnie/profiles"
+	const profileDir = "gennie/profiles"
 
 	profilesPath := os.Getenv("GINNIE_PROFILES_PATH")
 	if profilesPath == "" {
@@ -47,7 +47,10 @@ func LoadProfiles() ([]Profile, error) {
 		return nil, fmt.Errorf("No profiles found in %s", profilesPath)
 	}
 
-	profiles := make([]Profile, 0, len(profileFiles))
+	profiles := make([]Profile, 0, len(profileFiles)+1)
+
+	profiles = append(profiles, *createDefaultProfile())
+
 	for _, profileFile := range profileFiles {
 		profile, err := LoadProfileFromFile(profileFile)
 		if err != nil {
@@ -101,4 +104,12 @@ func LoadProfileFromFile(profilePath string) (*Profile, error) {
 	}
 
 	return profile, nil
+}
+
+func createDefaultProfile() *Profile {
+	return &Profile{
+		Name:   "Default assistant",
+		Author: "gennie",
+		Data:   "You are a helpful cli assistant. Try to answer in a concise way providing the most relevant information. And examples when necesary.",
+	}
 }
