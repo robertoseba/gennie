@@ -1,13 +1,12 @@
 // Inspired/Forked from https://github.com/Nexidian/gocliselect
 // I decided to create my own version without dependencies for the menu
 
-package menu
+package output
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/robertoseba/gennie/internal/output"
 	"golang.org/x/term"
 )
 
@@ -17,8 +16,8 @@ var escape byte = 27
 var enter byte = 13
 var ctrlC byte = 3
 
-var arrowOn = fmt.Sprintf(" %s>%s", output.Cyan, output.Reset)
-var arrowOff = fmt.Sprintf(" %s %s", output.Cyan, output.Reset)
+var arrowOn = fmt.Sprintf(" %s>%s", Cyan, Reset)
+var arrowOff = fmt.Sprintf(" %s %s", Cyan, Reset)
 
 var keys = map[byte]bool{
 	up:   true,
@@ -74,7 +73,7 @@ func (m *Menu) renderMenuItems(redraw bool) {
 
 		menuItemText := menuItem.Text
 		if index == m.CursorPos {
-			fmt.Printf("\r%s %s%s%s%s", arrowOn, output.Cyan, menuItemText, output.Reset, newline)
+			fmt.Printf("\r%s %s%s%s%s", arrowOn, Cyan, menuItemText, Reset, newline)
 			continue
 		}
 
@@ -87,7 +86,7 @@ func (m *Menu) Display() string {
 	defer showCursor()
 
 	fmt.Println()
-	fmt.Printf(" %s%s%s\n", output.Yellow, m.Prompt, output.Reset)
+	fmt.Printf(" %s%s%s\n", Yellow, m.Prompt, Reset)
 
 	m.renderMenuItems(false)
 

@@ -72,7 +72,7 @@ func main() {
 }
 
 func configModel(c *cache.Cache) error {
-	model := app.ConfigModel()
+	model := output.MenuModel()
 	c.SetModel(string(model))
 	return c.Save()
 }
@@ -82,7 +82,7 @@ func configProfile(c *cache.Cache) error {
 	if err != nil {
 		exitWithError(err)
 	}
-	profileIdx := app.ConfigProfile(&profiles)
+	profileIdx := output.MenuProfile(&profiles)
 
 	idx, err := strconv.Atoi(profileIdx)
 

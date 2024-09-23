@@ -1,15 +1,15 @@
-package app
+package output
 
 import (
 	"strconv"
 
 	"github.com/robertoseba/gennie/internal/models"
 	"github.com/robertoseba/gennie/internal/models/profile"
-	"github.com/robertoseba/gennie/internal/output/menu"
 )
 
-func ConfigModel() models.ModelEnum {
-	menu := menu.NewMenu("Select a model:")
+// TODO: create in menu a NewMenu that receivees titles and items[names, values] and returns a menu
+func MenuModel() models.ModelEnum {
+	menu := NewMenu("Select a model:")
 	for _, model := range models.ListModels() {
 		menu.AddItem(model.String(), string(model))
 	}
@@ -19,8 +19,8 @@ func ConfigModel() models.ModelEnum {
 	return model
 }
 
-func ConfigProfile(profiles *[]profile.Profile) string {
-	menu := menu.NewMenu("Select the profile you want to activate:")
+func MenuProfile(profiles *[]profile.Profile) string {
+	menu := NewMenu("Select the profile you want to activate:")
 	for idx, profile := range *profiles {
 		menu.AddItem(profile.Name, strconv.Itoa(idx))
 	}

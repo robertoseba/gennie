@@ -13,6 +13,7 @@ type InputOptions struct {
 	ConfigProfile bool
 }
 
+// TODO: create the option to question using a particular model and/or profile. Ex: gennie -q "question" -m "model" -p "profile"
 func ParseCliOptions() *InputOptions {
 	configModel := flag.Bool("model", false, "Activates configuration for model")
 	configProfile := flag.Bool("profile", false, "Activates configuration for profile")
