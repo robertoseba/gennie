@@ -11,6 +11,7 @@ import (
 
 type Profile struct {
 	Name   string `json:"name"`
+	Slug   string `json:"slug"`
 	Author string `json:"author"`
 	Data   string `json:"data"`
 }
@@ -110,6 +111,7 @@ func createDefaultProfile() *Profile {
 	return &Profile{
 		Name:   "Default assistant",
 		Author: "gennie",
+		Slug:   "default",
 		Data:   "You are a helpful cli assistant. Try to answer in a concise way providing the most relevant information. And examples when necesary.",
 	}
 }
