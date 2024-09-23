@@ -16,8 +16,8 @@ const (
 
 const DefaultModel = OpenAIMini
 
-func (m *ModelEnum) String() string {
-	switch *m {
+func (m ModelEnum) String() string {
+	switch m {
 	case OpenAIMini:
 		return "GPT-4o-mini (OPENAI)"
 	case OpenAI:

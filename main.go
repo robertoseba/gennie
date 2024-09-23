@@ -66,7 +66,7 @@ func main() {
 	printer.PrintAnswer(res.Answer())
 	printer.PrintLine(output.Yellow)
 
-	printer.PrintDetails(fmt.Sprintf("Model: %s, Profile: %s", c.Model, c.Profile.Name))
+	printer.PrintDetails(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(c.Model), c.Profile.Name))
 	printer.PrintDetails(fmt.Sprintf("Answered in: %0.2f seconds", res.DurationSeconds()))
 	printer.Print("", "")
 }
