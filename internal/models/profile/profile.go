@@ -16,6 +16,7 @@ type Profile struct {
 	Data   string `json:"data"`
 }
 
+// TODO: return a map[string]Profile for using the slug as key in cli commands. ex: gennie -p linux
 func LoadProfiles() ([]Profile, error) {
 	const profileDir = "gennie/profiles"
 
