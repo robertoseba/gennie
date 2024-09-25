@@ -32,6 +32,7 @@ func main() {
 		os.Exit(0)
 	}
 
+	//TODO: change these ifs to a strategy pattern. Ex: Action[inputOptions.Action].Execute()
 	if inputOptions.ConfigModel {
 		err := configModel(c)
 		if err != nil {
