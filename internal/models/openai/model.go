@@ -14,6 +14,7 @@ type OpenAIModel struct {
 	url    string
 	model  string
 	client *httpclient.HttpClient
+	apiKey string
 }
 
 const roleUser = "user"
@@ -37,12 +38,11 @@ type openAiResponse struct {
 }
 
 func NewModel(client *httpclient.HttpClient, modelName string) *OpenAIModel {
-	client.SetAuthHeader(fmt.Sprintf("Bearer %s", os.Getenv("OPEN_API_KEY")))
-
 	return &OpenAIModel{
 		url:    "https://api.openai.com/v1/chat/completions",
 		model:  modelName,
 		client: client,
+		apiKey: os.Getenv("OPEN_API_KEY"),
 	}
 }
 
@@ -55,7 +55,12 @@ func (m *OpenAIModel) Ask(question string, profile *profile.Profile, history *ch
 	finalResponse := chat.Chat{}
 	finalResponse.AddQuestion(question)
 
-	postRes, err := m.client.Post(m.url, preparedQuestion)
+	headers := map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %s", m.apiKey),
+		"Content-Type":  "application/json",
+	}
+
+	postRes, err := m.client.Post(m.url, preparedQuestion, headers)
 
 	if err != nil {
 		return nil, err

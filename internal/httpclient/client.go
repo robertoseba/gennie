@@ -9,19 +9,17 @@ import (
 )
 
 type HttpClient struct {
-	timeout    time.Duration
-	authHeader string
+	timeout time.Duration
 }
 
 func NewClient() *HttpClient {
 	return &HttpClient{
-		timeout:    10,
-		authHeader: "",
+		timeout: 10,
 	}
 }
 
 func (c *HttpClient) Get(url string) ([]byte, error) {
-	res, err := c.request("GET", url, "")
+	res, err := c.request("GET", url, "", nil)
 
 	if err != nil {
 		return nil, err
@@ -38,8 +36,8 @@ func (c *HttpClient) Get(url string) ([]byte, error) {
 	return body, nil
 }
 
-func (c *HttpClient) Post(url string, body string) ([]byte, error) {
-	res, err := c.request("POST", url, body)
+func (c *HttpClient) Post(url string, body string, headers map[string]string) ([]byte, error) {
+	res, err := c.request("POST", url, body, headers)
 	if err != nil {
 		return nil, err
 	}
@@ -67,16 +65,13 @@ func (c *HttpClient) SetTimeout(timeout int) {
 	c.timeout = time.Duration(timeout)
 }
 
-func (c *HttpClient) SetAuthHeader(authHeader string) {
-	c.authHeader = authHeader
-}
-
-func (c *HttpClient) request(method string, url string, body string) (*http.Response, error) {
+func (c *HttpClient) request(method string, url string, body string, headers map[string]string) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, strings.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
 
-	if c.authHeader != "" {
-		req.Header.Set("Authorization", c.authHeader)
+	if headers != nil {
+		for key, value := range headers {
+			req.Header.Set(key, value)
+		}
 	}
 
 	client := &http.Client{
