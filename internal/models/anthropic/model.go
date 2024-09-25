@@ -1,8 +1,7 @@
-package openai
+package anthropic
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/robertoseba/gennie/internal/chat"
@@ -10,7 +9,7 @@ import (
 	"github.com/robertoseba/gennie/internal/models/profile"
 )
 
-type OpenAIModel struct {
+type AnthropicModel struct {
 	url     string
 	model   string
 	client  *httpclient.HttpClient
@@ -19,7 +18,6 @@ type OpenAIModel struct {
 }
 
 const roleUser = "user"
-const roleSystem = "system"
 const roleAssistant = "assistant"
 
 type message struct {
@@ -31,22 +29,24 @@ type prompt struct {
 	Messages []message `json:"messages"`
 }
 
-type choice struct {
-	Message message `json:"message"`
+type content struct {
+	ContentType string `json:"type"`
+	Text        string `json:"text"`
 }
-type openAiResponse struct {
-	Choices []choice `json:"choices"`
+type AnthropicResponse struct {
+	Content []content `json:"content"`
 }
 
-func NewModel(client *httpclient.HttpClient, modelName string) *OpenAIModel {
-	apiKey := os.Getenv("OPEN_API_KEY")
+func NewModel(client *httpclient.HttpClient, modelName string) *AnthropicModel {
+	apiKey := os.Getenv("ANTHROPIC_API_KEY")
 	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", apiKey),
-		"Content-Type":  "application/json",
+		"x-api-key":         apiKey,
+		"anthropic-version": "2023-06-01",
+		"Content-Type":      "application/json",
 	}
 
-	return &OpenAIModel{
-		url:     "https://api.openai.com/v1/chat/completions",
+	return &AnthropicModel{
+		url:     "https://api.anthropic.com/v1/messages",
 		model:   modelName,
 		client:  client,
 		apiKey:  apiKey,
@@ -54,7 +54,7 @@ func NewModel(client *httpclient.HttpClient, modelName string) *OpenAIModel {
 	}
 }
 
-func (m *OpenAIModel) Ask(question string, profile *profile.Profile, history *chat.ChatHistory) (*chat.Chat, error) {
+func (m *AnthropicModel) Ask(question string, profile *profile.Profile, history *chat.ChatHistory) (*chat.Chat, error) {
 	preparedQuestion, err := m.prepareQuestion(question, profile)
 	if err != nil {
 		return nil, err
@@ -79,18 +79,22 @@ func (m *OpenAIModel) Ask(question string, profile *profile.Profile, history *ch
 	return &finalResponse, nil
 }
 
-func (m *OpenAIModel) sendQuestion(test string) string {
+func (m *AnthropicModel) sendQuestion(test string) string {
 	return ""
 }
 
-func (m *OpenAIModel) prepareQuestion(question string, profile *profile.Profile) (string, error) {
+func (m *AnthropicModel) prepareQuestion(question string, profile *profile.Profile) (string, error) {
 
 	p := prompt{
 		Model: m.model,
 		Messages: []message{
 			{
-				Role:    roleSystem,
+				Role:    roleUser,
 				Content: profile.Data,
+			},
+			{
+				Role:    roleAssistant,
+				Content: "Sure! How can I help ?",
 			},
 			{
 				Role:    roleUser,
@@ -107,12 +111,12 @@ func (m *OpenAIModel) prepareQuestion(question string, profile *profile.Profile)
 	return string(jsonData), nil
 }
 
-func (m *OpenAIModel) parseResponse(rawRes []byte) (string, error) {
-	var response openAiResponse
+func (m *AnthropicModel) parseResponse(rawRes []byte) (string, error) {
+	var response AnthropicResponse
 	err := json.Unmarshal([]byte(rawRes), &response)
 	if err != nil {
 		return "", err
 	}
 
-	return response.Choices[0].Message.Content, nil
+	return response.Content[0].Text, nil
 }

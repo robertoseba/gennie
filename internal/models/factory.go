@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/robertoseba/gennie/internal/httpclient"
+	"github.com/robertoseba/gennie/internal/models/anthropic"
 	"github.com/robertoseba/gennie/internal/models/openai"
 )
 
@@ -10,7 +11,7 @@ type ModelEnum string
 const (
 	OpenAIMini ModelEnum = "gpt-4o-mini"
 	OpenAI               = "gpt-4o"
-	Claude               = "claude"
+	Claude               = "claude-3-5-sonnet"
 	Maritaca             = "maritaca"
 )
 
@@ -23,7 +24,7 @@ func (m ModelEnum) String() string {
 	case OpenAI:
 		return "GPT-4o (OPENAI)"
 	case Claude:
-		return "Claude Opus (ANTHROPIC)"
+		return "Claude Sonnet 3.5 (ANTHROPIC)"
 	case Maritaca:
 		return "Maritaca (USP-BR)"
 	default:
@@ -40,7 +41,7 @@ func NewModel(modelType ModelEnum, client *httpclient.HttpClient) IModel {
 			return openai.NewModel(client, string(modelType))
 		},
 		Claude: func(*httpclient.HttpClient) IModel {
-			panic("Model not implemented")
+			return anthropic.NewModel(client, string(modelType))
 		},
 	}
 
