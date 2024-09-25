@@ -8,15 +8,17 @@ import (
 )
 
 type InputOptions struct {
-	Question      string
-	ConfigModel   bool
-	ConfigProfile bool
+	Question          string
+	ConfigModel       bool
+	ConfigProfile     bool
+	ShowCurrentConfig bool
 }
 
 // TODO: create the option to question using a particular model and/or profile. Ex: gennie -q "question" -m "model" -p "profile"
 func ParseCliOptions() *InputOptions {
 	configModel := flag.Bool("model", false, "Activates configuration for model")
 	configProfile := flag.Bool("profile", false, "Activates configuration for profile")
+	showCurrentConfig := flag.Bool("current", false, "Shows the current configuration")
 
 	if len(os.Args) <= 1 {
 		wrongUsage()
@@ -35,9 +37,10 @@ func ParseCliOptions() *InputOptions {
 	}
 
 	return &InputOptions{
-		Question:      question,
-		ConfigModel:   *configModel,
-		ConfigProfile: *configProfile,
+		Question:          question,
+		ConfigModel:       *configModel,
+		ConfigProfile:     *configProfile,
+		ShowCurrentConfig: *showCurrentConfig,
 	}
 }
 

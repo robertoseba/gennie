@@ -21,6 +21,17 @@ func main() {
 		exitWithError(err)
 	}
 
+	if inputOptions.ShowCurrentConfig {
+		printer := output.NewPrinter()
+		printer.PrintLine(output.Yellow)
+		printer.PrintAnswer(fmt.Sprintf("Model: %s ", models.ModelEnum(c.Model)))
+		printer.PrintLine(output.Yellow)
+		printer.PrintAnswer(fmt.Sprintf("Profile name: %s", c.Profile.Name))
+		printer.PrintAnswer(fmt.Sprintf("Profile description: %s", c.Profile.Data))
+		printer.PrintLine(output.Yellow)
+		os.Exit(0)
+	}
+
 	if inputOptions.ConfigModel {
 		err := configModel(c)
 		if err != nil {
