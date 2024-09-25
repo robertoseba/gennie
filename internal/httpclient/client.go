@@ -14,7 +14,7 @@ type HttpClient struct {
 
 func NewClient() *HttpClient {
 	return &HttpClient{
-		timeout: 10,
+		timeout: 15,
 	}
 }
 

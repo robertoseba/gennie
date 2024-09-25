@@ -25,8 +25,10 @@ type message struct {
 	Content string `json:"content"`
 }
 type prompt struct {
-	Model    string    `json:"model"`
-	Messages []message `json:"messages"`
+	Model     string    `json:"model"`
+	Messages  []message `json:"messages"`
+	MaxTokens int       `json:"max_tokens"`
+	System    string    `json:"system"`
 }
 
 type content struct {
@@ -90,17 +92,11 @@ func (m *AnthropicModel) prepareQuestion(question string, profile *profile.Profi
 		Messages: []message{
 			{
 				Role:    roleUser,
-				Content: profile.Data,
-			},
-			{
-				Role:    roleAssistant,
-				Content: "Sure! How can I help ?",
-			},
-			{
-				Role:    roleUser,
 				Content: question,
 			},
 		},
+		MaxTokens: 1024,
+		System:    profile.Data,
 	}
 	jsonData, err := json.Marshal(p)
 

@@ -9,10 +9,10 @@ import (
 type ModelEnum string
 
 const (
-	OpenAIMini ModelEnum = "gpt-4o-mini"
-	OpenAI               = "gpt-4o"
-	Claude               = "claude-3-5-sonnet"
-	Maritaca             = "maritaca"
+	OpenAIMini   ModelEnum = "gpt-4o-mini"
+	OpenAI                 = "gpt-4o"
+	ClaudeSonnet           = "claude-3-5-sonnet-20240620"
+	Maritaca               = "maritaca"
 )
 
 const DefaultModel = OpenAIMini
@@ -23,7 +23,7 @@ func (m ModelEnum) String() string {
 		return "GPT-4o-mini (OPENAI)"
 	case OpenAI:
 		return "GPT-4o (OPENAI)"
-	case Claude:
+	case ClaudeSonnet:
 		return "Claude Sonnet 3.5 (ANTHROPIC)"
 	case Maritaca:
 		return "Maritaca (USP-BR)"
@@ -40,7 +40,7 @@ func NewModel(modelType ModelEnum, client *httpclient.HttpClient) IModel {
 		OpenAI: func(*httpclient.HttpClient) IModel {
 			return openai.NewModel(client, string(modelType))
 		},
-		Claude: func(*httpclient.HttpClient) IModel {
+		ClaudeSonnet: func(*httpclient.HttpClient) IModel {
 			return anthropic.NewModel(client, string(modelType))
 		},
 	}
@@ -55,5 +55,5 @@ func NewModel(modelType ModelEnum, client *httpclient.HttpClient) IModel {
 }
 
 func ListModels() []ModelEnum {
-	return []ModelEnum{OpenAI, OpenAIMini, Claude, Maritaca}
+	return []ModelEnum{OpenAI, OpenAIMini, ClaudeSonnet, Maritaca}
 }
