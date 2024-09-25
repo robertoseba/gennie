@@ -2,6 +2,7 @@ package openai
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/robertoseba/gennie/internal/chat"
@@ -36,7 +37,8 @@ type openAiResponse struct {
 }
 
 func NewModel(client *httpclient.HttpClient, modelName string) *OpenAIModel {
-	client.SetBearerToken(os.Getenv("OPEN_API_KEY"))
+	client.SetAuthHeader(fmt.Sprintf("Bearer %s", os.Getenv("OPEN_API_KEY")))
+
 	return &OpenAIModel{
 		url:    "https://api.openai.com/v1/chat/completions",
 		model:  modelName,

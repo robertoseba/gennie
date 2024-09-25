@@ -9,14 +9,14 @@ import (
 )
 
 type HttpClient struct {
-	timeout     time.Duration
-	bearerToken string
+	timeout    time.Duration
+	authHeader string
 }
 
 func NewClient() *HttpClient {
 	return &HttpClient{
-		timeout:     10,
-		bearerToken: "",
+		timeout:    10,
+		authHeader: "",
 	}
 }
 
@@ -67,16 +67,16 @@ func (c *HttpClient) SetTimeout(timeout int) {
 	c.timeout = time.Duration(timeout)
 }
 
-func (c *HttpClient) SetBearerToken(authKey string) {
-	c.bearerToken = authKey
+func (c *HttpClient) SetAuthHeader(authHeader string) {
+	c.authHeader = authHeader
 }
 
 func (c *HttpClient) request(method string, url string, body string) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 
-	if c.bearerToken != "" {
-		req.Header.Set("Authorization", "Bearer "+c.bearerToken)
+	if c.authHeader != "" {
+		req.Header.Set("Authorization", c.authHeader)
 	}
 
 	client := &http.Client{
