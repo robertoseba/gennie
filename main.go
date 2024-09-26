@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/robertoseba/gennie/cmd"
 	"github.com/robertoseba/gennie/cmd/app"
 	"github.com/robertoseba/gennie/internal/cache"
 	"github.com/robertoseba/gennie/internal/httpclient"
@@ -14,6 +15,9 @@ import (
 )
 
 func main() {
+	cmd.Execute()
+	os.Exit(0)
+
 	inputOptions := app.ParseCliOptions()
 
 	c, err := cache.Load()
