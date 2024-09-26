@@ -15,6 +15,7 @@ type InputOptions struct {
 }
 
 // TODO: create the option to question using a particular model and/or profile. Ex: gennie -q "question" -m "model" -p "profile"
+// TODO: new features: --file-append (to appena a file to the msg) --followup (to ask a followup question sending the previous content with)
 func ParseCliOptions() *InputOptions {
 	configModel := flag.Bool("model", false, "Activates configuration for model")
 	configProfile := flag.Bool("profile", false, "Activates configuration for profile")
