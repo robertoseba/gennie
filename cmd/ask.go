@@ -33,6 +33,14 @@ var cmdAsk = &cobra.Command{
 			return fmt.Errorf("Model %s not supported. Please use one of the following:\n%s\n", model, strings.Join(models.ListModelsSlug(), ", "))
 		}
 
+		if askFile != "" {
+			return fmt.Errorf("File append not implemented yet.")
+		}
+
+		if isFollowUp {
+			return fmt.Errorf("Followup not implemented yet.")
+		}
+
 		fmt.Println("Question: " + strings.Join(args, " "))
 		fmt.Println("is followup: ", isFollowUp)
 		fmt.Println("Appending file: ", askFile)
