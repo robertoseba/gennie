@@ -105,21 +105,21 @@ func askModel(c *Container, input *InputOptions) {
 		c.Cache.SetProfile(p)
 	}
 
-	res, err := model.Ask(input.Question, c.Cache.Profile, nil)
+	chat, err := model.Ask(input.Question, c.Cache.Profile, nil)
 
 	if err != nil {
 		ExitWithError(err)
 	}
 
 	c.Printer.PrintLine(output.Yellow)
-	c.Printer.PrintAnswer(res.GetAnswer())
+	c.Printer.PrintAnswer(chat.GetAnswer())
 	c.Printer.PrintLine(output.Yellow)
 
 	c.Printer.PrintDetails(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(model.Model()), c.Cache.Profile.Name))
-	c.Printer.PrintDetails(fmt.Sprintf("Answered in: %0.2f seconds", res.DurationSeconds()))
+	c.Printer.PrintDetails(fmt.Sprintf("Answered in: %0.2f seconds", chat.DurationSeconds()))
 	c.Printer.Print("", "")
 
-	c.Cache.ChatHistory.AddResponse(*res)
+	c.Cache.ChatHistory.AddResponse(*chat)
 
 	c.Cache.Save()
 
