@@ -81,10 +81,6 @@ func (m *AnthropicModel) Ask(question string, profile *profile.Profile, history 
 	return &finalResponse, nil
 }
 
-func (m *AnthropicModel) sendQuestion(test string) string {
-	return ""
-}
-
 func (m *AnthropicModel) prepareQuestion(question string, profile *profile.Profile) (string, error) {
 
 	p := prompt{
