@@ -32,6 +32,9 @@ var cmdShowConfig = &cobra.Command{
 	Short: "Shows the current configuration.",
 	Run: func(cmd *cobra.Command, args []string) {
 		c := setUp()
+		if c.Cache.Model == "" || c.Cache.Profile == nil {
+			ExitWithError(fmt.Errorf("Gennie hasn't been configured yet. Please run gennie config first."))
+		}
 
 		c.Printer.PrintLine(output.Yellow)
 		c.Printer.Print(fmt.Sprintf("Model: %s ", models.ModelEnum(c.Cache.Model)), output.Cyan)
@@ -62,6 +65,11 @@ var cmdConfigProfile = &cobra.Command{
 
 func configModel(c *Container) {
 	model := output.MenuModel()
+
+	if model == "" {
+		return
+	}
+
 	c.Cache.SetModel(string(model))
 
 	if err := c.Cache.Save(); err != nil {
@@ -75,6 +83,10 @@ func configProfile(c *Container) {
 		ExitWithError(err)
 	}
 	profileSlug := output.MenuProfile(profiles)
+
+	if profileSlug == "" {
+		return
+	}
 
 	c.Cache.SetProfile(profiles[profileSlug])
 

@@ -54,6 +54,14 @@ var cmdAsk = &cobra.Command{
 			Profile:    profileFlag,
 		}
 
+		if input.Model == "" && c.Cache.Model == "" {
+			return fmt.Errorf("No model specified. Please use gennie config to set model of use the --model flag.")
+		}
+
+		if input.Profile == "" && c.Cache.Profile == nil {
+			return fmt.Errorf("No profile specified. Please use gennie config to set profile of use the --profile flag.")
+		}
+
 		askModel(c, input)
 
 		return nil
@@ -74,36 +82,45 @@ func askModel(c *Container, input *InputOptions) {
 	var model models.IModel
 	if input.Model != "" {
 		model = models.NewModel(models.ModelEnum(input.Model), client)
+		c.Cache.SetModel(input.Model)
 	} else {
 		model = models.NewModel(models.ModelEnum(c.Cache.Model), client)
 	}
 
-	var p *profile.Profile
+	if !input.IsFollowUp && c.Cache.ChatHistory != nil {
+		c.Cache.ChatHistory.Clear()
+	}
+
 	if input.Profile != "" {
 		profiles, err := profile.LoadProfiles()
 		if err != nil {
 			ExitWithError(err)
 		}
-		var ok bool
-		p, ok = profiles[input.Profile]
+		p, ok := profiles[input.Profile]
+
 		if !ok {
 			ExitWithError(fmt.Errorf("Profile %s not found", input.Profile))
 		}
-	} else {
-		p = c.Cache.Profile
+
+		c.Cache.SetProfile(p)
 	}
 
-	res, err := model.Ask(input.Question, p, nil)
+	res, err := model.Ask(input.Question, c.Cache.Profile, nil)
 
 	if err != nil {
 		ExitWithError(err)
 	}
 
 	c.Printer.PrintLine(output.Yellow)
-	c.Printer.PrintAnswer(res.Answer())
+	c.Printer.PrintAnswer(res.GetAnswer())
 	c.Printer.PrintLine(output.Yellow)
 
 	c.Printer.PrintDetails(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(model.Model()), c.Cache.Profile.Name))
 	c.Printer.PrintDetails(fmt.Sprintf("Answered in: %0.2f seconds", res.DurationSeconds()))
 	c.Printer.Print("", "")
+
+	c.Cache.ChatHistory.AddResponse(*res)
+
+	c.Cache.Save()
+
 }

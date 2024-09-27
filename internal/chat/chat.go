@@ -8,45 +8,45 @@ const SystemRole = "system"
 
 // Data sent to the model
 type input struct {
-	content   string
-	role      string
-	timestamp time.Time
+	Content   string
+	Role      string
+	Timestamp time.Time
 }
 
 // Data returned by the model
 type output struct {
-	content   string
-	role      string
-	timestamp time.Time
+	Content   string
+	Role      string
+	Timestamp time.Time
 }
 
 type Chat struct {
-	answer   output
-	question input
-	duration time.Duration
+	Answer   output
+	Question input
+	Duration time.Duration
 }
 
-func (r *Chat) Answer() string {
-	return r.answer.content
+func (r *Chat) GetAnswer() string {
+	return r.Answer.Content
 }
 
 func (r *Chat) AddQuestion(question string) {
-	r.question = input{
-		content:   question,
-		role:      UserRole,
-		timestamp: time.Now(),
+	r.Question = input{
+		Content:   question,
+		Role:      UserRole,
+		Timestamp: time.Now(),
 	}
 }
 
 func (r *Chat) AddAnswer(answer string) {
-	r.answer = output{
-		content:   answer,
-		role:      AssistantRole,
-		timestamp: time.Now(),
+	r.Answer = output{
+		Content:   answer,
+		Role:      AssistantRole,
+		Timestamp: time.Now(),
 	}
-	r.duration = r.answer.timestamp.Sub(r.question.timestamp)
+	r.Duration = r.Answer.Timestamp.Sub(r.Question.Timestamp)
 }
 
 func (r *Chat) DurationSeconds() float64 {
-	return r.duration.Seconds()
+	return r.Duration.Seconds()
 }

@@ -5,13 +5,15 @@ import (
 	"os"
 	"path"
 
+	"github.com/robertoseba/gennie/internal/chat"
 	"github.com/robertoseba/gennie/internal/models/profile"
 )
 
 type Cache struct {
-	Model    string           `json:"model"`
-	Profile  *profile.Profile `json:"profile"`
-	filePath string
+	Model       string
+	Profile     *profile.Profile
+	filePath    string
+	ChatHistory *chat.ChatHistory
 }
 
 func (c *Cache) SetModel(modelName string) {
@@ -28,6 +30,7 @@ func (c *Cache) Save() error {
 		return err
 	}
 	encoder := gob.NewEncoder(file)
+
 	if err := encoder.Encode(c); err != nil {
 		return err
 	}
@@ -45,9 +48,10 @@ func Load() (*Cache, error) {
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		return &Cache{
-			Model:    "",
-			Profile:  nil,
-			filePath: filePath,
+			Model:       "",
+			Profile:     nil,
+			filePath:    filePath,
+			ChatHistory: chat.NewChatHistory(),
 		}, nil
 	}
 

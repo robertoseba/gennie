@@ -1,20 +1,30 @@
 package chat
 
 type ChatHistory struct {
-	Responses []*Chat
+	Responses []Chat
 }
 
-func (c ChatHistory) LastResponse() *Chat {
+// Returns the last response in the chat history. If there are no responses, it returns false.
+func (c ChatHistory) LastResponse() (Chat, bool) {
 	if len(c.Responses) == 0 {
-		return nil
+		return Chat{}, false
 	}
-	return c.Responses[len(c.Responses)-1]
+	return c.Responses[len(c.Responses)-1], true
 }
 
-func (c *ChatHistory) AddResponse(response *Chat) {
+func (c *ChatHistory) AddResponse(response Chat) {
+	// if c.Responses == nil {
+	// 	c.Responses = make([]Chat, 0, 1)
+	// }
 	c.Responses = append(c.Responses, response)
 }
 
-func NewChatHistory(name string) *ChatHistory {
-	return &ChatHistory{}
+func NewChatHistory() *ChatHistory {
+	return &ChatHistory{
+		Responses: nil,
+	}
+}
+
+func (c *ChatHistory) Clear() {
+	c.Responses = nil
 }
