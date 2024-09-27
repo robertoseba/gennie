@@ -10,10 +10,11 @@ import (
 )
 
 type Cache struct {
-	Model       string
-	Profile     *profile.Profile
-	filePath    string
-	ChatHistory *chat.ChatHistory
+	Model            string
+	Profile          *profile.Profile
+	filePath         string // path to the cache file
+	ChatHistory      *chat.ChatHistory
+	ProfileFilenames map[string]string // map[profileSlug]filename
 }
 
 func (c *Cache) SetModel(modelName string) {

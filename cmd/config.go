@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	models "github.com/robertoseba/gennie/internal/models"
-	"github.com/robertoseba/gennie/internal/models/profile"
 	output "github.com/robertoseba/gennie/internal/output"
 	cobra "github.com/spf13/cobra"
 )
@@ -54,15 +53,6 @@ var cmdModelConfig = &cobra.Command{
 	},
 }
 
-var cmdConfigProfile = &cobra.Command{
-	Use:   "profile",
-	Short: "Configures which profile to use.",
-	Run: func(cmd *cobra.Command, args []string) {
-		c := setUp()
-		configProfile(c)
-	},
-}
-
 func configModel(c *Container) {
 	model := output.MenuModel()
 
@@ -71,24 +61,6 @@ func configModel(c *Container) {
 	}
 
 	c.Cache.SetModel(string(model))
-
-	if err := c.Cache.Save(); err != nil {
-		ExitWithError(err)
-	}
-}
-
-func configProfile(c *Container) {
-	profiles, err := profile.LoadProfiles()
-	if err != nil {
-		ExitWithError(err)
-	}
-	profileSlug := output.MenuProfile(profiles)
-
-	if profileSlug == "" {
-		return
-	}
-
-	c.Cache.SetProfile(profiles[profileSlug])
 
 	if err := c.Cache.Save(); err != nil {
 		ExitWithError(err)
