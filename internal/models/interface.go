@@ -7,4 +7,5 @@ import (
 
 type IModel interface {
 	Ask(question string, profile *profile.Profile, history *chat.ChatHistory) (*chat.Chat, error)
+	Model() string
 }

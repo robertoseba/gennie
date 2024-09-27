@@ -57,3 +57,14 @@ func NewModel(modelType ModelEnum, client *httpclient.HttpClient) IModel {
 func ListModels() []ModelEnum {
 	return []ModelEnum{OpenAI, OpenAIMini, ClaudeSonnet, Maritaca}
 }
+
+func ListModelsSlug() []string {
+	models := ListModels()
+	modelsSlug := make([]string, len(models))
+
+	for i, model := range models {
+		modelsSlug[i] = string(model)
+	}
+
+	return modelsSlug
+}

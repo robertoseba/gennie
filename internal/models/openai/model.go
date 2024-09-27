@@ -79,10 +79,6 @@ func (m *OpenAIModel) Ask(question string, profile *profile.Profile, history *ch
 	return &finalResponse, nil
 }
 
-func (m *OpenAIModel) sendQuestion(test string) string {
-	return ""
-}
-
 func (m *OpenAIModel) prepareQuestion(question string, profile *profile.Profile) (string, error) {
 
 	p := prompt{
@@ -115,4 +111,8 @@ func (m *OpenAIModel) parseResponse(rawRes []byte) (string, error) {
 	}
 
 	return response.Choices[0].Message.Content, nil
+}
+
+func (m *OpenAIModel) Model() string {
+	return m.model
 }
