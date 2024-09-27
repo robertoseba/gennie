@@ -84,7 +84,7 @@ func (p *Printer) PrintDetails(details string) {
 func (p *Printer) Print(message string, color Color) {
 	fullMessage := fmt.Sprintf("%s%s%s", color, message, Reset)
 
-	lines := p.splitLine(fullMessage, []string{})
+	lines := p.wrapWithMargins(fullMessage, []string{})
 
 	fmt.Printf("%s", color)
 	for _, text := range lines {
@@ -93,7 +93,7 @@ func (p *Printer) Print(message string, color Color) {
 	fmt.Printf("%s", Reset)
 }
 
-func (p *Printer) splitLine(text string, initial []string) []string {
+func (p *Printer) wrapWithMargins(text string, initial []string) []string {
 	if len(text)+p.marginSize*2 <= p.width {
 		return append(initial, text)
 	}
@@ -106,9 +106,9 @@ func (p *Printer) splitLine(text string, initial []string) []string {
 			idx = len(cut)
 		}
 		initial = append(initial, cut[:idx])
-		return p.splitLine(text[idx+1:], initial)
+		return p.wrapWithMargins(text[idx+1:], initial)
 	}
 
 	initial = append(initial, cut)
-	return p.splitLine(text[p.width-p.marginSize*2:], initial)
+	return p.wrapWithMargins(text[p.width-p.marginSize*2:], initial)
 }

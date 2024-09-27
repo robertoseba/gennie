@@ -17,7 +17,7 @@ func TestSplitLine(t *testing.T) {
 	p.width = 15
 	p.marginSize = 2
 
-	lines := p.splitLine(text, []string{})
+	lines := p.wrapWithMargins(text, []string{})
 	for _, line := range lines {
 		if len(line) > 15 {
 			t.Errorf("Expected line to be 15 characters long, got %d", len(line))
