@@ -10,14 +10,14 @@ import (
 )
 
 type Profile struct {
-	Name   string `json:"name"`
-	Slug   string `json:"slug"`
-	Author string `json:"author"`
-	Data   string `json:"data"`
+	Name     string `json:"name"`
+	Slug     string `json:"slug"`
+	Author   string `json:"author"`
+	Data     string `json:"data"`
+	Filename string
 }
 
-// TODO: return a map[string]Profile for using the slug as key in cli commands. ex: gennie -p linux
-func LoadProfiles() ([]Profile, error) {
+func LoadProfiles() (map[string]*Profile, error) {
 	const profileDir = "gennie/profiles"
 
 	profilesPath := os.Getenv("GINNIE_PROFILES_PATH")
@@ -49,16 +49,18 @@ func LoadProfiles() ([]Profile, error) {
 		return nil, fmt.Errorf("No profiles found in %s", profilesPath)
 	}
 
-	profiles := make([]Profile, 0, len(profileFiles)+1)
+	profiles := make(map[string]*Profile, len(profileFiles)+1)
 
-	profiles = append(profiles, *createDefaultProfile())
+	defaultProfile := createDefaultProfile()
+	profiles[defaultProfile.Slug] = defaultProfile
 
 	for _, profileFile := range profileFiles {
 		profile, err := LoadProfileFromFile(profileFile)
+		profile.Filename = profileFile
 		if err != nil {
 			return nil, err
 		}
-		profiles = append(profiles, *profile)
+		profiles[profile.Slug] = profile
 	}
 
 	return profiles, nil

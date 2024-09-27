@@ -1,8 +1,6 @@
 package output
 
 import (
-	"strconv"
-
 	"github.com/robertoseba/gennie/internal/models"
 	"github.com/robertoseba/gennie/internal/models/profile"
 )
@@ -19,10 +17,10 @@ func MenuModel() models.ModelEnum {
 	return model
 }
 
-func MenuProfile(profiles *[]profile.Profile) string {
+func MenuProfile(profiles map[string]*profile.Profile) string {
 	menu := NewMenu("Select the profile you want to activate:")
-	for idx, profile := range *profiles {
-		menu.AddItem(profile.Name, strconv.Itoa(idx))
+	for _, profile := range profiles {
+		menu.AddItem(profile.Name, profile.Slug)
 	}
 	selection := menu.Display()
 

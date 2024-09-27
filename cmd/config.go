@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"strconv"
 
 	models "github.com/robertoseba/gennie/internal/models"
 	"github.com/robertoseba/gennie/internal/models/profile"
@@ -21,7 +20,6 @@ var cmdConfig = &cobra.Command{
 	Use:   "config",
 	Short: "Configurations for gennie",
 	Long:  `Use it to configure ginnie. You can change models, profiles and more!`,
-	// Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := setUp()
 		configModel(c)
@@ -76,15 +74,9 @@ func configProfile(c *Container) {
 	if err != nil {
 		ExitWithError(err)
 	}
-	profileIdx := output.MenuProfile(&profiles)
+	profileSlug := output.MenuProfile(profiles)
 
-	idx, err := strconv.Atoi(profileIdx)
-
-	if err != nil {
-		ExitWithError(err)
-	}
-
-	c.Cache.SetProfile(&profiles[idx])
+	c.Cache.SetProfile(profiles[profileSlug])
 
 	if err := c.Cache.Save(); err != nil {
 		ExitWithError(err)

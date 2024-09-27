@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"slices"
 	"strings"
 
 	"github.com/robertoseba/gennie/internal/httpclient"
 	"github.com/robertoseba/gennie/internal/models"
+	"github.com/robertoseba/gennie/internal/models/profile"
 	output "github.com/robertoseba/gennie/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -44,11 +44,6 @@ var cmdAsk = &cobra.Command{
 			return fmt.Errorf("Followup not implemented yet.")
 		}
 
-		if profileFlag != "" {
-			// todo: validate profiles
-			return fmt.Errorf("Profile not implemented yet.")
-		}
-
 		c := setUp()
 
 		input := &InputOptions{
@@ -83,11 +78,22 @@ func askModel(c *Container, input *InputOptions) {
 		model = models.NewModel(models.ModelEnum(c.Cache.Model), client)
 	}
 
+	var p *profile.Profile
 	if input.Profile != "" {
-		ExitWithError(errors.New("Not implemented yet."))
+		profiles, err := profile.LoadProfiles()
+		if err != nil {
+			ExitWithError(err)
+		}
+		var ok bool
+		p, ok = profiles[input.Profile]
+		if !ok {
+			ExitWithError(fmt.Errorf("Profile %s not found", input.Profile))
+		}
+	} else {
+		p = c.Cache.Profile
 	}
 
-	res, err := model.Ask(input.Question, c.Cache.Profile, nil)
+	res, err := model.Ask(input.Question, p, nil)
 
 	if err != nil {
 		ExitWithError(err)
