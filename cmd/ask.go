@@ -44,6 +44,11 @@ var cmdAsk = &cobra.Command{
 			return fmt.Errorf("Followup not implemented yet.")
 		}
 
+		if profileFlag != "" {
+			// todo: validate profiles
+			return fmt.Errorf("Profile not implemented yet.")
+		}
+
 		c := setUp()
 
 		input := &InputOptions{
@@ -71,15 +76,17 @@ type InputOptions struct {
 func askModel(c *Container, input *InputOptions) {
 	client := httpclient.NewClient()
 
+	var model models.IModel
 	if input.Model != "" {
-		ExitWithError(errors.New("Not implemented yet."))
+		model = models.NewModel(models.ModelEnum(input.Model), client)
+	} else {
+		model = models.NewModel(models.ModelEnum(c.Cache.Model), client)
 	}
 
 	if input.Profile != "" {
 		ExitWithError(errors.New("Not implemented yet."))
 	}
 
-	model := models.NewModel(models.ModelEnum(c.Cache.Model), client)
 	res, err := model.Ask(input.Question, c.Cache.Profile, nil)
 
 	if err != nil {
@@ -90,7 +97,7 @@ func askModel(c *Container, input *InputOptions) {
 	c.Printer.PrintAnswer(res.Answer())
 	c.Printer.PrintLine(output.Yellow)
 
-	c.Printer.PrintDetails(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(c.Cache.Model), c.Cache.Profile.Name))
+	c.Printer.PrintDetails(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(model.Model()), c.Cache.Profile.Name))
 	c.Printer.PrintDetails(fmt.Sprintf("Answered in: %0.2f seconds", res.DurationSeconds()))
 	c.Printer.Print("", "")
 }

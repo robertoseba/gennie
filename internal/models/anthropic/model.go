@@ -116,3 +116,7 @@ func (m *AnthropicModel) parseResponse(rawRes []byte) (string, error) {
 
 	return response.Content[0].Text, nil
 }
+
+func (m *AnthropicModel) Model() string {
+	return m.model
+}

@@ -116,3 +116,7 @@ func (m *OpenAIModel) parseResponse(rawRes []byte) (string, error) {
 
 	return response.Choices[0].Message.Content, nil
 }
+
+func (m *OpenAIModel) Model() string {
+	return m.model
+}
