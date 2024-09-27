@@ -54,6 +54,20 @@ var cmdAsk = &cobra.Command{
 			Profile:    profileFlag,
 		}
 
+		if input.Profile != "" {
+			profiles, err := profile.LoadProfiles()
+			if err != nil {
+				ExitWithError(err)
+			}
+			p, ok := profiles[input.Profile]
+
+			if !ok {
+				ExitWithError(fmt.Errorf("Profile %s not found. Please use gennie profile list to check available profiles.", input.Profile))
+			}
+
+			c.Cache.SetProfile(p)
+		}
+
 		if input.Model == "" && c.Cache.Model == "" {
 			return fmt.Errorf("No model specified. Please use gennie config to set model of use the --model flag.")
 		}
@@ -63,6 +77,8 @@ var cmdAsk = &cobra.Command{
 		}
 
 		askModel(c, input)
+
+		c.Cache.Save()
 
 		return nil
 	},
@@ -80,29 +96,15 @@ func askModel(c *Container, input *InputOptions) {
 	client := httpclient.NewClient()
 
 	var model models.IModel
+
 	if input.Model != "" {
-		model = models.NewModel(models.ModelEnum(input.Model), client)
 		c.Cache.SetModel(input.Model)
-	} else {
-		model = models.NewModel(models.ModelEnum(c.Cache.Model), client)
 	}
+
+	model = models.NewModel(models.ModelEnum(c.Cache.Model), client)
 
 	if !input.IsFollowUp && c.Cache.ChatHistory != nil {
 		c.Cache.ChatHistory.Clear()
-	}
-
-	if input.Profile != "" {
-		profiles, err := profile.LoadProfiles()
-		if err != nil {
-			ExitWithError(err)
-		}
-		p, ok := profiles[input.Profile]
-
-		if !ok {
-			ExitWithError(fmt.Errorf("Profile %s not found", input.Profile))
-		}
-
-		c.Cache.SetProfile(p)
 	}
 
 	chat, err := model.Ask(input.Question, c.Cache.Profile, nil)
@@ -120,7 +122,5 @@ func askModel(c *Container, input *InputOptions) {
 	c.Printer.Print("", "")
 
 	c.Cache.ChatHistory.AddResponse(*chat)
-
-	c.Cache.Save()
 
 }
