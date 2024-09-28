@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewAskCmd(c *cache.Cache, p *output.Printer) *cobra.Command {
+func NewAskCmd(c *cache.Cache, p *output.Printer, h httpclient.IHttpClient) *cobra.Command {
 
 	var isFollowUpFlag bool
 	var appendFileFlag string
@@ -68,7 +68,7 @@ func NewAskCmd(c *cache.Cache, p *output.Printer) *cobra.Command {
 				return fmt.Errorf("No profile specified. Please use gennie config to set profile of use the --profile flag.")
 			}
 
-			askModel(c, p, input)
+			askModel(c, p, input, h)
 
 			c.Save()
 
@@ -92,8 +92,7 @@ type InputOptions struct {
 	Profile    string
 }
 
-func askModel(c *cache.Cache, p *output.Printer, input *InputOptions) {
-	client := httpclient.NewClient()
+func askModel(c *cache.Cache, p *output.Printer, input *InputOptions, client httpclient.IHttpClient) {
 
 	var model models.IModel
 

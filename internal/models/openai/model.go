@@ -13,7 +13,7 @@ import (
 type OpenAIModel struct {
 	url     string
 	model   string
-	client  *httpclient.HttpClient
+	client  httpclient.IHttpClient
 	apiKey  string
 	headers map[string]string
 }
@@ -38,7 +38,7 @@ type openAiResponse struct {
 	Choices []choice `json:"choices"`
 }
 
-func NewModel(client *httpclient.HttpClient, modelName string) *OpenAIModel {
+func NewModel(client httpclient.IHttpClient, modelName string) *OpenAIModel {
 	apiKey := os.Getenv("OPEN_API_KEY")
 	headers := map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", apiKey),

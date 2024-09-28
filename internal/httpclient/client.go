@@ -8,6 +8,9 @@ import (
 	"time"
 )
 
+type IHttpClient interface {
+	Post(url string, body string, headers map[string]string) ([]byte, error)
+}
 type HttpClient struct {
 	timeout time.Duration
 }

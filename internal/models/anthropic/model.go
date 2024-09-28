@@ -12,7 +12,7 @@ import (
 type AnthropicModel struct {
 	url     string
 	model   string
-	client  *httpclient.HttpClient
+	client  httpclient.IHttpClient
 	apiKey  string
 	headers map[string]string
 }
@@ -39,7 +39,7 @@ type AnthropicResponse struct {
 	Content []content `json:"content"`
 }
 
-func NewModel(client *httpclient.HttpClient, modelName string) *AnthropicModel {
+func NewModel(client httpclient.IHttpClient, modelName string) *AnthropicModel {
 	apiKey := os.Getenv("ANTHROPIC_API_KEY")
 	headers := map[string]string{
 		"x-api-key":         apiKey,

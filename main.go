@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/robertoseba/gennie/cmd"
 	"github.com/robertoseba/gennie/internal/cache"
+	"github.com/robertoseba/gennie/internal/httpclient"
 	"github.com/robertoseba/gennie/internal/output"
 )
 
@@ -12,6 +13,8 @@ func main() {
 		cmd.ExitWithError(err)
 	}
 
-	cmd.NewRootCmd(cache, output.NewPrinter(nil, nil)).Execute()
+	httpClient := httpclient.NewClient()
+
+	cmd.NewRootCmd(cache, output.NewPrinter(nil, nil), httpClient).Execute()
 
 }

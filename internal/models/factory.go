@@ -32,15 +32,15 @@ func (m ModelEnum) String() string {
 	}
 }
 
-func NewModel(modelType ModelEnum, client *httpclient.HttpClient) IModel {
-	model := map[ModelEnum]func(*httpclient.HttpClient) IModel{
-		OpenAIMini: func(*httpclient.HttpClient) IModel {
+func NewModel(modelType ModelEnum, client httpclient.IHttpClient) IModel {
+	model := map[ModelEnum]func(httpclient.IHttpClient) IModel{
+		OpenAIMini: func(httpclient.IHttpClient) IModel {
 			return openai.NewModel(client, string(modelType))
 		},
-		OpenAI: func(*httpclient.HttpClient) IModel {
+		OpenAI: func(httpclient.IHttpClient) IModel {
 			return openai.NewModel(client, string(modelType))
 		},
-		ClaudeSonnet: func(*httpclient.HttpClient) IModel {
+		ClaudeSonnet: func(httpclient.IHttpClient) IModel {
 			return anthropic.NewModel(client, string(modelType))
 		},
 	}
