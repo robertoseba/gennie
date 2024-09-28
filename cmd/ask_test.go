@@ -76,6 +76,11 @@ func TestUsesModelFromFlag(t *testing.T) {
 
 	c.SetArgs([]string{"ask what is the meaning of life?", "--model", "gpt-4o"})
 	c.Execute()
+
+	//Saves the model from the flag to the cache
+	if cache.Model != "gpt-4o" {
+		t.Errorf("Expected model to be 'gpt-4o' but got %s", cache.Model)
+	}
 }
 
 func setupTestCache() *cache.Cache {
