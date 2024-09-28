@@ -13,9 +13,10 @@ func NewRootCmd(c *cache.Cache, p *output.Printer, h httpclient.IHttpClient) *co
 		Short: "Gennie is a cli assistant with multiple models and profile support.",
 	}
 
-	rootCmd.AddCommand(NewConfigCmd(c, p))
+	rootCmd.AddCommand(NewModelCmd(c, p))
 	rootCmd.AddCommand(NewProfilesCmd(c, p))
 	rootCmd.AddCommand(NewAskCmd(c, p, h))
+	rootCmd.AddCommand(NewStatusCmd(c, p))
 
 	return rootCmd
 }
