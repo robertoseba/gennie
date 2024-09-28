@@ -71,7 +71,11 @@ func (c *HttpClient) SetTimeout(timeout int) {
 func (c *HttpClient) request(method string, url string, body string, headers map[string]string) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, strings.NewReader(body))
 
-	if headers != nil {
+	if err != nil {
+		return nil, err
+	}
+
+	if len(headers) > 0 {
 		for key, value := range headers {
 			req.Header.Set(key, value)
 		}
@@ -81,20 +85,11 @@ func (c *HttpClient) request(method string, url string, body string, headers map
 		Timeout: c.timeout * time.Second,
 	}
 
-	//TODO: Implement retry logic
 	res, err := client.Do(req)
 
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO: retry in case of specific status code
-	// if res.StatusCode != http.StatusOK {
-	// 	return nil, &HttpError{
-	// 		StatusCode: res.StatusCode,
-	// 		Status:     res.Status
-	// 	}
-	// }
 
 	return res, nil
 }
