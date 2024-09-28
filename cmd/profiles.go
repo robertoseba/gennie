@@ -3,80 +3,80 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/robertoseba/gennie/internal/cache"
 	"github.com/robertoseba/gennie/internal/models/profile"
 	"github.com/robertoseba/gennie/internal/output"
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	rootCmd.AddCommand(cmdProfiles)
+func NewProfilesCmd(c *cache.Cache, p *output.Printer) *cobra.Command {
+
+	cmdProfiles := &cobra.Command{
+		Use:   "profile",
+		Short: "Profile management",
+	}
+
+	cmdListProfiles := &cobra.Command{
+		Use:   "list",
+		Short: "List available profiles slug for use with --profile flag when asking questions",
+		Run: func(cmd *cobra.Command, args []string) {
+
+			if len(c.ProfileFilenames) == 0 {
+				refreshProfiles(c)
+				c.Save()
+			}
+
+			if c.Profile != nil {
+				p.PrintLine(output.Yellow)
+				p.Print(fmt.Sprintf("Current Profile: %s (%s)", c.Profile.Name, c.Profile.Slug), output.Cyan)
+			}
+
+			p.PrintLine(output.Yellow)
+			p.Print("Available Profiles: ", output.Cyan)
+			for slug := range c.ProfileFilenames {
+				p.Print(slug, output.Gray)
+			}
+			p.PrintLine(output.Yellow)
+		},
+	}
+
+	cmdRefreshProfiles := &cobra.Command{
+		Use:   "refresh",
+		Short: "Rescan the profiles folder and update the cache with available profiles",
+		Run: func(cmd *cobra.Command, args []string) {
+			refreshProfiles(c)
+			c.Save()
+		},
+	}
+
+	cmdConfigProfile := &cobra.Command{
+		Use:   "config",
+		Short: "Configures which profile to use.",
+		Run: func(cmd *cobra.Command, args []string) {
+			configProfile(c)
+		},
+	}
+
 	cmdProfiles.AddCommand(cmdRefreshProfiles)
 	cmdProfiles.AddCommand(cmdListProfiles)
 	cmdProfiles.AddCommand(cmdConfigProfile)
+
+	return cmdProfiles
 }
 
-var cmdProfiles = &cobra.Command{
-	Use:   "profile",
-	Short: "Profile management",
-}
-
-var cmdListProfiles = &cobra.Command{
-	Use:   "list",
-	Short: "List available profiles slug for use with --profile flag when asking questions",
-	Run: func(cmd *cobra.Command, args []string) {
-		c := setUp()
-
-		if len(c.Cache.ProfileFilenames) == 0 {
-			refreshProfiles(c)
-			c.Cache.Save()
-		}
-
-		if c.Cache.Profile != nil {
-			c.Printer.PrintLine(output.Yellow)
-			c.Printer.Print(fmt.Sprintf("Current Profile: %s (%s)", c.Cache.Profile.Name, c.Cache.Profile.Slug), output.Cyan)
-		}
-
-		c.Printer.PrintLine(output.Yellow)
-		c.Printer.Print("Available Profiles: ", output.Cyan)
-		for slug := range c.Cache.ProfileFilenames {
-			c.Printer.Print(slug, output.Gray)
-		}
-		c.Printer.PrintLine(output.Yellow)
-	},
-}
-
-var cmdRefreshProfiles = &cobra.Command{
-	Use:   "refresh",
-	Short: "Rescan the profiles folder and update the cache with available profiles",
-	Run: func(cmd *cobra.Command, args []string) {
-		c := setUp()
-		refreshProfiles(c)
-		c.Cache.Save()
-	},
-}
-
-func refreshProfiles(c *Container) {
+func refreshProfiles(c *cache.Cache) {
 	profiles, err := profile.LoadProfiles()
 	if err != nil {
 		ExitWithError(err)
 	}
 
-	c.Cache.ProfileFilenames = make(map[string]string, len(profiles))
+	c.ProfileFilenames = make(map[string]string, len(profiles))
 	for i := range profiles {
-		c.Cache.ProfileFilenames[profiles[i].Slug] = profiles[i].Filename
+		c.ProfileFilenames[profiles[i].Slug] = profiles[i].Filename
 	}
 }
 
-var cmdConfigProfile = &cobra.Command{
-	Use:   "config",
-	Short: "Configures which profile to use.",
-	Run: func(cmd *cobra.Command, args []string) {
-		c := setUp()
-		configProfile(c)
-	},
-}
-
-func configProfile(c *Container) {
+func configProfile(c *cache.Cache) {
 	profiles, err := profile.LoadProfiles()
 	if err != nil {
 		ExitWithError(err)
@@ -87,14 +87,14 @@ func configProfile(c *Container) {
 		return
 	}
 
-	c.Cache.SetProfile(profiles[profileSlug])
+	c.SetProfile(profiles[profileSlug])
 
-	c.Cache.ProfileFilenames = make(map[string]string, len(profiles))
+	c.ProfileFilenames = make(map[string]string, len(profiles))
 	for i := range profiles {
-		c.Cache.ProfileFilenames[profiles[i].Slug] = profiles[i].Filename
+		c.ProfileFilenames[profiles[i].Slug] = profiles[i].Filename
 	}
 
-	if err := c.Cache.Save(); err != nil {
+	if err := c.Save(); err != nil {
 		ExitWithError(err)
 	}
 }
