@@ -9,6 +9,7 @@ import (
 	"github.com/robertoseba/gennie/internal/cache"
 	"github.com/robertoseba/gennie/internal/chat"
 	mock_httpclient "github.com/robertoseba/gennie/internal/httpclient/mock"
+	"github.com/robertoseba/gennie/internal/models"
 	"github.com/robertoseba/gennie/internal/models/profile"
 	output "github.com/robertoseba/gennie/internal/output"
 	"go.uber.org/mock/gomock"
@@ -80,6 +81,37 @@ func TestUsesModelFromFlag(t *testing.T) {
 	//Saves the model from the flag to the cache
 	if cache.Model != "gpt-4o" {
 		t.Errorf("Expected model to be 'gpt-4o' but got %s", cache.Model)
+	}
+}
+
+func TestIfNoModelNorProfileInCacheNorFlagUsesDefault(t *testing.T) {
+	os.Setenv("OPENAI_API", "key")
+	ctrl := gomock.NewController(t)
+
+	mockClient := mock_httpclient.NewMockIHttpClient(ctrl)
+
+	httpResponse := mockOpenAiResponse("The meaning of life is 42")
+
+	mockClient.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(httpResponse), nil)
+
+	out := bytes.NewBufferString("")
+
+	printer := output.NewPrinter(out, nil)
+
+	cache := setupTestCache()
+	cache.Profile = nil
+
+	c := NewAskCmd(cache, printer, mockClient)
+
+	c.SetArgs([]string{"ask what is the meaning of life?"})
+	c.Execute()
+
+	//Saves the model from the flag to the cache
+	if cache.Model != string(models.DefaultModel) {
+		t.Errorf("Expected model to be %s  but got %s", string(models.DefaultModel), cache.Model)
+	}
+	if cache.Profile.Slug != "default" {
+		t.Errorf("Expected profile to be default but got %s", cache.Profile.Slug)
 	}
 }
 

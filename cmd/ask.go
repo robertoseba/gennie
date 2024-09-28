@@ -61,11 +61,11 @@ func NewAskCmd(c *cache.Cache, p *output.Printer, h httpclient.IHttpClient) *cob
 			}
 
 			if input.Model == "" && c.Model == "" {
-				return fmt.Errorf("No model specified. Please use gennie config to set model of use the --model flag.")
+				c.Model = string(models.DefaultModel)
 			}
 
 			if input.Profile == "" && c.Profile == nil {
-				return fmt.Errorf("No profile specified. Please use gennie config to set profile of use the --profile flag.")
+				c.SetProfile(profile.CreateDefaultProfile())
 			}
 
 			askModel(c, p, input, h)

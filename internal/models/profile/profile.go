@@ -51,7 +51,7 @@ func LoadProfiles() (map[string]*Profile, error) {
 
 	profiles := make(map[string]*Profile, len(profileFiles)+1)
 
-	defaultProfile := createDefaultProfile()
+	defaultProfile := CreateDefaultProfile()
 	profiles[defaultProfile.Slug] = defaultProfile
 
 	for _, profileFile := range profileFiles {
@@ -110,7 +110,7 @@ func LoadProfileFromFile(profilePath string) (*Profile, error) {
 	return profile, nil
 }
 
-func createDefaultProfile() *Profile {
+func CreateDefaultProfile() *Profile {
 	return &Profile{
 		Name:   "Default assistant",
 		Author: "gennie",
