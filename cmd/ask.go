@@ -114,11 +114,11 @@ func askModel(c *cache.Cache, p *output.Printer, input *InputOptions) {
 	}
 
 	p.PrintLine(output.Yellow)
-	p.PrintAnswer(chat.GetAnswer())
+	p.PrintWithCodeStyling(chat.GetAnswer(), output.Yellow)
 	p.PrintLine(output.Yellow)
 
-	p.PrintDetails(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(model.Model()), c.Profile.Name))
-	p.PrintDetails(fmt.Sprintf("Answered in: %0.2f seconds", chat.DurationSeconds()))
+	p.Print(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(model.Model()), c.Profile.Name), output.Cyan)
+	p.Print(fmt.Sprintf("Answered in: %0.2f seconds", chat.DurationSeconds()), output.Cyan)
 	p.Print("", "")
 
 	c.ChatHistory.AddResponse(*chat)

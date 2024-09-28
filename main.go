@@ -12,6 +12,6 @@ func main() {
 		cmd.ExitWithError(err)
 	}
 
-	cmd.NewRootCmd(cache, output.NewPrinter()).Execute()
+	cmd.NewRootCmd(cache, output.NewPrinter(nil, nil)).Execute()
 
 }

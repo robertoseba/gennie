@@ -3,6 +3,7 @@ package output
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -16,9 +17,11 @@ type Printer struct {
 	height     int
 	marginSize int
 	margin     string
+	Stdout     io.Writer
+	Stderr     io.Writer
 }
 
-func NewPrinter() *Printer {
+func NewPrinter(out io.Writer, err io.Writer) *Printer {
 	width, height := GetTermSize()
 	var margin int = 5
 
@@ -26,11 +29,20 @@ func NewPrinter() *Printer {
 		margin = 1
 	}
 
+	if out == nil {
+		out = os.Stdout
+	}
+	if err == nil {
+		err = os.Stderr
+	}
+
 	return &Printer{
 		width:      width,
 		height:     height,
 		marginSize: margin,
 		margin:     strings.Repeat(" ", margin),
+		Stdout:     out,
+		Stderr:     err,
 	}
 }
 
@@ -43,7 +55,7 @@ func GetTermSize() (int, int) {
 	return width, height
 }
 
-func (p *Printer) PrintAnswer(answer string) {
+func (p *Printer) PrintWithCodeStyling(answer string, codeColor Color) {
 	scanner := bufio.NewScanner(strings.NewReader(answer))
 	isCodeBlock := false
 
@@ -56,7 +68,7 @@ func (p *Printer) PrintAnswer(answer string) {
 		}
 
 		if isCodeBlock {
-			p.Print(line, Yellow)
+			p.Print(line, codeColor)
 			continue
 		}
 
@@ -70,27 +82,20 @@ func (p *Printer) PrintLine(color Color) {
 	}
 
 	lineChar := "\u2014"
-
-	for i := 0; i < p.width; i++ {
-		fmt.Printf("%s%s%s", color, lineChar, Reset)
-	}
-	fmt.Print("\n")
-}
-
-func (p *Printer) PrintDetails(details string) {
-	p.Print(details, Cyan)
+	line := strings.Repeat(lineChar, p.width)
+	fmt.Fprintf(p.Stdout, "%s%s%s\n", color, line, Reset)
 }
 
 func (p *Printer) Print(message string, color Color) {
-	fullMessage := fmt.Sprintf("%s%s%s", color, message, Reset)
+	lines := p.wrapWithMargins(message, []string{})
 
-	lines := p.wrapWithMargins(fullMessage, []string{})
+	fmt.Fprintf(p.Stdout, "%s", color)
 
-	fmt.Printf("%s", color)
 	for _, text := range lines {
-		fmt.Printf("%s%s%s\n", p.margin, text, p.margin)
+		fmt.Fprintf(p.Stdout, "%s%s%s\n", p.margin, text, p.margin)
 	}
-	fmt.Printf("%s", Reset)
+
+	fmt.Fprintf(p.Stdout, "%s", Reset)
 }
 
 func (p *Printer) wrapWithMargins(text string, initial []string) []string {
