@@ -60,6 +60,10 @@ func configModel(c *cache.Cache) {
 		return
 	}
 
+	if string(model) == c.Model {
+		return
+	}
+
 	c.SetModel(string(model))
 
 	if err := c.Save(); err != nil {

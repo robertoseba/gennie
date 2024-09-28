@@ -87,6 +87,10 @@ func configProfile(c *cache.Cache) {
 		return
 	}
 
+	if profileSlug == c.Profile.Slug {
+		return
+	}
+
 	c.SetProfile(profiles[profileSlug])
 
 	c.ProfileFilenames = make(map[string]string, len(profiles))
