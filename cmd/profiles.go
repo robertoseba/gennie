@@ -81,6 +81,11 @@ func configProfile(c *cache.Cache) {
 	if err != nil {
 		ExitWithError(err)
 	}
+
+	if c.Profile == nil {
+		c.Profile = &profile.Profile{}
+	}
+
 	profileSlug := output.MenuProfile(profiles, c.Profile.Slug)
 
 	if profileSlug == "" {

@@ -15,6 +15,8 @@ func main() {
 
 	httpClient := httpclient.NewClient()
 
-	cmd.NewRootCmd(cache, output.NewPrinter(nil, nil), httpClient).Execute()
+	printer := output.NewPrinter(nil, nil)
+
+	cmd.NewRootCmd(cache, printer, httpClient).Execute()
 
 }
