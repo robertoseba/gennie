@@ -6,23 +6,37 @@ import (
 )
 
 // TODO: create in menu a NewMenu that receivees titles and items[names, values] and returns a menu
-func MenuModel() models.ModelEnum {
+func MenuModel(m []models.ModelEnum, selected models.ModelEnum) models.ModelEnum {
 	menu := NewMenu("Select a model:")
-	for _, model := range models.ListModels() {
+
+	idxSelected := 0
+	idx := 0
+	for _, model := range m {
+		if model == selected {
+			idxSelected = idx
+		}
 		menu.AddItem(model.String(), string(model))
+		idx++
 	}
-	selection := menu.Display()
+
+	selection := menu.Display(idxSelected)
 
 	model := models.ModelEnum(selection)
 	return model
 }
 
-func MenuProfile(profiles map[string]*profile.Profile) string {
+func MenuProfile(profiles map[string]*profile.Profile, selected string) string {
 	menu := NewMenu("Select the profile you want to activate:")
-	for _, profile := range profiles {
-		menu.AddItem(profile.Name, profile.Slug)
+	idxSelected := 0
+	idx := 0
+	for slug := range profiles {
+		if slug == selected {
+			idxSelected = idx
+		}
+		menu.AddItem(profiles[slug].Name, slug)
+		idx++
 	}
-	selection := menu.Display()
+	selection := menu.Display(idxSelected)
 
 	return selection
 }

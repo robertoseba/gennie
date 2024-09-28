@@ -81,7 +81,7 @@ func configProfile(c *cache.Cache) {
 	if err != nil {
 		ExitWithError(err)
 	}
-	profileSlug := output.MenuProfile(profiles)
+	profileSlug := output.MenuProfile(profiles, c.Profile.Slug)
 
 	if profileSlug == "" {
 		return

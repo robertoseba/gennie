@@ -81,13 +81,23 @@ func (m *Menu) renderMenuItems(redraw bool) {
 	}
 }
 
-func (m *Menu) Display() string {
-	defer fmt.Println()
+func (m *Menu) clearMenu() {
+	fmt.Printf("\033[%dA", len(m.MenuItems))
+	for i := 0; i < len(m.MenuItems)+1; i++ {
+		fmt.Print("\033[G")
+		fmt.Print("\033[K")
+		fmt.Print("\033[G")
+		fmt.Print("\n")
+	}
+
+	fmt.Printf("\033[%dA", len(m.MenuItems)+1)
+}
+
+func (m *Menu) Display(selectedIdx int) string {
 	defer showCursor()
 
-	fmt.Println()
 	fmt.Printf(" %s%s%s\n", Yellow, m.Prompt, Reset)
-
+	m.CursorPos = selectedIdx
 	m.renderMenuItems(false)
 
 	hideCursor()
@@ -95,13 +105,12 @@ func (m *Menu) Display() string {
 	for {
 		keyCode := getInput()
 		switch keyCode {
-		case escape:
-			return ""
-		case ctrlC:
+		case escape, ctrlC:
+			m.clearMenu()
 			return ""
 		case enter:
 			menuItem := m.MenuItems[m.CursorPos]
-			fmt.Println("\r")
+			m.clearMenu()
 			return menuItem.ID
 		case up:
 			m.CursorPos = (m.CursorPos + len(m.MenuItems) - 1) % len(m.MenuItems)
@@ -125,7 +134,7 @@ func getInput() byte {
 
 	readBytes := make([]byte, 3)
 
-	read, err = os.Stdin.Read(readBytes)
+	read, _ = os.Stdin.Read(readBytes)
 
 	if read == 3 {
 		if _, ok := keys[readBytes[2]]; ok {

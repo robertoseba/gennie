@@ -15,6 +15,7 @@ func NewConfigCmd(c *cache.Cache, p *output.Printer) *cobra.Command {
 		Use:   "config",
 		Short: "Configurations for gennie",
 		Long:  `Use it to configure ginnie. You can change models, profiles and more!`,
+		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			configModel(c)
 			configProfile(c) // todo: where to better put this function
@@ -53,7 +54,7 @@ func NewConfigCmd(c *cache.Cache, p *output.Printer) *cobra.Command {
 }
 
 func configModel(c *cache.Cache) {
-	model := output.MenuModel()
+	model := output.MenuModel(models.ListModels(), models.ModelEnum(c.Model))
 
 	if model == "" {
 		return
