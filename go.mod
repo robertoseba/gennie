@@ -4,6 +4,7 @@ go 1.23.1
 
 require (
 	github.com/spf13/cobra v1.8.1
+	go.uber.org/mock v0.4.0
 	golang.org/x/term v0.24.0
 )
 

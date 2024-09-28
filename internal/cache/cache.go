@@ -25,6 +25,10 @@ func (c *Cache) SetProfile(profile *profile.Profile) {
 }
 
 func (c *Cache) Save() error {
+	if c.cacheFilePath == "" {
+		return nil
+	}
+
 	file, err := os.Create(c.cacheFilePath)
 	if err != nil {
 		return err
