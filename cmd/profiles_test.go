@@ -10,7 +10,7 @@ func TestHasProfileSubCommands(t *testing.T) {
 	if r.Use != "profile" {
 		t.Errorf("Expected 'profiles' but got %s", r.Use)
 	}
-	expectedCommands := []string{"list", "refresh", "config"}
+	expectedCommands := []string{"slugs", "refresh"}
 
 	for _, c := range r.Commands() {
 		idx := slices.Index(expectedCommands, c.Use)
