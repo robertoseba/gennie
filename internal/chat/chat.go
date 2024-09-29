@@ -30,6 +30,10 @@ func (r *Chat) GetAnswer() string {
 	return r.Answer.Content
 }
 
+func (r *Chat) GetQuestion() string {
+	return r.Question.Content
+}
+
 func (r *Chat) AddQuestion(question string) {
 	r.Question = input{
 		Content:   question,

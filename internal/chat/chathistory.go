@@ -28,3 +28,7 @@ func NewChatHistory() *ChatHistory {
 func (c *ChatHistory) Clear() {
 	c.Responses = nil
 }
+
+func (c *ChatHistory) Len() int {
+	return len(c.Responses)
+}

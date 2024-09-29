@@ -84,6 +84,43 @@ func TestUsesModelFromFlag(t *testing.T) {
 	}
 }
 
+func TestResetsChatHistoryIfNotFollowUP(t *testing.T) {
+	os.Setenv("OPENAI_API", "key")
+	ctrl := gomock.NewController(t)
+
+	mockClient := mock_httpclient.NewMockIHttpClient(ctrl)
+
+	httpResponse := mockOpenAiResponse("The meaning of life is 42")
+
+	mockClient.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(httpResponse), nil)
+
+	out := bytes.NewBufferString("")
+
+	printer := output.NewPrinter(out, nil)
+
+	cache := setupTestCache()
+	oldChat := chat.Chat{}
+	oldChat.AddQuestion("Initial question")
+	oldChat.AddAnswer("Answer to initial question")
+	cache.ChatHistory.AddResponse(oldChat)
+
+	c := NewAskCmd(cache, printer, mockClient)
+
+	c.SetArgs([]string{"ask what is the meaning of life?", "--model", "gpt-4o"})
+	c.Execute()
+
+	if cache.ChatHistory.Len() != 1 {
+		t.Errorf("Expected chat history to have 1 item but got %d", cache.ChatHistory.Len())
+	}
+
+	chat, _ := cache.ChatHistory.LastResponse()
+
+	if chat.GetAnswer() != "The meaning of life is 42" || chat.GetQuestion() != "ask what is the meaning of life?" {
+		t.Errorf("Expected chat history to have only the last question and answer but got %v", chat)
+	}
+
+}
+
 func TestIfNoModelNorProfileInCacheNorFlagUsesDefault(t *testing.T) {
 	os.Setenv("OPENAI_API", "key")
 	ctrl := gomock.NewController(t)
