@@ -2,12 +2,12 @@ package openai
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
 	"github.com/robertoseba/gennie/internal/chat"
 	"github.com/robertoseba/gennie/internal/httpclient"
-	"github.com/robertoseba/gennie/internal/models/profile"
 )
 
 type OpenAIModel struct {
@@ -54,46 +54,62 @@ func NewModel(client httpclient.IHttpClient, modelName string) *OpenAIModel {
 	}
 }
 
-func (m *OpenAIModel) Ask(question string, profile *profile.Profile, history *chat.ChatHistory) (*chat.Chat, error) {
-	preparedQuestion, err := m.prepareQuestion(question, profile)
-	if err != nil {
-		return nil, err
+func (m *OpenAIModel) CompleteChat(chatHistory *chat.ChatHistory, systemPrompt string) error {
+	lastChat, ok := chatHistory.LastChat()
+	if !ok {
+		return errors.New("Chat history is empty")
 	}
 
-	finalResponse := chat.Chat{}
-	finalResponse.AddQuestion(question)
+	if lastChat.GetAnswer() != "" {
+		return errors.New("Last chat is already completed with answer")
+	}
 
-	postRes, err := m.client.Post(m.url, preparedQuestion, m.headers)
+	payload, err := m.preparePayload(chatHistory, systemPrompt)
+	if err != nil {
+		return err
+	}
+
+	postRes, err := m.client.Post(m.url, payload, m.headers)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	parsedResponse, err := m.parseResponse(postRes)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	finalResponse.AddAnswer(parsedResponse)
+	chatHistory.SetNewAnswerToLastChat(parsedResponse)
 
-	return &finalResponse, nil
+	return nil
 }
 
-func (m *OpenAIModel) prepareQuestion(question string, profile *profile.Profile) (string, error) {
+func (m *OpenAIModel) preparePayload(chatHistory *chat.ChatHistory, systemPrompt string) (string, error) {
 
 	p := prompt{
 		Model: m.model,
 		Messages: []message{
 			{
 				Role:    roleSystem,
-				Content: profile.Data,
-			},
-			{
-				Role:    roleUser,
-				Content: question,
+				Content: systemPrompt,
 			},
 		},
 	}
+
+	for _, chat := range chatHistory.Responses {
+		p.Messages = append(p.Messages, message{
+			Role:    roleUser,
+			Content: chat.GetQuestion(),
+		})
+		if chat.HasAnswer() {
+			p.Messages = append(p.Messages, message{
+				Role:    roleAssistant,
+				Content: chat.GetAnswer(),
+			})
+		}
+	}
+
 	jsonData, err := json.Marshal(p)
 
 	if err != nil {

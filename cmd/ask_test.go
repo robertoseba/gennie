@@ -49,7 +49,7 @@ func TestSavesChatToCache(t *testing.T) {
 	c.SetArgs([]string{"ask what is the meaning of life?"})
 	c.Execute()
 
-	actualResponse, _ := cache.ChatHistory.LastResponse()
+	actualResponse, _ := cache.ChatHistory.LastChat()
 
 	if actualResponse.GetAnswer() != "The meaning of life is 42" {
 		t.Errorf("Expected 'The meaning of life is 42' but got %s", actualResponse.GetAnswer())
@@ -84,7 +84,7 @@ func TestUsesModelFromFlag(t *testing.T) {
 	}
 }
 
-func TestResetsChatHistoryIfNotFollowUP(t *testing.T) {
+func TestResetsChatHistoryIfNotFollowUp(t *testing.T) {
 	os.Setenv("OPENAI_API", "key")
 	ctrl := gomock.NewController(t)
 
@@ -102,7 +102,7 @@ func TestResetsChatHistoryIfNotFollowUP(t *testing.T) {
 	oldChat := chat.Chat{}
 	oldChat.AddQuestion("Initial question")
 	oldChat.AddAnswer("Answer to initial question")
-	cache.ChatHistory.AddResponse(oldChat)
+	cache.ChatHistory.AddChat(oldChat)
 
 	c := NewAskCmd(cache, printer, mockClient)
 
@@ -113,7 +113,7 @@ func TestResetsChatHistoryIfNotFollowUP(t *testing.T) {
 		t.Errorf("Expected chat history to have 1 item but got %d", cache.ChatHistory.Len())
 	}
 
-	chat, _ := cache.ChatHistory.LastResponse()
+	chat, _ := cache.ChatHistory.LastChat()
 
 	if chat.GetAnswer() != "The meaning of life is 42" || chat.GetQuestion() != "ask what is the meaning of life?" {
 		t.Errorf("Expected chat history to have only the last question and answer but got %v", chat)
@@ -129,7 +129,8 @@ func TestFollowUpAppendsToChatHistory(t *testing.T) {
 
 	httpResponse := mockOpenAiResponse("The meaning of life is 42")
 
-	mockClient.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(httpResponse), nil)
+	body := `{"model":"gpt-4o-mini","messages":[{"role":"system","content":"you are a assistant"},{"role":"user","content":"Initial question"},{"role":"assistant","content":"Answer to initial question"},{"role":"user","content":"ask what is the meaning of life?"}]}`
+	mockClient.EXPECT().Post(gomock.Any(), body, gomock.Any()).Return([]byte(httpResponse), nil)
 
 	out := bytes.NewBufferString("")
 
@@ -139,7 +140,7 @@ func TestFollowUpAppendsToChatHistory(t *testing.T) {
 	oldChat := chat.Chat{}
 	oldChat.AddQuestion("Initial question")
 	oldChat.AddAnswer("Answer to initial question")
-	cache.ChatHistory.AddResponse(oldChat)
+	cache.ChatHistory.AddChat(oldChat)
 
 	c := NewAskCmd(cache, printer, mockClient)
 

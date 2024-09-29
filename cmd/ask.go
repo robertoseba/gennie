@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/robertoseba/gennie/internal/cache"
+	"github.com/robertoseba/gennie/internal/chat"
 	"github.com/robertoseba/gennie/internal/httpclient"
 	"github.com/robertoseba/gennie/internal/models"
 	"github.com/robertoseba/gennie/internal/models/profile"
@@ -32,10 +33,6 @@ func NewAskCmd(c *cache.Cache, p *output.Printer, h httpclient.IHttpClient) *cob
 
 			if appendFileFlag != "" {
 				return fmt.Errorf("File append not implemented yet.")
-			}
-
-			if isFollowUpFlag {
-				return fmt.Errorf("Followup not implemented yet.")
 			}
 
 			input := &InputOptions{
@@ -106,20 +103,21 @@ func askModel(c *cache.Cache, p *output.Printer, input *InputOptions, client htt
 		c.ChatHistory.Clear()
 	}
 
-	chat, err := model.Ask(input.Question, c.Profile, nil)
+	chat := chat.NewChat(input.Question)
+	c.ChatHistory.AddChat(*chat)
+
+	err := model.CompleteChat(c.ChatHistory, c.Profile.Data)
 
 	if err != nil {
 		ExitWithError(err)
 	}
 
 	p.PrintLine(output.Yellow)
-	p.PrintWithCodeStyling(chat.GetAnswer(), output.Yellow)
+	p.PrintWithCodeStyling(c.ChatHistory.LastAnswer(), output.Yellow)
 	p.PrintLine(output.Yellow)
 
 	p.Print(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(model.Model()), c.Profile.Name), output.Cyan)
 	p.Print(fmt.Sprintf("Answered in: %0.2f seconds", chat.DurationSeconds()), output.Cyan)
 	p.Print("", "")
-
-	c.ChatHistory.AddResponse(*chat)
 
 }

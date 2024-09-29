@@ -2,7 +2,6 @@ package models
 
 import (
 	"github.com/robertoseba/gennie/internal/httpclient"
-	"github.com/robertoseba/gennie/internal/models/anthropic"
 	"github.com/robertoseba/gennie/internal/models/openai"
 )
 
@@ -40,9 +39,9 @@ func NewModel(modelType ModelEnum, client httpclient.IHttpClient) IModel {
 		OpenAI: func(httpclient.IHttpClient) IModel {
 			return openai.NewModel(client, string(modelType))
 		},
-		ClaudeSonnet: func(httpclient.IHttpClient) IModel {
-			return anthropic.NewModel(client, string(modelType))
-		},
+		// ClaudeSonnet: func(httpclient.IHttpClient) IModel {
+		// 	return anthropic.NewModel(client, string(modelType))
+		// },
 	}
 
 	activeModel, ok := model[modelType]
