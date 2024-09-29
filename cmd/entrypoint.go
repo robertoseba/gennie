@@ -18,6 +18,7 @@ func NewRootCmd(c *cache.Cache, p *output.Printer, h httpclient.IHttpClient) *co
 	rootCmd.AddCommand(NewAskCmd(c, p, h))
 	rootCmd.AddCommand(NewStatusCmd(c, p))
 	rootCmd.AddCommand(NewExportCmd(c, p))
+	rootCmd.AddCommand(NewClearCmd(c, p))
 
 	return rootCmd
 }

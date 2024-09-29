@@ -2,6 +2,7 @@ package cache
 
 import (
 	"encoding/gob"
+	"fmt"
 	"os"
 
 	"github.com/robertoseba/gennie/internal/chat"
@@ -11,7 +12,7 @@ import (
 type Cache struct {
 	Model            string
 	Profile          *profile.Profile
-	cacheFilePath    string
+	FilePath         string
 	ChatHistory      *chat.ChatHistory
 	ProfileFilenames map[string]string // map[profileSlug]filename
 }
@@ -25,11 +26,11 @@ func (c *Cache) SetProfile(profile *profile.Profile) {
 }
 
 func (c *Cache) Save() error {
-	if c.cacheFilePath == "" {
+	if c.FilePath == "" {
 		return nil
 	}
 
-	file, err := os.Create(c.cacheFilePath)
+	file, err := os.Create(c.FilePath)
 	if err != nil {
 		return err
 	}
@@ -39,4 +40,24 @@ func (c *Cache) Save() error {
 		return err
 	}
 	return nil
+}
+
+func (c *Cache) Clear() error {
+	if c.FilePath == "" {
+		return nil
+	}
+
+	if _, err := os.Stat(c.FilePath); os.IsNotExist(err) {
+		return fmt.Errorf("Cache has not been created yet")
+	}
+
+	c.resetCache()
+
+	return os.Remove(c.FilePath)
+}
+
+func (c *Cache) resetCache() {
+	c.Model = ""
+	c.Profile = nil
+	c.ChatHistory = chat.NewChatHistory()
 }

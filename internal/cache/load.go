@@ -8,21 +8,20 @@ import (
 	"github.com/robertoseba/gennie/internal/chat"
 )
 
+const cacheFile = ".cache"
+
 func Load() (*Cache, error) {
-	const cacheFile = ".cache"
-	basePath, err := getCacheFolderPath()
+	filePath, err := getCacheFilePath()
 	if err != nil {
 		return nil, err
 	}
 
-	filePath := path.Join(basePath, cacheFile)
-
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		return &Cache{
-			Model:         "",
-			Profile:       nil,
-			cacheFilePath: filePath,
-			ChatHistory:   chat.NewChatHistory(),
+			Model:       "",
+			Profile:     nil,
+			FilePath:    filePath,
+			ChatHistory: chat.NewChatHistory(),
 		}, nil
 	}
 
@@ -31,36 +30,36 @@ func Load() (*Cache, error) {
 		return nil, err
 	}
 
-	cache.cacheFilePath = filePath
+	cache.FilePath = filePath
 
 	return cache, nil
 }
 
-func getCacheFolderPath() (string, error) {
-	systemCacheFolder, err := os.UserCacheDir()
-	if err != nil {
-		return "", err
+/**
+ * It will try to use the system cache directory,
+ * if it fails it will fallback to the current directory.
+ */
+func getCacheFilePath() (string, error) {
+
+	//TODO: Add support for env var to set cache dir
+
+	systemCacheDir, err := os.UserCacheDir()
+	if err != nil || systemCacheDir == "" {
+		return fallbackPathAsCurrentDir()
 	}
 
-	cacheFolder := "gennie"
+	cacheDirName := "gennie"
+	cacheDirPath := path.Join(systemCacheDir, cacheDirName)
 
-	if _, err := os.Stat(systemCacheFolder); os.IsNotExist(err) {
-		curr, err := os.Getwd()
+	if _, err := os.Stat(cacheDirPath); os.IsNotExist(err) {
+
+		err = os.Mkdir(cacheDirPath, 0755)
 		if err != nil {
-			return "", err
-		}
-		return curr, nil
-	}
-
-	if _, err := os.Stat(path.Join(systemCacheFolder, cacheFolder)); os.IsNotExist(err) {
-
-		err = os.Mkdir(path.Join(systemCacheFolder, cacheFolder), 0755)
-		if err != nil {
-			return "", err
+			return fallbackPathAsCurrentDir()
 		}
 	}
 
-	return path.Join(systemCacheFolder, cacheFolder), nil
+	return path.Join(cacheDirPath, cacheFile), nil
 }
 
 func readFrom(filename string) (*Cache, error) {
@@ -77,4 +76,13 @@ func readFrom(filename string) (*Cache, error) {
 	}
 
 	return &cache, nil
+}
+
+func fallbackPathAsCurrentDir() (string, error) {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	return path.Join(currentDir, cacheFile), nil
 }

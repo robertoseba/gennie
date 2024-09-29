@@ -18,7 +18,7 @@ func NewStatusCmd(c *cache.Cache, p *output.Printer) *cobra.Command {
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			if c.Model == "" || c.Profile == nil {
-				ExitWithError(fmt.Errorf("Gennie hasn't been configured yet. Please run gennie config first."))
+				ExitWithError(fmt.Errorf("Gennie hasn't been configured yet.\nPlease configure model and profile first, or just ask a question to get started with the default."))
 			}
 
 			p.PrintLine(output.Yellow)
@@ -26,6 +26,8 @@ func NewStatusCmd(c *cache.Cache, p *output.Printer) *cobra.Command {
 			p.PrintLine(output.Yellow)
 			p.Print(fmt.Sprintf("Profile name: %s", c.Profile.Name), output.Gray)
 			p.Print(fmt.Sprintf("Profile description: %s", c.Profile.Data), output.Gray)
+			p.Print("", "")
+			p.Print(fmt.Sprintf("Cache saved at: %s", c.FilePath), output.Gray)
 			p.PrintLine(output.Yellow)
 		},
 	}
