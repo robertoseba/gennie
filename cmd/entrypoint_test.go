@@ -10,7 +10,7 @@ func TestHasRootSubCommands(t *testing.T) {
 	if r.Use != "gennie" {
 		t.Errorf("Expected 'gennie' but got %s", r.Use)
 	}
-	expectedCommands := []string{"model", "profile", "ask [question for the llm model]", "status"}
+	expectedCommands := []string{"model", "profile", "ask [question for the llm model]", "status", "export"}
 
 	for _, c := range r.Commands() {
 		idx := slices.Index(expectedCommands, c.Use)
