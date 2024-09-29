@@ -26,8 +26,26 @@ type Chat struct {
 	Duration time.Duration
 }
 
+func NewChat(question string) *Chat {
+	return &Chat{
+		Question: input{
+			Content:   question,
+			Role:      UserRole,
+			Timestamp: time.Now(),
+		},
+	}
+}
+
+func (r *Chat) HasAnswer() bool {
+	return r.Answer.Content != ""
+}
+
 func (r *Chat) GetAnswer() string {
 	return r.Answer.Content
+}
+
+func (r *Chat) GetQuestion() string {
+	return r.Question.Content
 }
 
 func (r *Chat) AddQuestion(question string) {
