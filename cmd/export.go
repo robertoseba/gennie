@@ -34,12 +34,12 @@ func exportChatHistory(c *cache.Cache, filename string) error {
 	}
 	for _, chat := range c.ChatHistory.Responses {
 		var err error
-		_, err = f.WriteString(fmt.Sprintf("Question: %s\n", chat.GetQuestion()))
+		_, err = f.WriteString(fmt.Sprintf("## Question: %s\n", chat.GetQuestion()))
 		if err != nil {
 			return err
 		}
 
-		_, err = f.WriteString(fmt.Sprintf("Answer: %s\n", chat.GetAnswer()))
+		_, err = f.WriteString(fmt.Sprintf("## Answer: %s\n", chat.GetAnswer()))
 		if err != nil {
 			return err
 		}
