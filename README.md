@@ -9,6 +9,8 @@
 
 ## 👋 Hi, I'm Gennie!
 
+<img src="docs/images/awk.gif" width=500>
+
 A powerful CLI assistant designed to support multiple models and profiles to suit your needs. Whether you're working on programming, researching movies, or diving into database management, I'm here to assist!
 
 ## 📁 Profiles
@@ -48,6 +50,8 @@ Current Models:
 - [Ollama](https://ollama.com/)
 
 ## Extra Features
+
+<img src="docs/images/table.gif" width=500>
 
 ### Follow-Up Questions
 
