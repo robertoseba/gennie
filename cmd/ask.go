@@ -9,8 +9,8 @@ import (
 	"github.com/robertoseba/gennie/internal/chat"
 	"github.com/robertoseba/gennie/internal/httpclient"
 	"github.com/robertoseba/gennie/internal/models"
-	"github.com/robertoseba/gennie/internal/models/profile"
-	output "github.com/robertoseba/gennie/internal/output"
+	"github.com/robertoseba/gennie/internal/output"
+	"github.com/robertoseba/gennie/internal/profile"
 	"github.com/spf13/cobra"
 )
 

@@ -10,8 +10,8 @@ import (
 	"github.com/robertoseba/gennie/internal/chat"
 	mock_httpclient "github.com/robertoseba/gennie/internal/httpclient/mock"
 	"github.com/robertoseba/gennie/internal/models"
-	"github.com/robertoseba/gennie/internal/models/profile"
-	output "github.com/robertoseba/gennie/internal/output"
+	"github.com/robertoseba/gennie/internal/output"
+	"github.com/robertoseba/gennie/internal/profile"
 	"go.uber.org/mock/gomock"
 )
 

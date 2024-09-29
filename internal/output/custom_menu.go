@@ -2,7 +2,7 @@ package output
 
 import (
 	"github.com/robertoseba/gennie/internal/models"
-	"github.com/robertoseba/gennie/internal/models/profile"
+	"github.com/robertoseba/gennie/internal/profile"
 )
 
 // TODO: create in menu a NewMenu that receivees titles and items[names, values] and returns a menu

@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/robertoseba/gennie/internal/chat"
-	"github.com/robertoseba/gennie/internal/models/profile"
+	"github.com/robertoseba/gennie/internal/profile"
 )
 
 type Cache struct {
