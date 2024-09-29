@@ -122,6 +122,16 @@ Flags:
 Use "gennie [command] --help" for more information about a command.
 ```
 
+## API Keys
+
+Each model requires an API key to function.
+Here are the respective environment variables and how to set it in you cli:
+
+```bash
+export OPEN_API_KEY=<your_openai_key>
+export ANTHROPIC_API_KEY=<your_anthropic_key>
+```
+
 ## 🐛 Issues and Suggestions
 
 Gennie is an **OPEN** source project in its early stages. We welcome any bugs, issues, or suggestions you may have. Feel free to create an issue or contact me directly, and I'll respond as soon as possible!
