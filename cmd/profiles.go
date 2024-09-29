@@ -49,6 +49,7 @@ func NewProfilesCmd(c *cache.Cache, p *output.Printer) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			refreshProfiles(c)
 			c.Save()
+			p.Print("Profiles refreshed...", output.Cyan)
 		},
 	}
 
@@ -68,6 +69,7 @@ func refreshProfiles(c *cache.Cache) {
 	for i := range profiles {
 		c.ProfileFilenames[profiles[i].Slug] = profiles[i].Filename
 	}
+
 }
 
 func configProfile(c *cache.Cache) {
