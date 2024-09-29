@@ -121,6 +121,43 @@ func TestResetsChatHistoryIfNotFollowUP(t *testing.T) {
 
 }
 
+func TestFollowUpAppendsToChatHistory(t *testing.T) {
+	os.Setenv("OPENAI_API", "key")
+	ctrl := gomock.NewController(t)
+
+	mockClient := mock_httpclient.NewMockIHttpClient(ctrl)
+
+	httpResponse := mockOpenAiResponse("The meaning of life is 42")
+
+	mockClient.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(httpResponse), nil)
+
+	out := bytes.NewBufferString("")
+
+	printer := output.NewPrinter(out, nil)
+
+	cache := setupTestCache()
+	oldChat := chat.Chat{}
+	oldChat.AddQuestion("Initial question")
+	oldChat.AddAnswer("Answer to initial question")
+	cache.ChatHistory.AddResponse(oldChat)
+
+	c := NewAskCmd(cache, printer, mockClient)
+
+	c.SetArgs([]string{"ask what is the meaning of life?", "--followup"})
+	c.Execute()
+
+	if cache.ChatHistory.Len() != 2 {
+		t.Errorf("Expected chat history to have 2 item but got %d", cache.ChatHistory.Len())
+	}
+
+	chats := cache.ChatHistory.Responses
+
+	if chats[0].GetAnswer() != "Answer to initial question" || chats[1].GetAnswer() != "The meaning of life is 42" {
+		t.Errorf("Failed to append to chat history. Expected chat history to have both answers, but got: %v", chats)
+	}
+
+}
+
 func TestIfNoModelNorProfileInCacheNorFlagUsesDefault(t *testing.T) {
 	os.Setenv("OPENAI_API", "key")
 	ctrl := gomock.NewController(t)
