@@ -2,20 +2,14 @@ package openai
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 
 	"github.com/robertoseba/gennie/internal/chat"
-	"github.com/robertoseba/gennie/internal/httpclient"
 )
 
 type OpenAIModel struct {
-	url     string
-	model   string
-	client  httpclient.IHttpClient
-	apiKey  string
-	headers map[string]string
+	model string
 }
 
 const roleUser = "user"
@@ -38,55 +32,26 @@ type openAiResponse struct {
 	Choices []choice `json:"choices"`
 }
 
-func NewModel(client httpclient.IHttpClient, modelName string) *OpenAIModel {
+func NewProvider(modelName string) *OpenAIModel {
+	return &OpenAIModel{
+		model: modelName,
+	}
+}
+
+func (m *OpenAIModel) GetHeaders() map[string]string {
 	apiKey := os.Getenv("OPEN_API_KEY")
-	headers := map[string]string{
+
+	return map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", apiKey),
 		"Content-Type":  "application/json",
 	}
-
-	return &OpenAIModel{
-		url:     "https://api.openai.com/v1/chat/completions",
-		model:   modelName,
-		client:  client,
-		apiKey:  apiKey,
-		headers: headers,
-	}
 }
 
-func (m *OpenAIModel) CompleteChat(chatHistory *chat.ChatHistory, systemPrompt string) error {
-	lastChat, ok := chatHistory.LastChat()
-	if !ok {
-		return errors.New("Chat history is empty")
-	}
-
-	if lastChat.GetAnswer() != "" {
-		return errors.New("Last chat is already completed with answer")
-	}
-
-	payload, err := m.preparePayload(chatHistory, systemPrompt)
-	if err != nil {
-		return err
-	}
-
-	postRes, err := m.client.Post(m.url, payload, m.headers)
-
-	if err != nil {
-		return err
-	}
-
-	parsedResponse, err := m.parseResponse(postRes)
-	if err != nil {
-		return err
-	}
-
-	chatHistory.SetNewAnswerToLastChat(parsedResponse)
-
-	return nil
+func (m *OpenAIModel) GetUrl() string {
+	return "https://api.openai.com/v1/chat/completions"
 }
 
-func (m *OpenAIModel) preparePayload(chatHistory *chat.ChatHistory, systemPrompt string) (string, error) {
-
+func (m *OpenAIModel) PreparePayload(chatHistory *chat.ChatHistory, systemPrompt string) (string, error) {
 	p := prompt{
 		Model: m.model,
 		Messages: []message{
@@ -119,16 +84,12 @@ func (m *OpenAIModel) preparePayload(chatHistory *chat.ChatHistory, systemPrompt
 	return string(jsonData), nil
 }
 
-func (m *OpenAIModel) parseResponse(rawRes []byte) (string, error) {
+func (m *OpenAIModel) ParseResponse(rawRes []byte) (string, error) {
 	var response openAiResponse
-	err := json.Unmarshal([]byte(rawRes), &response)
+	err := json.Unmarshal(rawRes, &response)
 	if err != nil {
 		return "", err
 	}
 
 	return response.Choices[0].Message.Content, nil
-}
-
-func (m *OpenAIModel) Model() string {
-	return m.model
 }

@@ -11,5 +11,4 @@ type IModel interface {
 	* Once succeded the model will fill out the answer in the last chat.
 	 */
 	CompleteChat(chatHistory *chat.ChatHistory, systemPrompt string) error
-	Model() string
 }

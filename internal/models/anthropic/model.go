@@ -6,7 +6,6 @@ import (
 
 	"github.com/robertoseba/gennie/internal/chat"
 	"github.com/robertoseba/gennie/internal/httpclient"
-	"github.com/robertoseba/gennie/internal/models/profile"
 )
 
 type AnthropicModel struct {
@@ -39,60 +38,47 @@ type AnthropicResponse struct {
 	Content []content `json:"content"`
 }
 
-func NewModel(client httpclient.IHttpClient, modelName string) *AnthropicModel {
+func NewProvider(modelName string) *AnthropicModel {
+
+	return &AnthropicModel{
+		model: modelName,
+	}
+}
+
+func (m *AnthropicModel) GetUrl() string {
+	return "https://api.anthropic.com/v1/messages"
+}
+
+func (m *AnthropicModel) GetHeaders() map[string]string {
 	apiKey := os.Getenv("ANTHROPIC_API_KEY")
-	headers := map[string]string{
+	return map[string]string{
 		"x-api-key":         apiKey,
 		"anthropic-version": "2023-06-01",
 		"Content-Type":      "application/json",
 	}
-
-	return &AnthropicModel{
-		url:     "https://api.anthropic.com/v1/messages",
-		model:   modelName,
-		client:  client,
-		apiKey:  apiKey,
-		headers: headers,
-	}
 }
 
-func (m *AnthropicModel) Ask(question string, profile *profile.Profile, history *chat.ChatHistory) (*chat.Chat, error) {
-	preparedQuestion, err := m.prepareQuestion(question, profile)
-	if err != nil {
-		return nil, err
+func (m *AnthropicModel) PreparePayload(chatHistory *chat.ChatHistory, systemPrompt string) (string, error) {
+
+	messages := make([]message, 0, chatHistory.Len())
+	for _, chat := range chatHistory.Responses {
+		messages = append(messages, message{
+			Role:    roleUser,
+			Content: chat.GetQuestion(),
+		})
+		if chat.HasAnswer() {
+			messages = append(messages, message{
+				Role:    roleAssistant,
+				Content: chat.GetAnswer(),
+			})
+		}
 	}
-
-	finalResponse := chat.Chat{}
-	finalResponse.AddQuestion(question)
-
-	postRes, err := m.client.Post(m.url, preparedQuestion, m.headers)
-
-	if err != nil {
-		return nil, err
-	}
-
-	parsedResponse, err := m.parseResponse(postRes)
-	if err != nil {
-		return nil, err
-	}
-
-	finalResponse.AddAnswer(parsedResponse)
-
-	return &finalResponse, nil
-}
-
-func (m *AnthropicModel) prepareQuestion(question string, profile *profile.Profile) (string, error) {
 
 	p := prompt{
-		Model: m.model,
-		Messages: []message{
-			{
-				Role:    roleUser,
-				Content: question,
-			},
-		},
+		Model:     m.model,
+		Messages:  messages,
 		MaxTokens: 1024,
-		System:    profile.Data,
+		System:    systemPrompt,
 	}
 	jsonData, err := json.Marshal(p)
 
@@ -103,7 +89,7 @@ func (m *AnthropicModel) prepareQuestion(question string, profile *profile.Profi
 	return string(jsonData), nil
 }
 
-func (m *AnthropicModel) parseResponse(rawRes []byte) (string, error) {
+func (m *AnthropicModel) ParseResponse(rawRes []byte) (string, error) {
 	var response AnthropicResponse
 	err := json.Unmarshal([]byte(rawRes), &response)
 	if err != nil {

@@ -116,7 +116,7 @@ func askModel(c *cache.Cache, p *output.Printer, input *InputOptions, client htt
 	p.PrintWithCodeStyling(c.ChatHistory.LastAnswer(), output.Yellow)
 	p.PrintLine(output.Yellow)
 
-	p.Print(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(model.Model()), c.Profile.Name), output.Cyan)
+	p.Print(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(c.Model), c.Profile.Name), output.Cyan)
 	p.Print(fmt.Sprintf("Answered in: %0.2f seconds", chat.DurationSeconds()), output.Cyan)
 	p.Print("", "")
 
