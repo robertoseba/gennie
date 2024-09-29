@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"slices"
 	"strings"
 
@@ -29,10 +31,6 @@ func NewAskCmd(c *cache.Cache, p *output.Printer, h httpclient.IHttpClient) *cob
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if modelFlag != "" && !slices.Contains(models.ListModels(), models.ModelEnum(modelFlag)) {
 				return fmt.Errorf("Model %s not supported. Please use one of the following:\n%s\n", modelFlag, strings.Join(models.ListModelsSlug(), ", "))
-			}
-
-			if appendFileFlag != "" {
-				return fmt.Errorf("File append not implemented yet.")
 			}
 
 			input := &InputOptions{
@@ -103,6 +101,15 @@ func askModel(c *cache.Cache, p *output.Printer, input *InputOptions, client htt
 		c.ChatHistory.Clear()
 	}
 
+	if input.AppendFile != "" {
+		fileContent, err := readFileContents(input.AppendFile)
+		if err != nil {
+			ExitWithError(err)
+		}
+		input.Question = fmt.Sprintf("%s\n%s", input.Question, fileContent)
+
+	}
+
 	chat := chat.NewChat(input.Question)
 	c.ChatHistory.AddChat(*chat)
 
@@ -120,4 +127,24 @@ func askModel(c *cache.Cache, p *output.Printer, input *InputOptions, client htt
 	p.Print(fmt.Sprintf("Answered in: %0.2f seconds", chat.DurationSeconds()), output.Cyan)
 	p.Print("", "")
 
+}
+
+func readFileContents(filePath string) (string, error) {
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return "", fmt.Errorf("File %s not found", filePath)
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
+
+	if err != nil {
+		return "", fmt.Errorf("Error reading file %s: %s", filePath, err)
+	}
+
+	return string(content), nil
 }

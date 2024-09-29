@@ -57,7 +57,6 @@ func TestSavesChatToCache(t *testing.T) {
 }
 
 func TestUsesModelFromFlag(t *testing.T) {
-	os.Setenv("OPENAI_API", "key")
 	ctrl := gomock.NewController(t)
 
 	mockClient := mock_httpclient.NewMockIHttpClient(ctrl)
@@ -84,8 +83,41 @@ func TestUsesModelFromFlag(t *testing.T) {
 	}
 }
 
+func TestAppendsFileContentToQuestion(t *testing.T) {
+
+	fileContent := "This is a file content"
+
+	f, err := os.Create("./test.csv")
+	if err != nil {
+		t.Fatal("Failed to create file")
+	}
+	f.WriteString(fileContent)
+	f.Close()
+
+	ctrl := gomock.NewController(t)
+
+	mockClient := mock_httpclient.NewMockIHttpClient(ctrl)
+
+	httpResponse := mockOpenAiResponse("The meaning of life is 42")
+
+	body := `{"model":"gpt-4o-mini","messages":[{"role":"system","content":"you are a assistant"},{"role":"user","content":"ask what is the meaning of life?\nThis is a file content"}]}`
+	mockClient.EXPECT().Post(gomock.Any(), body, gomock.Any()).Return([]byte(httpResponse), nil)
+
+	out := bytes.NewBufferString("")
+
+	printer := output.NewPrinter(out, nil)
+
+	cache := setupTestCache()
+
+	c := NewAskCmd(cache, printer, mockClient)
+
+	c.SetArgs([]string{"ask what is the meaning of life?", "--append", "./test.csv"})
+	c.Execute()
+
+	os.Remove("./test.csv")
+}
+
 func TestResetsChatHistoryIfNotFollowUp(t *testing.T) {
-	os.Setenv("OPENAI_API", "key")
 	ctrl := gomock.NewController(t)
 
 	mockClient := mock_httpclient.NewMockIHttpClient(ctrl)
@@ -122,7 +154,6 @@ func TestResetsChatHistoryIfNotFollowUp(t *testing.T) {
 }
 
 func TestFollowUpAppendsToChatHistory(t *testing.T) {
-	os.Setenv("OPENAI_API", "key")
 	ctrl := gomock.NewController(t)
 
 	mockClient := mock_httpclient.NewMockIHttpClient(ctrl)
@@ -160,7 +191,6 @@ func TestFollowUpAppendsToChatHistory(t *testing.T) {
 }
 
 func TestIfNoModelNorProfileInCacheNorFlagUsesDefault(t *testing.T) {
-	os.Setenv("OPENAI_API", "key")
 	ctrl := gomock.NewController(t)
 
 	mockClient := mock_httpclient.NewMockIHttpClient(ctrl)
@@ -217,7 +247,7 @@ func mockOpenAiResponse(answer string) string {
 			}
 		],
 		"created": 1677664795,
-		"id": "chatcmpl-7QyqpwdfhqwajicIEznoc6Q47XAyW",
+		"id": "chatcmpl",
 		"model": "gpt-4o-mini",
 		"object": "chat.completion",
 		"usage": {
