@@ -93,6 +93,13 @@ $ gennie status
 $ go install github.com/robertoseba/gennie@latest
 ```
 
+If after installation you receive a `command not found` error, ensure that your `$GOPATH/bin` is in your `$PATH`.
+Here's how you can add it:
+
+```bash
+export PATH=${PATH}:`go env GOPATH`/bin
+```
+
 ### Downloading the Binary:
 
 Visit the [releases page](https://github.com/robertoseba/gennie/releases) to download the appropriate binary for your system.
