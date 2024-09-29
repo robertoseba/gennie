@@ -3,7 +3,7 @@
 [![Go Version](https://img.shields.io/github/go-mod/go-version/robertoseba/gennie?style=flat)](https://go.dev)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/robertoseba/gennie/ci.yaml?style=flat)](https://github.com/robertoseba/gennie/actions)
 [![License](https://img.shields.io/github/license/robertoseba/gennie?style=flat)](./LICENSE)
-[![Release](https://img.shields.io/github/v/release/robertoseba/gennie?style=flat)](https://github.com/robertoseba/gennie/releases)
+[![Release](https://img.shields.io/github/v/release/robertoseba/gennie?style=flat)](https://github.com/robertoseba/gennie/releases/latest)
 
 ---
 
