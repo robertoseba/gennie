@@ -14,7 +14,7 @@ type Spinner struct {
 
 func NewSpinner(message string) *Spinner {
 	return &Spinner{
-		frames:  []string{"|", "/", "-", "\\"},
+		frames:  []string{"⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"},
 		index:   0,
 		done:    make(chan struct{}),
 		message: message,
