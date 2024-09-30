@@ -1,7 +1,7 @@
 run:
 	go run .
 build:
-	go build -o bin/ .
+	go build -ldflags="-s -w" -o bin/ .
 
 test:
 	go test -v ./...
