@@ -25,11 +25,13 @@ A powerful CLI assistant designed to support multiple models and profiles to sui
 
 Use `gennie profile` to manage your profiles or the `--profile` flag with the `ask` command.
 
-**Profiles are cached for performance:**
+**Profiles are cached locally for performance:**
 
 - Set the environment variable `GINNIE_PROFILES_PATH` to customize your profile storage directory.
 - Default location: `~/.config/gennie/profiles`
 - Refresh your cached profiles with `gennie profile refresh`.
+
+_You can download sample profiles from the [profiles](profiles) directory._
 
 ### Creating new profiles
 
