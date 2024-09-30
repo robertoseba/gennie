@@ -31,6 +31,23 @@ Use `gennie profile` to manage your profiles or the `--profile` flag with the `a
 - Default location: `~/.config/gennie/profiles`
 - Refresh your cached profiles with `gennie profile refresh`.
 
+### Creating new profiles
+
+Profiles must be json files ending with `profile.json`.
+
+Here's a simple example for a sql profile to help you out with database related questions.
+
+File: `sql.profile.json`
+
+```json
+{
+  "name": "SQL", //This is the name that will show up in the profile menu. Can be more descriptive than the slug
+  "slug": "sql", //Slug is used to identify the profile when using the --profile flag
+  "author": "Roberto Seba",
+  "data": "You are expert database administrator especially in MySQL and PostgreSQL. Try to keep your answers short. It's always important to think about query performance and data integrity." //Data is where you prep the assistant before you ask questions. It can be as long as you want.
+}
+```
+
 ## 🤖 Supported Models / AI Companies
 
 ![Models Menu](docs/images/model_menu.png)
