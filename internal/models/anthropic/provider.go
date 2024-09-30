@@ -8,6 +8,10 @@ import (
 	"github.com/robertoseba/gennie/internal/httpclient"
 )
 
+var slugMap = map[string]string{
+	"sonnet": "claude-3-5-sonnet-20240620",
+}
+
 type AnthropicModel struct {
 	url     string
 	model   string
@@ -38,10 +42,10 @@ type AnthropicResponse struct {
 	Content []content `json:"content"`
 }
 
-func NewProvider(modelName string) *AnthropicModel {
+func NewProvider(modelSlug string) *AnthropicModel {
 
 	return &AnthropicModel{
-		model: modelName,
+		model: slugMap[modelSlug],
 	}
 }
 

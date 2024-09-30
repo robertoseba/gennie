@@ -1,4 +1,4 @@
-package base
+package models
 
 import (
 	"errors"
@@ -7,17 +7,8 @@ import (
 	"github.com/robertoseba/gennie/internal/httpclient"
 )
 
-/**
-* The Provider is only responsible for preparing the payload,
-* formatting it accordinly to the model's requirements
-* and parsing the response back to the system.
- */
-type IModelProvider interface {
-	PreparePayload(chatHistory *chat.ChatHistory, systemPrompt string) (string, error)
-	ParseResponse(response []byte) (string, error)
-	GetHeaders() map[string]string
-	GetUrl() string
-}
+var ErrEmptyChatHistory = errors.New("Chat history is empty")
+var ErrLastChatCompleted = errors.New("Last chat is already completed with answer")
 
 type BaseModel struct {
 	client        httpclient.IHttpClient
@@ -34,11 +25,11 @@ func NewBaseModel(client httpclient.IHttpClient, modelProvider IModelProvider) *
 func (m *BaseModel) CompleteChat(chatHistory *chat.ChatHistory, systemPrompt string) error {
 	lastChat, ok := chatHistory.LastChat()
 	if !ok {
-		return errors.New("Chat history is empty")
+		return ErrLastChatCompleted
 	}
 
 	if lastChat.GetAnswer() != "" {
-		return errors.New("Last chat is already completed with answer")
+		return ErrEmptyChatHistory
 	}
 
 	payload, err := m.modelProvider.PreparePayload(chatHistory, systemPrompt)

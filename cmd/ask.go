@@ -113,18 +113,23 @@ func askModel(c *cache.Cache, p *output.Printer, input *InputOptions, client htt
 	chat := chat.NewChat(input.Question)
 	c.ChatHistory.AddChat(*chat)
 
+	spinner := output.NewSpinner("Thinking...")
+	spinner.Start()
 	err := model.CompleteChat(c.ChatHistory, c.Profile.Data)
+	spinner.Stop()
 
 	if err != nil {
 		ExitWithError(err)
 	}
 
+	lastChat, _ := c.ChatHistory.LastChat()
+
 	p.PrintLine(output.Yellow)
-	p.PrintWithCodeStyling(c.ChatHistory.LastAnswer(), output.Yellow)
+	p.PrintWithCodeStyling(lastChat.GetAnswer(), output.Yellow)
 	p.PrintLine(output.Yellow)
 
 	p.Print(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(c.Model), c.Profile.Name), output.Cyan)
-	p.Print(fmt.Sprintf("Answered in: %0.2f seconds", chat.DurationSeconds()), output.Cyan)
+	p.Print(fmt.Sprintf("Answered in: %0.2f seconds", lastChat.DurationSeconds()), output.Cyan)
 	p.Print("", "")
 
 }

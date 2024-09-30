@@ -3,7 +3,6 @@ package models
 import (
 	"github.com/robertoseba/gennie/internal/httpclient"
 	"github.com/robertoseba/gennie/internal/models/anthropic"
-	"github.com/robertoseba/gennie/internal/models/base"
 	"github.com/robertoseba/gennie/internal/models/openai"
 )
 
@@ -12,7 +11,7 @@ type ModelEnum string
 const (
 	OpenAIMini   ModelEnum = "gpt-4o-mini"
 	OpenAI       ModelEnum = "gpt-4o"
-	ClaudeSonnet ModelEnum = "claude-3-5-sonnet-20240620"
+	ClaudeSonnet ModelEnum = "sonnet"
 	Maritaca     ModelEnum = "maritaca"
 )
 
@@ -36,15 +35,15 @@ func (m ModelEnum) String() string {
 func NewModel(modelType ModelEnum, client httpclient.IHttpClient) IModel {
 	switch modelType {
 	case OpenAI:
-		return base.NewBaseModel(client, openai.NewProvider(string(modelType)))
+		return NewBaseModel(client, openai.NewProvider(string(modelType)))
 	case OpenAIMini:
-		return base.NewBaseModel(client, openai.NewProvider(string(modelType)))
+		return NewBaseModel(client, openai.NewProvider(string(modelType)))
 	case ClaudeSonnet:
-		return base.NewBaseModel(client, anthropic.NewProvider(string(modelType)))
+		return NewBaseModel(client, anthropic.NewProvider(string(modelType)))
 	case Maritaca:
 		panic("Not implemented yet")
 	default:
-		return base.NewBaseModel(client, openai.NewProvider(string(modelType)))
+		return NewBaseModel(client, openai.NewProvider(string(modelType)))
 	}
 
 }

@@ -12,3 +12,15 @@ type IModel interface {
 	 */
 	CompleteChat(chatHistory *chat.ChatHistory, systemPrompt string) error
 }
+
+/**
+* The Provider is only responsible for preparing the payload,
+* formatting it accordinly to the model's requirements
+* and parsing the response back to the system.
+ */
+type IModelProvider interface {
+	PreparePayload(chatHistory *chat.ChatHistory, systemPrompt string) (string, error)
+	ParseResponse(response []byte) (string, error)
+	GetHeaders() map[string]string
+	GetUrl() string
+}
