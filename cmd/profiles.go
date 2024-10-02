@@ -15,7 +15,7 @@ func NewProfilesCmd(c *cache.Cache, p *output.Printer) *cobra.Command {
 		Use:   "profile",
 		Short: "Profile management",
 		Run: func(cmd *cobra.Command, args []string) {
-			configProfile(c)
+			configProfile(c, p)
 		},
 	}
 
@@ -72,23 +72,21 @@ func refreshProfiles(c *cache.Cache) {
 
 }
 
-func configProfile(c *cache.Cache) {
-	profiles, err := profile.LoadProfiles()
-	if err != nil {
-		ExitWithError(err)
+func configProfile(c *cache.Cache, p *output.Printer) {
+	if c.Profile == nil {
+		c.Profile = profile.LoadDefaultProfile()
 	}
 
-	if c.Profile == nil {
-		c.Profile = &profile.Profile{}
+	profiles, err := profile.LoadProfiles()
+	if err != nil {
+		p.Print(fmt.Sprintf("Could not load profiles: %s\n", err.Error()), output.Red)
+		profiles = make(map[string]*profile.Profile, 1)
+		profiles[c.Profile.Slug] = c.Profile
 	}
 
 	profileSlug := output.MenuProfile(profiles, c.Profile.Slug)
 
 	if profileSlug == "" {
-		return
-	}
-
-	if profileSlug == c.Profile.Slug {
 		return
 	}
 

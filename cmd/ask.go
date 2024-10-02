@@ -41,7 +41,12 @@ func NewAskCmd(c *cache.Cache, p *output.Printer, h httpclient.IHttpClient) *cob
 				Profile:    profileFlag,
 			}
 
+			if input.Profile == "" && c.Profile == nil {
+				c.SetProfile(profile.LoadDefaultProfile())
+			}
+
 			if input.Profile != "" {
+				//todo: should only use cache here.
 				profiles, err := profile.LoadProfiles()
 				if err != nil {
 					ExitWithError(err)
@@ -57,10 +62,6 @@ func NewAskCmd(c *cache.Cache, p *output.Printer, h httpclient.IHttpClient) *cob
 
 			if input.Model == "" && c.Model == "" {
 				c.Model = string(models.DefaultModel)
-			}
-
-			if input.Profile == "" && c.Profile == nil {
-				c.SetProfile(profile.CreateDefaultProfile())
 			}
 
 			askModel(c, p, input, h)

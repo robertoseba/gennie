@@ -220,6 +220,57 @@ func TestIfNoModelNorProfileInCacheNorFlagUsesDefault(t *testing.T) {
 	}
 }
 
+func TestUsesProfileFromFlag(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	mockClient := mock_httpclient.NewMockIHttpClient(ctrl)
+
+	httpResponse := mockOpenAiResponse("The meaning of life is 41")
+
+	mockClient.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(httpResponse), nil)
+
+	out := bytes.NewBufferString("")
+
+	printer := output.NewPrinter(out, nil)
+
+	cache := setupTestCache()
+
+	c := NewAskCmd(cache, printer, mockClient)
+
+	// os.Setenv("GENNIE_PROFILES_PATH",os.Get )
+	c.SetArgs([]string{"ask what is the meaning of life?", "-p=linux"})
+	c.Execute()
+
+	if cache.Profile.Slug != "linux" {
+		t.Errorf("Expected profile to be linux but got %s", cache.Profile.Slug)
+	}
+}
+
+func TestUsesProfileFromCacheIfNotSpecified(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	mockClient := mock_httpclient.NewMockIHttpClient(ctrl)
+
+	httpResponse := mockOpenAiResponse("The meaning of life is 41")
+
+	mockClient.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(httpResponse), nil)
+
+	out := bytes.NewBufferString("")
+
+	printer := output.NewPrinter(out, nil)
+
+	cache := setupTestCache()
+
+	c := NewAskCmd(cache, printer, mockClient)
+
+	c.SetArgs([]string{"ask what is the meaning of life?"})
+	c.Execute()
+
+	if cache.Profile.Slug != "test" {
+		t.Errorf("Expected profile to be test but got %s", cache.Profile.Slug)
+	}
+}
+
 func setupTestCache() *cache.Cache {
 	return &cache.Cache{
 		Model: "gpt-4o-mini",

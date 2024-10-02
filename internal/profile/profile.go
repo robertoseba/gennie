@@ -2,7 +2,6 @@ package profile
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"path"
@@ -18,26 +17,27 @@ type Profile struct {
 }
 
 func LoadProfiles() (map[string]*Profile, error) {
-	const profileDir = "gennie/profiles"
+	const gennieConfigDir = "gennie"
+	const gennieProfilesDir = "profiles"
 
 	profilesPath := os.Getenv("GINNIE_PROFILES_PATH")
 	if profilesPath == "" {
-
 		configDir, err := os.UserConfigDir()
+		profilesPath = path.Join(configDir, gennieConfigDir, gennieProfilesDir)
 
-		if err != nil {
+		_, errStats := os.Stat(profilesPath)
+
+		if err != nil || os.IsNotExist(errStats) {
 			curr, err := os.Getwd()
 			if err != nil {
 				return nil, err
 			}
-			profilesPath = path.Join(curr, profileDir)
+			profilesPath = path.Join(curr, gennieProfilesDir)
 		}
-
-		profilesPath = path.Join(configDir, profileDir)
 	}
 
 	if _, err := os.Stat(profilesPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("No profiles folder in %s", profilesPath)
+		return nil, ErrNoFolder{Path: profilesPath}
 	}
 
 	profileFiles, err := loadFileNames(profilesPath)
@@ -46,12 +46,12 @@ func LoadProfiles() (map[string]*Profile, error) {
 		return nil, err
 	}
 	if len(profileFiles) == 0 {
-		return nil, fmt.Errorf("No profiles found in %s", profilesPath)
+		return nil, ErrNoProfiles{profilesPath}
 	}
 
 	profiles := make(map[string]*Profile, len(profileFiles)+1)
 
-	defaultProfile := CreateDefaultProfile()
+	defaultProfile := LoadDefaultProfile()
 	profiles[defaultProfile.Slug] = defaultProfile
 
 	for _, profileFile := range profileFiles {
@@ -110,7 +110,7 @@ func LoadProfileFromFile(profilePath string) (*Profile, error) {
 	return profile, nil
 }
 
-func CreateDefaultProfile() *Profile {
+func LoadDefaultProfile() *Profile {
 	return &Profile{
 		Name:   "Default assistant",
 		Author: "gennie",
