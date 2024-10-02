@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewRootCmd(c *cache.Cache, p *output.Printer, h httpclient.IHttpClient) *cobra.Command {
+func NewRootCmd(version string, c *cache.Cache, p *output.Printer, h httpclient.IHttpClient) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "gennie",
 		Short: "Gennie is a cli assistant with multiple models and profile support.",
@@ -19,6 +19,6 @@ func NewRootCmd(c *cache.Cache, p *output.Printer, h httpclient.IHttpClient) *co
 	rootCmd.AddCommand(NewStatusCmd(c, p))
 	rootCmd.AddCommand(NewExportCmd(c, p))
 	rootCmd.AddCommand(NewClearCmd(c, p))
-
+	rootCmd.AddCommand(NewVersionCmd(version))
 	return rootCmd
 }
