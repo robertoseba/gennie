@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/robertoseba/gennie/internal/common"
+	"github.com/robertoseba/gennie/internal/profile"
 )
 
 func TestNewCacheHasNewConfig(t *testing.T) {
@@ -91,5 +92,21 @@ func TestGetProfileWithInexistentSlug(t *testing.T) {
 
 	if !errors.Is(err, ErrNoProfileSlug) {
 		t.Errorf("Expected ErrNoProfileSlug, got: %v", err)
+	}
+}
+
+func TestGetProfileForDefaultSlug(t *testing.T) {
+	c := NewCache(".cache_temp")
+
+	profileRetrieved, err := c.GetProfile("default")
+
+	if err != nil {
+		t.Errorf("Error while getting profile: %v", err)
+	}
+
+	defaultExpected := profile.DefaultProfile()
+
+	if *profileRetrieved != *defaultExpected {
+		t.Errorf("Expected default profile, got: %v", profileRetrieved)
 	}
 }

@@ -50,7 +50,6 @@ func (c *Cache) GetProfile(profileSlug string) (*profile.Profile, error) {
 	}
 
 	filename, ok := c.CachedProfilesPath[profileSlug]
-
 	if !ok {
 		return nil, ErrNoProfileSlug
 	}
