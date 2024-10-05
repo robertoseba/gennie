@@ -2,35 +2,37 @@ package cache
 
 import (
 	"encoding/gob"
-	"fmt"
+	"encoding/json"
+	"io"
 	"os"
 
 	"github.com/robertoseba/gennie/internal/chat"
+	"github.com/robertoseba/gennie/internal/common"
 	"github.com/robertoseba/gennie/internal/profile"
 )
 
 type Cache struct {
-	Model            string
-	Profile          *profile.Profile
-	FilePath         string
-	ChatHistory      *chat.ChatHistory
-	ProfileFilenames map[string]string // map[profileSlug]filename
+	Config             common.Config
+	CachedProfilesPath map[string]string // map[profileSlug]filepath
+	ChatHistory        chat.ChatHistory  //Not using pointers so we garantee immutability of chat in cache
+	filePath           string
 }
 
-func (c *Cache) SetModel(modelName string) {
-	c.Model = modelName
-}
-
-func (c *Cache) SetProfile(profile *profile.Profile) {
-	c.Profile = profile
+func NewCache(filePath string) *Cache {
+	return &Cache{
+		Config:             common.NewConfig(),
+		CachedProfilesPath: map[string]string{},
+		ChatHistory:        chat.NewChatHistory(),
+		filePath:           filePath,
+	}
 }
 
 func (c *Cache) Save() error {
-	if c.FilePath == "" {
+	if c.filePath == "" {
 		return nil
 	}
 
-	file, err := os.Create(c.FilePath)
+	file, err := os.Create(c.filePath)
 	if err != nil {
 		return err
 	}
@@ -42,22 +44,56 @@ func (c *Cache) Save() error {
 	return nil
 }
 
-func (c *Cache) Clear() error {
-	if c.FilePath == "" {
-		return nil
+func (c *Cache) GetProfile(profileSlug string) (*profile.Profile, error) {
+	if profileSlug == "default" {
+		return profile.DefaultProfile(), nil
 	}
 
-	if _, err := os.Stat(c.FilePath); os.IsNotExist(err) {
-		return fmt.Errorf("Cache has not been created yet")
+	filename, ok := c.CachedProfilesPath[profileSlug]
+
+	if !ok {
+		return nil, ErrNoProfileSlug
 	}
 
-	c.resetCache()
+	data, err := loadFile(filename)
+	if err != nil {
+		return nil, err
+	}
 
-	return os.Remove(c.FilePath)
+	return jsonToProfile(data)
 }
 
-func (c *Cache) resetCache() {
-	c.Model = ""
-	c.Profile = nil
-	c.ChatHistory = chat.NewChatHistory()
+func (c *Cache) GetProfileSlugs() []string {
+	slugs := make([]string, 0, len(c.CachedProfilesPath))
+	for k := range c.CachedProfilesPath {
+		slugs = append(slugs, k)
+	}
+	return slugs
+}
+
+func loadFile(path string) ([]byte, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+	return data, err
+}
+
+func jsonToProfile(data []byte) (*profile.Profile, error) {
+	profile := &profile.Profile{}
+
+	err := json.Unmarshal(data, profile)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return profile, nil
 }

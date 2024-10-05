@@ -74,7 +74,7 @@ func refreshProfiles(c *cache.Cache) {
 
 func configProfile(c *cache.Cache, p *output.Printer) {
 	if c.Profile == nil {
-		c.Profile = profile.LoadDefaultProfile()
+		c.Profile = profile.DefaultProfile()
 	}
 
 	profiles, err := profile.LoadProfiles()

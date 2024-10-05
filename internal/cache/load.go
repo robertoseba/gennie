@@ -4,25 +4,14 @@ import (
 	"encoding/gob"
 	"os"
 	"path"
-
-	"github.com/robertoseba/gennie/internal/chat"
 )
 
 const cacheFile = ".cache"
 
-func Load() (*Cache, error) {
-	filePath, err := getCacheFilePath()
-	if err != nil {
-		return nil, err
-	}
-
+func RestoreFrom(filePath string) (*Cache, error) {
+	// If file does not exist, returns a new cache
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		return &Cache{
-			Model:       "",
-			Profile:     nil,
-			FilePath:    filePath,
-			ChatHistory: chat.NewChatHistory(),
-		}, nil
+		return nil, ErrNoCacheFile
 	}
 
 	cache, err := readFrom(filePath)
@@ -30,7 +19,7 @@ func Load() (*Cache, error) {
 		return nil, err
 	}
 
-	cache.FilePath = filePath
+	cache.filePath = filePath
 
 	return cache, nil
 }
@@ -39,9 +28,7 @@ func Load() (*Cache, error) {
  * It will try to use the system cache directory,
  * if it fails it will fallback to the current directory.
  */
-func getCacheFilePath() (string, error) {
-
-	//TODO: Add support for env var to set cache dir
+func GetCacheFilePath() (string, error) {
 
 	systemCacheDir, err := os.UserCacheDir()
 	if err != nil || systemCacheDir == "" {
@@ -69,13 +56,13 @@ func readFrom(filename string) (*Cache, error) {
 	}
 	defer file.Close()
 
-	var cache Cache
+	var persistence Cache
 	decoder := gob.NewDecoder(file)
-	if err := decoder.Decode(&cache); err != nil {
+	if err := decoder.Decode(&persistence); err != nil {
 		return nil, err
 	}
 
-	return &cache, nil
+	return &persistence, nil
 }
 
 func fallbackPathAsCurrentDir() (string, error) {

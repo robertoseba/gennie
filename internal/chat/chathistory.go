@@ -4,8 +4,8 @@ type ChatHistory struct {
 	Responses []Chat
 }
 
-func NewChatHistory() *ChatHistory {
-	return &ChatHistory{
+func NewChatHistory() ChatHistory {
+	return ChatHistory{
 		Responses: nil,
 	}
 }

@@ -42,7 +42,7 @@ func NewAskCmd(c *cache.Cache, p *output.Printer, h httpclient.IHttpClient) *cob
 			}
 
 			if input.Profile == "" && c.Profile == nil {
-				c.SetProfile(profile.LoadDefaultProfile())
+				c.SetProfile(profile.DefaultProfile())
 			}
 
 			if input.Profile != "" {
