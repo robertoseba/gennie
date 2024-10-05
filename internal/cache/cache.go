@@ -44,6 +44,10 @@ func (c *Cache) Save() error {
 	return nil
 }
 
+func (c *Cache) GetCacheFilePath() string {
+	return c.filePath
+}
+
 func (c *Cache) GetConfig() common.Config {
 	return c.Config
 }

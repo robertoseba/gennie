@@ -15,8 +15,8 @@ func NewRootCmd(version string, persistence common.IPersistence, p *output.Print
 
 	rootCmd.AddCommand(NewModelCmd(persistence, p))
 	rootCmd.AddCommand(NewProfilesCmd(persistence, p))
+	rootCmd.AddCommand(NewStatusCmd(persistence, p))
 	// rootCmd.AddCommand(NewAskCmd(persistence, p, h))
-	// rootCmd.AddCommand(NewStatusCmd(persistence, p))
 	// rootCmd.AddCommand(NewExportCmd(persistence, p))
 	// rootCmd.AddCommand(NewClearCmd(persistence, p))
 	rootCmd.AddCommand(NewVersionCmd(version))

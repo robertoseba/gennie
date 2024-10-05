@@ -12,4 +12,5 @@ type IPersistence interface {
 	GetProfileSlugs() []string
 	GetChatHistory() chat.ChatHistory
 	SetChatHistory(chat.ChatHistory)
+	GetCacheFilePath() string
 }

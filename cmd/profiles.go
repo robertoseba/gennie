@@ -13,8 +13,6 @@ func NewProfilesCmd(persistence common.IPersistence, p *output.Printer) *cobra.C
 		Short: "Profile management",
 		Run: func(cmd *cobra.Command, args []string) {
 			config := persistence.GetConfig()
-			// profileFiles := persistence.GetProfileFiles()
-			//Load all profiles from files in map[slug]profile
 			availableProfiles := persistence.GetProfileSlugs()
 
 			if len(availableProfiles) == 0 {
