@@ -2,11 +2,10 @@ package output
 
 import (
 	"github.com/robertoseba/gennie/internal/models"
-	"github.com/robertoseba/gennie/internal/profile"
 )
 
 // TODO: create in menu a NewMenu that receivees titles and items[names, values] and returns a menu
-func MenuModel(m []models.ModelEnum, selected models.ModelEnum) models.ModelEnum {
+func MenuModel(m []models.ModelEnum, selected models.ModelEnum) string {
 	menu := NewMenu("Select a model:")
 
 	idxSelected := 0
@@ -19,24 +18,20 @@ func MenuModel(m []models.ModelEnum, selected models.ModelEnum) models.ModelEnum
 		idx++
 	}
 
-	selection := menu.Display(idxSelected)
-
-	model := models.ModelEnum(selection)
-	return model
+	return menu.Display(idxSelected)
 }
 
-func MenuProfile(profiles map[string]*profile.Profile, selected string) string {
+func MenuProfile(profiles []string, selected string) string {
 	menu := NewMenu("Select the profile you want to activate:")
 	idxSelected := 0
 	idx := 0
-	for slug := range profiles {
+	for _, slug := range profiles {
 		if slug == selected {
 			idxSelected = idx
 		}
-		menu.AddItem(profiles[slug].Name, slug)
+		menu.AddItem(slug, slug)
 		idx++
 	}
-	selection := menu.Display(idxSelected)
 
-	return selection
+	return menu.Display(idxSelected)
 }

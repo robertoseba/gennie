@@ -6,11 +6,10 @@ import (
 )
 
 type IPersistence interface {
-	Save() error
-	Clear() error
 	GetConfig() Config
 	SetConfig(Config)
-	GetProfile(string) (profile.Profile, error)
+	GetProfile(string) (*profile.Profile, error)
+	GetProfileSlugs() []string
 	GetChatHistory() chat.ChatHistory
 	SetChatHistory(chat.ChatHistory)
 }

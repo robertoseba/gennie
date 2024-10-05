@@ -44,6 +44,22 @@ func (c *Cache) Save() error {
 	return nil
 }
 
+func (c *Cache) GetConfig() common.Config {
+	return c.Config
+}
+
+func (c *Cache) SetConfig(config common.Config) {
+	c.Config = config
+}
+
+func (c *Cache) GetChatHistory() chat.ChatHistory {
+	return c.ChatHistory
+}
+
+func (c *Cache) SetChatHistory(chatHistory chat.ChatHistory) {
+	c.ChatHistory = chatHistory
+}
+
 func (c *Cache) GetProfile(profileSlug string) (*profile.Profile, error) {
 	if profileSlug == "default" {
 		return profile.DefaultProfile(), nil
