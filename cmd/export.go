@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/robertoseba/gennie/internal/cache"
+	"github.com/robertoseba/gennie/internal/common"
 	"github.com/robertoseba/gennie/internal/output"
 	"github.com/spf13/cobra"
 )
 
-func NewExportCmd(c *cache.Cache, p *output.Printer) *cobra.Command {
+func NewExportCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 
 	cmdExport := &cobra.Command{
 		Use:   "export",
@@ -17,7 +17,7 @@ func NewExportCmd(c *cache.Cache, p *output.Printer) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			p.Print(fmt.Sprintf("Exporting chat history to file %s", args[0]), output.Cyan)
-			err := exportChatHistory(c, args[0])
+			err := exportChatHistory(storage, args[0])
 			if err != nil {
 				ExitWithError(err)
 			}
@@ -27,12 +27,15 @@ func NewExportCmd(c *cache.Cache, p *output.Printer) *cobra.Command {
 	return cmdExport
 }
 
-func exportChatHistory(c *cache.Cache, filename string) error {
+func exportChatHistory(storage common.IStorage, filename string) error {
 	f, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
-	for _, chat := range c.ChatHistory.Responses {
+
+	chatHistory := storage.GetChatHistory()
+
+	for _, chat := range chatHistory.Responses {
 		var err error
 		_, err = f.WriteString(fmt.Sprintf("## Question: %s\n", chat.GetQuestion()))
 		if err != nil {

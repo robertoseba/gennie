@@ -9,36 +9,36 @@ import (
 	"github.com/robertoseba/gennie/internal/chat"
 )
 
-func TestCacheDefaultPath(t *testing.T) {
+func TestStorageDefaultPath(t *testing.T) {
 
-	cachePath, err := GetCacheFilePath()
+	storePath, err := GetStorageFilepath()
 	expectedPath := "/gennie/.cache"
 
 	if err != nil {
 		t.Error("Error while getting cache path")
 	}
-	if !strings.HasSuffix(cachePath, expectedPath) {
-		t.Errorf("Default cache path should end with: /gennie/.cache, got: %s", cachePath)
+	if !strings.HasSuffix(storePath, expectedPath) {
+		t.Errorf("Default storage path should end with: /gennie/.cache, got: %s", storePath)
 	}
 }
 
 func TestRestoreFromNonExistentFile(t *testing.T) {
 	_, err := RestoreFrom("non_existent_file")
-	if !errors.Is(err, ErrNoCacheFile) {
+	if !errors.Is(err, ErrNoStoreFile) {
 		t.Errorf("Expected error to be ErrNoCacheFile, got: %v", err)
 	}
 }
 
 func TestRestoreFrom(t *testing.T) {
 	cachePath := ".cache_temp"
-	c := NewCache(cachePath)
+	c := NewStorage(cachePath)
 
 	chatHistory := chat.NewChatHistory()
 	chat := chat.NewChat("question")
 	chatHistory.AddChat(*chat)
 	c.ChatHistory = chatHistory
 
-	c.Config.CurrModelSlug = "testModelSlug"
+	c.CurrModelSlug = "testModelSlug"
 
 	c.Save()
 
@@ -56,8 +56,8 @@ func TestRestoreFrom(t *testing.T) {
 		t.Errorf("Expected restored cache Config to be %v, got: %v", c.Config, restoredCache.Config)
 	}
 
-	if restoredCache.CachedProfilesPath == nil {
-		t.Errorf("Expected restored cache CachedProfilesPath to be %v, got: %v", c.CachedProfilesPath, restoredCache.CachedProfilesPath)
+	if restoredCache.CachedProfiles == nil {
+		t.Errorf("Expected restored cache CachedProfilesPath to be %v, got: %v", c.CachedProfiles, restoredCache.CachedProfiles)
 	}
 
 	if restoredCache.ChatHistory.LastQuestion() != "question" {

@@ -3,8 +3,6 @@ package main
 import (
 	_ "embed"
 	"errors"
-	"fmt"
-	"os"
 
 	"github.com/robertoseba/gennie/cmd"
 	"github.com/robertoseba/gennie/internal/cache"
@@ -16,30 +14,33 @@ import (
 var version string
 
 func main() {
-	cachePath, err := cache.GetCacheFilePath()
+	storagePath, err := cache.GetStorageFilepath()
 	if err != nil {
 		cmd.ExitWithError(err)
 	}
 
-	persistence, err := cache.RestoreFrom(cachePath)
+	storage, err := cache.RestoreFrom(storagePath)
 
-	if errors.Is(err, cache.ErrNoCacheFile) {
-		persistence = cache.NewCache(cachePath)
-		//run cmd config
-		fmt.Println("No cache found, let's start config.")
-		os.Exit(0)
-	}
+	shouldConfig := false
 
 	if err != nil {
-		cmd.ExitWithError(err)
+		if errors.Is(err, cache.ErrNoStoreFile) {
+			storage = cache.NewStorage(storagePath)
+			shouldConfig = true
+		} else {
+			cmd.ExitWithError(err)
+		}
 	}
 
-	defer persistence.Save()
+	defer storage.Save()
 
 	httpClient := httpclient.NewClient()
-
 	printer := output.NewPrinter(nil, nil)
 
-	cmd.NewRootCmd(version, persistence, printer, httpClient).Execute()
+	command := cmd.NewRootCmd(version, storage, printer, httpClient)
+	if shouldConfig {
+		command.SetArgs([]string{"config"})
+	}
+	command.Execute()
 
 }

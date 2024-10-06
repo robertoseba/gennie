@@ -271,8 +271,8 @@ func TestUsesProfileFromCacheIfNotSpecified(t *testing.T) {
 	}
 }
 
-func setupTestCache() *cache.Cache {
-	return &cache.Cache{
+func setupTestCache() *cache.Storage {
+	return &cache.Storage{
 		Model: "gpt-4o-mini",
 		Profile: &profile.Profile{
 			Name:   "test",

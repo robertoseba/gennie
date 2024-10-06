@@ -7,16 +7,15 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/robertoseba/gennie/internal/cache"
 	"github.com/robertoseba/gennie/internal/chat"
+	"github.com/robertoseba/gennie/internal/common"
 	"github.com/robertoseba/gennie/internal/httpclient"
 	"github.com/robertoseba/gennie/internal/models"
 	"github.com/robertoseba/gennie/internal/output"
-	"github.com/robertoseba/gennie/internal/profile"
 	"github.com/spf13/cobra"
 )
 
-func NewAskCmd(c *cache.Cache, p *output.Printer, h httpclient.IHttpClient) *cobra.Command {
+func NewAskCmd(storage common.IStorage, p *output.Printer, h httpclient.IHttpClient) *cobra.Command {
 
 	var isFollowUpFlag bool
 	var appendFileFlag string
@@ -37,36 +36,21 @@ func NewAskCmd(c *cache.Cache, p *output.Printer, h httpclient.IHttpClient) *cob
 				Question:   strings.Join(args, " "),
 				IsFollowUp: isFollowUpFlag,
 				AppendFile: appendFileFlag,
-				Model:      modelFlag,
-				Profile:    profileFlag,
 			}
 
-			if input.Profile == "" && c.Profile == nil {
-				c.SetProfile(profile.DefaultProfile())
-			}
-
-			if input.Profile != "" {
-				//todo: should only use cache here.
-				profiles, err := profile.LoadProfiles()
+			if profileFlag != "" {
+				profile, err := storage.LoadProfileData(input.Profile)
 				if err != nil {
 					ExitWithError(err)
 				}
-				p, ok := profiles[input.Profile]
-
-				if !ok {
-					ExitWithError(fmt.Errorf("Profile %s not found. Please use gennie profile list to check available profiles.", input.Profile))
-				}
-
-				c.SetProfile(p)
+				storage.SetCurrProfile(*profile)
 			}
 
-			if input.Model == "" && c.Model == "" {
-				c.Model = string(models.DefaultModel)
+			if modelFlag != "" {
+				storage.SetCurrModelSlug(modelFlag)
 			}
 
-			askModel(c, p, input, h)
-
-			c.Save()
+			askModel(storage, p, input, h)
 
 			return nil
 		},
@@ -88,18 +72,16 @@ type InputOptions struct {
 	Profile    string
 }
 
-func askModel(c *cache.Cache, p *output.Printer, input *InputOptions, client httpclient.IHttpClient) {
+func askModel(storage common.IStorage, p *output.Printer, input *InputOptions, client httpclient.IHttpClient) {
 
 	var model models.IModel
 
-	if input.Model != "" {
-		c.SetModel(input.Model)
-	}
+	model = models.NewModel(models.ModelEnum(storage.GetCurrModelSlug()), client)
 
-	model = models.NewModel(models.ModelEnum(c.Model), client)
+	chatHistory := storage.GetChatHistory()
 
-	if !input.IsFollowUp && c.ChatHistory != nil {
-		c.ChatHistory.Clear()
+	if !input.IsFollowUp && chatHistory.Len() > 0 {
+		chatHistory.Clear()
 	}
 
 	if input.AppendFile != "" {
@@ -112,24 +94,24 @@ func askModel(c *cache.Cache, p *output.Printer, input *InputOptions, client htt
 	}
 
 	chat := chat.NewChat(input.Question)
-	c.ChatHistory.AddChat(*chat)
+	chatHistory.AddChat(*chat)
 
 	spinner := output.NewSpinner("Thinking...")
 	spinner.Start()
-	err := model.CompleteChat(c.ChatHistory, c.Profile.Data)
+	err := model.CompleteChat(&chatHistory, storage.GetCurrProfile().Data)
 	spinner.Stop()
 
 	if err != nil {
 		ExitWithError(err)
 	}
 
-	lastChat, _ := c.ChatHistory.LastChat()
+	lastChat, _ := chatHistory.LastChat()
 
 	p.PrintLine(output.Yellow)
 	p.PrintWithCodeStyling(lastChat.GetAnswer(), output.Yellow)
 	p.PrintLine(output.Yellow)
 
-	p.Print(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(c.Model), c.Profile.Name), output.Cyan)
+	p.Print(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(storage.GetCurrModelSlug()), storage.GetCurrProfile().Name), output.Cyan)
 	p.Print(fmt.Sprintf("Answered in: %0.2f seconds", lastChat.DurationSeconds()), output.Cyan)
 	p.Print("", "")
 

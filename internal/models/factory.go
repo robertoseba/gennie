@@ -28,7 +28,7 @@ func (m ModelEnum) String() string {
 	case Maritaca:
 		return "Maritaca (USP-BR)"
 	default:
-		panic("Invalid model")
+		return DefaultModel.String()
 	}
 }
 

@@ -98,6 +98,17 @@ func (p *Printer) Print(message string, color Color) {
 	fmt.Fprintf(p.Stdout, "%s", Reset)
 }
 
+func (p *Printer) Ask(message string, color Color) string {
+	fmt.Fprintf(p.Stdout, "%s", color)
+	fmt.Fprintf(p.Stdout, message)
+	fmt.Fprintf(p.Stdout, "%s", Reset)
+
+	var input string
+	fmt.Scanln(&input)
+
+	return input
+}
+
 func (p *Printer) wrapWithMargins(text string, initial []string) []string {
 	if len(text)+p.marginSize*2 <= p.width {
 		return append(initial, text)

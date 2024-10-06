@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewStatusCmd(persistence common.IPersistence, p *output.Printer) *cobra.Command {
+func NewStatusCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 
 	cmdStatus := &cobra.Command{
 		Use:   "status",
@@ -17,18 +17,37 @@ func NewStatusCmd(persistence common.IPersistence, p *output.Printer) *cobra.Com
 		Long:  `Use it to check the current status of ginnie. You can check the model, profile and more!`,
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			config := persistence.GetConfig()
+
+			profile := storage.GetCurrProfile()
 
 			p.PrintLine(output.Yellow)
-			p.Print(fmt.Sprintf("Model: %s ", models.ModelEnum(config.CurrModelSlug)), output.Cyan)
+			p.Print(fmt.Sprintf("Model: %s ", models.ModelEnum(storage.GetCurrModelSlug())), output.Cyan)
 			p.PrintLine(output.Yellow)
-			p.Print(fmt.Sprintf("Profile name: %s", config.CurrProfile.Name), output.Gray)
-			p.Print(fmt.Sprintf("Profile description: %s", config.CurrProfile.Data), output.Gray)
-			p.Print("", "")
-			p.Print(fmt.Sprintf("Cache saved at: %s", persistence.GetCacheFilePath()), output.Gray)
+			p.Print(fmt.Sprintf("Profile name: %s", profile.Name), output.Gray)
+			p.Print(fmt.Sprintf("Profile description: %s", profile.Data), output.Gray)
+
+			config := storage.GetConfig()
+
+			p.PrintLine(output.Yellow)
+			p.Print("API Keys", output.Cyan)
+			apiKeyStatus("Open AI API Key", config.OpenAiApiKey, p)
+			apiKeyStatus("Anthropic API Key", config.AnthropicApiKey, p)
+			apiKeyStatus("Maritaca API Key", config.MaritacaApiKey, p)
+
+			p.PrintLine(output.Yellow)
+			p.Print(fmt.Sprintf("Profiles path: %s", config.ProfilesPath), output.Gray)
+			p.Print(fmt.Sprintf("Cache saved at: %s", storage.GetStorageFilepath()), output.Gray)
 			p.PrintLine(output.Yellow)
 		},
 	}
 
 	return cmdStatus
+}
+
+func apiKeyStatus(text string, apiKey string, p *output.Printer) {
+	if apiKey != "" {
+		p.Print(fmt.Sprintf("%s: Set", text), output.Green)
+	} else {
+		p.Print(fmt.Sprintf("%s: Not Set", text), output.Red)
+	}
 }

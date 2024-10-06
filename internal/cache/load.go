@@ -6,57 +6,56 @@ import (
 	"path"
 )
 
-const cacheFile = ".cache"
+const storageDefaultFile = ".cache"
 
-func RestoreFrom(filePath string) (*Cache, error) {
-	// If file does not exist, returns a new cache
+func RestoreFrom(filePath string) (*Storage, error) {
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		return nil, ErrNoCacheFile
+		return nil, ErrNoStoreFile
 	}
 
-	cache, err := readFrom(filePath)
+	store, err := decodeGob(filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	cache.filePath = filePath
+	store.filePath = filePath
 
-	return cache, nil
+	return store, nil
 }
 
 /**
  * It will try to use the system cache directory,
  * if it fails it will fallback to the current directory.
  */
-func GetCacheFilePath() (string, error) {
+func GetStorageFilepath() (string, error) {
 
 	systemCacheDir, err := os.UserCacheDir()
 	if err != nil || systemCacheDir == "" {
 		return fallbackPathAsCurrentDir()
 	}
 
-	cacheDirName := "gennie"
-	cacheDirPath := path.Join(systemCacheDir, cacheDirName)
+	storageDirName := "gennie"
+	storageDirPath := path.Join(systemCacheDir, storageDirName)
 
-	if _, err := os.Stat(cacheDirPath); os.IsNotExist(err) {
+	if _, err := os.Stat(storageDirPath); os.IsNotExist(err) {
 
-		err = os.Mkdir(cacheDirPath, 0755)
+		err = os.Mkdir(storageDirPath, 0755)
 		if err != nil {
 			return fallbackPathAsCurrentDir()
 		}
 	}
 
-	return path.Join(cacheDirPath, cacheFile), nil
+	return path.Join(storageDirPath, storageDefaultFile), nil
 }
 
-func readFrom(filename string) (*Cache, error) {
+func decodeGob(filename string) (*Storage, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	var persistence Cache
+	var persistence Storage
 	decoder := gob.NewDecoder(file)
 	if err := decoder.Decode(&persistence); err != nil {
 		return nil, err
@@ -71,5 +70,5 @@ func fallbackPathAsCurrentDir() (string, error) {
 		return "", err
 	}
 
-	return path.Join(currentDir, cacheFile), nil
+	return path.Join(currentDir, storageDefaultFile), nil
 }

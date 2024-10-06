@@ -6,30 +6,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewProfilesCmd(persistence common.IPersistence, p *output.Printer) *cobra.Command {
+func NewProfilesCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 
 	cmdProfiles := &cobra.Command{
 		Use:   "profile",
 		Short: "Profile management",
 		Run: func(cmd *cobra.Command, args []string) {
-			config := persistence.GetConfig()
-			availableProfiles := persistence.GetProfileSlugs()
+			availableProfiles := storage.GetCachedProfiles()
 
 			if len(availableProfiles) == 0 {
 				p.Print("No profiles found. Please add profiles to the profiles folder.", output.Red)
 				return
 			}
 
-			selectedProfileSlug := output.MenuProfile(availableProfiles, config.CurrProfile.Slug)
+			menuMap := make(map[string]string, len(availableProfiles))
+			for slug, profile := range availableProfiles {
+				menuMap[slug] = profile.Name
+			}
 
-			profile, err := persistence.GetProfile(selectedProfileSlug)
+			selectedProfileSlug := output.MenuProfile(menuMap, storage.GetCurrProfile().Slug)
+
+			profile, err := storage.LoadProfileData(selectedProfileSlug)
 			if err != nil {
 				ExitWithError(err)
 			}
 
-			config.CurrProfile = *profile
-
-			persistence.SetConfig(config)
+			storage.SetCurrProfile(*profile)
 		},
 	}
 
@@ -39,7 +41,7 @@ func NewProfilesCmd(persistence common.IPersistence, p *output.Printer) *cobra.C
 		Run: func(cmd *cobra.Command, args []string) {
 			p.PrintLine(output.Yellow)
 
-			availableProfiles := persistence.GetProfileSlugs()
+			availableProfiles := storage.GetCachedProfiles()
 
 			if len(availableProfiles) == 0 {
 				p.Print("No profiles found. Please add profiles to the profiles folder.", output.Red)
@@ -48,7 +50,7 @@ func NewProfilesCmd(persistence common.IPersistence, p *output.Printer) *cobra.C
 
 			p.Print("Available Profiles: ", output.Cyan)
 
-			for _, slug := range persistence.GetProfileSlugs() {
+			for slug, _ := range availableProfiles {
 				p.Print(slug, output.Gray)
 			}
 			p.PrintLine(output.Yellow)

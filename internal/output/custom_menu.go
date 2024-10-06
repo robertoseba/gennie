@@ -21,15 +21,15 @@ func MenuModel(m []models.ModelEnum, selected models.ModelEnum) string {
 	return menu.Display(idxSelected)
 }
 
-func MenuProfile(profiles []string, selected string) string {
+func MenuProfile(profiles map[string]string, selected string) string {
 	menu := NewMenu("Select the profile you want to activate:")
 	idxSelected := 0
 	idx := 0
-	for _, slug := range profiles {
+	for slug, name := range profiles {
 		if slug == selected {
 			idxSelected = idx
 		}
-		menu.AddItem(slug, slug)
+		menu.AddItem(name, slug)
 		idx++
 	}
 

@@ -11,23 +11,27 @@ import (
 	"github.com/robertoseba/gennie/internal/profile"
 )
 
-type Cache struct {
-	Config             common.Config
-	CachedProfilesPath map[string]string // map[profileSlug]filepath
-	ChatHistory        chat.ChatHistory  //Not using pointers so we garantee immutability of chat in cache
-	filePath           string
+type Storage struct {
+	Config         common.Config
+	CurrModelSlug  string
+	CurrProfile    profile.Profile
+	CachedProfiles map[string]profile.ProfileInfo // map[profileSlug]ProfileCache
+	ChatHistory    chat.ChatHistory               //Not using pointers so we garantee immutability of chat in cache
+	filePath       string
 }
 
-func NewCache(filePath string) *Cache {
-	return &Cache{
-		Config:             common.NewConfig(),
-		CachedProfilesPath: map[string]string{},
-		ChatHistory:        chat.NewChatHistory(),
-		filePath:           filePath,
+func NewStorage(filePath string) *Storage {
+	return &Storage{
+		Config:         common.NewConfig(),
+		CurrModelSlug:  "default",
+		CurrProfile:    *profile.DefaultProfile(),
+		CachedProfiles: map[string]profile.ProfileInfo{},
+		ChatHistory:    chat.NewChatHistory(),
+		filePath:       filePath,
 	}
 }
 
-func (c *Cache) Save() error {
+func (c *Storage) Save() error {
 	if c.filePath == "" {
 		return nil
 	}
@@ -44,37 +48,53 @@ func (c *Cache) Save() error {
 	return nil
 }
 
-func (c *Cache) GetCacheFilePath() string {
+func (c *Storage) GetCurrModelSlug() string {
+	return c.CurrModelSlug
+}
+
+func (c *Storage) SetCurrModelSlug(slug string) {
+	c.CurrModelSlug = slug
+}
+
+func (c *Storage) GetCurrProfile() profile.Profile {
+	return c.CurrProfile
+}
+
+func (c *Storage) SetCurrProfile(profile profile.Profile) {
+	c.CurrProfile = profile
+}
+
+func (c *Storage) GetStorageFilepath() string {
 	return c.filePath
 }
 
-func (c *Cache) GetConfig() common.Config {
+func (c *Storage) GetConfig() common.Config {
 	return c.Config
 }
 
-func (c *Cache) SetConfig(config common.Config) {
+func (c *Storage) SetConfig(config common.Config) {
 	c.Config = config
 }
 
-func (c *Cache) GetChatHistory() chat.ChatHistory {
+func (c *Storage) GetChatHistory() chat.ChatHistory {
 	return c.ChatHistory
 }
 
-func (c *Cache) SetChatHistory(chatHistory chat.ChatHistory) {
+func (c *Storage) SetChatHistory(chatHistory chat.ChatHistory) {
 	c.ChatHistory = chatHistory
 }
 
-func (c *Cache) GetProfile(profileSlug string) (*profile.Profile, error) {
+func (c *Storage) LoadProfileData(profileSlug string) (*profile.Profile, error) {
 	if profileSlug == "default" {
 		return profile.DefaultProfile(), nil
 	}
 
-	filename, ok := c.CachedProfilesPath[profileSlug]
+	profileInfo, ok := c.CachedProfiles[profileSlug]
 	if !ok {
 		return nil, ErrNoProfileSlug
 	}
 
-	data, err := loadFile(filename)
+	data, err := loadFile(profileInfo.Filepath)
 	if err != nil {
 		return nil, err
 	}
@@ -82,12 +102,16 @@ func (c *Cache) GetProfile(profileSlug string) (*profile.Profile, error) {
 	return jsonToProfile(data)
 }
 
-func (c *Cache) GetProfileSlugs() []string {
-	slugs := make([]string, 0, len(c.CachedProfilesPath))
-	for k := range c.CachedProfilesPath {
-		slugs = append(slugs, k)
-	}
-	return slugs
+func (c *Storage) Clear() {
+	c.CurrProfile = *profile.DefaultProfile()
+	c.ChatHistory = chat.NewChatHistory()
+	c.Config = common.NewConfig()
+	c.CurrModelSlug = "default"
+	c.CachedProfiles = map[string]profile.ProfileInfo{}
+}
+
+func (c *Storage) GetCachedProfiles() map[string]profile.ProfileInfo {
+	return c.CachedProfiles
 }
 
 func loadFile(path string) ([]byte, error) {
