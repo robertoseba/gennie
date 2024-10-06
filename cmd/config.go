@@ -17,9 +17,9 @@ func NewConfigCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config := storage.GetConfig()
 
-			config.OpenAiApiKey = p.Ask("Enter your Open AI API Key: ", output.Cyan)
-			config.AnthropicApiKey = p.Ask("Enter your Anthopic API Key: ", output.Cyan)
-			config.MaritacaApiKey = p.Ask("Enter your Maritaca API Key: ", output.Cyan)
+			config.OpenAiApiKey = askKey(p, "OpenAI", config.OpenAiApiKey)
+			config.AnthropicApiKey = askKey(p, "Anthropic", config.AnthropicApiKey)
+			config.MaritacaApiKey = askKey(p, "Maritaca", config.MaritacaApiKey)
 
 			defaultPath := profile.DefaultProfilePath()
 			profileFolder := p.Ask(fmt.Sprintf("Enter the path to your profiles folder or press ENTER to use Default(%s): ", defaultPath), output.Cyan)
@@ -37,4 +37,15 @@ func NewConfigCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 	}
 
 	return clearCmd
+}
+
+func askKey(p *output.Printer, key string, previousValue string) string {
+	if previousValue != "" {
+		newValue := p.Ask(fmt.Sprintf("Enter your new %s API Key (or press ENTER keep the old one): ", key), output.Cyan)
+		if newValue != "" {
+			return newValue
+		}
+		return previousValue
+	}
+	return p.Ask(fmt.Sprintf("Enter your %s API Key: ", key), output.Cyan)
 }

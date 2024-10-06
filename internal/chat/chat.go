@@ -7,28 +7,21 @@ const AssistantRole = "assistant"
 const SystemRole = "system"
 
 // Data sent to the model
-type input struct {
-	Content   string
-	Role      string
-	Timestamp time.Time
-}
-
-// Data returned by the model
-type output struct {
+type message struct {
 	Content   string
 	Role      string
 	Timestamp time.Time
 }
 
 type Chat struct {
-	Answer   output
-	Question input
+	Answer   message
+	Question message
 	Duration time.Duration
 }
 
 func NewChat(question string) *Chat {
 	return &Chat{
-		Question: input{
+		Question: message{
 			Content:   question,
 			Role:      UserRole,
 			Timestamp: time.Now(),
@@ -49,7 +42,7 @@ func (r *Chat) GetQuestion() string {
 }
 
 func (r *Chat) AddQuestion(question string) {
-	r.Question = input{
+	r.Question = message{
 		Content:   question,
 		Role:      UserRole,
 		Timestamp: time.Now(),
@@ -57,7 +50,7 @@ func (r *Chat) AddQuestion(question string) {
 }
 
 func (r *Chat) AddAnswer(answer string) {
-	r.Answer = output{
+	r.Answer = message{
 		Content:   answer,
 		Role:      AssistantRole,
 		Timestamp: time.Now(),
