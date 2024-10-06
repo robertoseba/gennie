@@ -23,7 +23,7 @@ func DefaultProfile() *Profile {
 		Name:   "Default assistant",
 		Author: "gennie",
 		Slug:   "default",
-		Data:   "You are a helpful cli assistant. Try to answer in a concise way providing the most relevant information. And examples when necesary.",
+		Data:   "You are a helpful cli assistant. Try to answer in a concise way providing the most relevant information. And examples when necessary.",
 	}
 }
 

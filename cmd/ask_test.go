@@ -62,7 +62,7 @@ func TestUsesModelFromFlag(t *testing.T) {
 
 	httpResponse := mockOpenAiResponse("The meaning of life is 42")
 
-	body := `{"model":"gpt-4o","messages":[{"role":"system","content":"You are a helpful cli assistant. Try to answer in a concise way providing the most relevant information. And examples when necesary."},{"role":"user","content":"ask what is the meaning of life?"}]}`
+	body := `{"model":"gpt-4o","messages":[{"role":"system","content":"You are a helpful cli assistant. Try to answer in a concise way providing the most relevant information. And examples when necessary."},{"role":"user","content":"ask what is the meaning of life?"}]}`
 	mockClient.EXPECT().Post(gomock.Any(), body, gomock.Any()).Return([]byte(httpResponse), nil)
 
 	out := bytes.NewBufferString("")
@@ -99,7 +99,7 @@ func TestAppendsFileContentToQuestion(t *testing.T) {
 
 	httpResponse := mockOpenAiResponse("The meaning of life is 42")
 
-	body := `{"model":"gpt-4o-mini","messages":[{"role":"system","content":"You are a helpful cli assistant. Try to answer in a concise way providing the most relevant information. And examples when necesary."},{"role":"user","content":"ask what is the meaning of life?\nThis is a file content"}]}`
+	body := `{"model":"gpt-4o-mini","messages":[{"role":"system","content":"You are a helpful cli assistant. Try to answer in a concise way providing the most relevant information. And examples when necessary."},{"role":"user","content":"ask what is the meaning of life?\nThis is a file content"}]}`
 	mockClient.EXPECT().Post(gomock.Any(), body, gomock.Any()).Return([]byte(httpResponse), nil)
 
 	out := bytes.NewBufferString("")
