@@ -13,13 +13,12 @@ release:
 		echo "VERSION variable is required"; \
 		exit 1; \
 	fi
-
 	@if [ "$(VERSION)" = "$(LATEST_TAG)" ]; then \
 		echo "Version has already been released"; \
 		exit 1; \
-	else \
-		$(shell git tag -a v$(VERSION) -m "Release version $(VERSION)"); \
-		echo "Building version $(VERSION)"; \
 	fi
+
+	git tag -a v$(VERSION) -m "Release version $(VERSION)"
+	echo "Building version $(VERSION)" 
 	@echo "$(VERSION) - Released at: $$(date +"%Y-%m-%d")" > version.txt
 	@go build -ldflags="-s -w" -o bin/ .
