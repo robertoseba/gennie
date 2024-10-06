@@ -27,7 +27,6 @@ Use `gennie profile` to manage your profiles or the `--profile` flag with the `a
 
 **Profiles are cached locally for performance:**
 
-- Set the environment variable `GINNIE_PROFILES_PATH` to customize your profile storage directory.
 - Default location: `~/.config/gennie/profiles`
 - Refresh your cached profiles with `gennie profile refresh`.
 
@@ -127,6 +126,14 @@ export PATH=${PATH}:`go env GOPATH`/bin
 
 Visit the [releases page](https://github.com/robertoseba/gennie/releases) to download the appropriate binary for your system.
 
+## 🚀 Using for the first time
+
+After installing you must configure keys and profiles folder. You can do this by running the following command:
+
+```bash
+$ gennie config
+```
+
 ## 📖 Usage
 
 ```
@@ -141,11 +148,13 @@ Available Commands:
   ask         You can ask anything here
   clear       Clears all the conversation and preferences from cache
   completion  Generate the autocompletion script for the specified shell
+  config      Configures Gennie
   export      Export the chat history to a file
   help        Help about any command
-  model       Configures which model to use.
+  model       Configures the model to use.
   profile     Profile management
   status      Shows the current status of gennie
+  version     Print the version of the Gennie
 
 Flags:
   -h, --help   help for gennie
@@ -156,12 +165,7 @@ Use "gennie [command] --help" for more information about a command.
 ## API Keys
 
 Each model requires an API key to function.
-Here are the respective environment variables and how to set it in you cli:
-
-```bash
-export OPEN_API_KEY=<your_openai_key>
-export ANTHROPIC_API_KEY=<your_anthropic_key>
-```
+Use the `gennie config` command to set your API keys.
 
 ## 🐛 Issues and Suggestions
 
