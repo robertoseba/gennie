@@ -4,6 +4,8 @@ import (
 	"github.com/robertoseba/gennie/internal/common"
 	"github.com/robertoseba/gennie/internal/httpclient"
 	"github.com/robertoseba/gennie/internal/models/anthropic"
+	"github.com/robertoseba/gennie/internal/models/groq"
+	"github.com/robertoseba/gennie/internal/models/maritaca"
 	"github.com/robertoseba/gennie/internal/models/openai"
 )
 
@@ -14,6 +16,7 @@ const (
 	OpenAI       ModelEnum = "gpt-4o"
 	ClaudeSonnet ModelEnum = "sonnet"
 	Maritaca     ModelEnum = "maritaca"
+	Groq         ModelEnum = "groq"
 )
 
 const DefaultModel = OpenAIMini
@@ -27,7 +30,9 @@ func (m ModelEnum) String() string {
 	case ClaudeSonnet:
 		return "Claude Sonnet 3.5 (ANTHROPIC)"
 	case Maritaca:
-		return "Maritaca (USP-BR)"
+		return "Maritaca (BR)"
+	case Groq:
+		return "Groq (LLAMA-3.2-3B)"
 	default:
 		return DefaultModel.String()
 	}
@@ -42,7 +47,9 @@ func NewModel(modelType ModelEnum, client httpclient.IHttpClient, config common.
 	case ClaudeSonnet:
 		return NewBaseModel(client, anthropic.NewProvider(string(modelType), config.AnthropicApiKey))
 	case Maritaca:
-		panic("Not implemented yet")
+		return NewBaseModel(client, maritaca.NewProvider(string(modelType), config.MaritacaApiKey))
+	case Groq:
+		return NewBaseModel(client, groq.NewProvider(string(modelType), config.GroqApiKey))
 	default:
 		return NewBaseModel(client, openai.NewProvider(string(DefaultModel), config.OpenAiApiKey))
 	}
@@ -50,7 +57,7 @@ func NewModel(modelType ModelEnum, client httpclient.IHttpClient, config common.
 }
 
 func ListModels() []ModelEnum {
-	return []ModelEnum{OpenAI, OpenAIMini, ClaudeSonnet, Maritaca}
+	return []ModelEnum{OpenAI, OpenAIMini, ClaudeSonnet, Maritaca, Groq}
 }
 
 func ListModelsSlug() []string {

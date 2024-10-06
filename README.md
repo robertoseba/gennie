@@ -51,8 +51,6 @@ File: `sql.profile.json`
 
 ## 🤖 Supported Models / AI Companies
 
-![Models Menu](docs/images/model_menu.png)
-
 **Explore multiple models at your fingertips!** Check and switch between them using `gennie model`, or with the `--model` flag in the `ask` command.
 
 Current Models:
@@ -60,11 +58,11 @@ Current Models:
 - [OpenAI's GPT-4](https://openai.com/)
 - [OpenAI's GPT-4 Mini](https://openai.com/)
 - [Anthropic's Claude](https://www.anthropic.com/)
+- [Maritaca AI](https://maritaca.ai/)
+- [Groq's Llama](https://www.groq.com/)
 
 ### Coming Soon:
 
-- [Maritaca AI](https://maritaca.ai/)
-- [Groq's Llama](https://www.groq.com/)
 - [Ollama](https://ollama.com/)
 
 ## Extra Features

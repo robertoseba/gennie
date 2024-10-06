@@ -5,6 +5,7 @@ type Config struct {
 	OpenAiApiKey    string
 	AnthropicApiKey string
 	MaritacaApiKey  string
+	GroqApiKey      string
 	StyledTerminal  bool
 }
 
@@ -14,6 +15,7 @@ func NewConfig() Config {
 		OpenAiApiKey:    "",
 		AnthropicApiKey: "",
 		MaritacaApiKey:  "",
+		GroqApiKey:      "",
 		StyledTerminal:  true,
 	}
 }

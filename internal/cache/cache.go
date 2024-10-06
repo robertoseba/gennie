@@ -16,7 +16,7 @@ type Storage struct {
 	CurrModelSlug  string
 	CurrProfile    profile.Profile
 	CachedProfiles map[string]profile.ProfileInfo // map[profileSlug]ProfileCache
-	ChatHistory    chat.ChatHistory               //Not using pointers so we garantee immutability of chat in cache
+	ChatHistory    chat.ChatHistory
 	filePath       string
 }
 

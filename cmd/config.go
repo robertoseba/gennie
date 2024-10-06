@@ -20,6 +20,7 @@ func NewConfigCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 			config.OpenAiApiKey = askKey(p, "OpenAI", config.OpenAiApiKey)
 			config.AnthropicApiKey = askKey(p, "Anthropic", config.AnthropicApiKey)
 			config.MaritacaApiKey = askKey(p, "Maritaca", config.MaritacaApiKey)
+			config.GroqApiKey = askKey(p, "Groq", config.GroqApiKey)
 
 			defaultPath := profile.DefaultProfilePath()
 			profileFolder := p.Ask(fmt.Sprintf("Enter the path to your profiles folder or press ENTER to use Default(%s): ", defaultPath), output.Cyan)
