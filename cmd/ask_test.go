@@ -9,7 +9,6 @@ import (
 	"github.com/robertoseba/gennie/internal/cache"
 	"github.com/robertoseba/gennie/internal/chat"
 	mock_httpclient "github.com/robertoseba/gennie/internal/httpclient/mock"
-	"github.com/robertoseba/gennie/internal/models"
 	"github.com/robertoseba/gennie/internal/output"
 	"github.com/robertoseba/gennie/internal/profile"
 	"go.uber.org/mock/gomock"
@@ -63,7 +62,7 @@ func TestUsesModelFromFlag(t *testing.T) {
 
 	httpResponse := mockOpenAiResponse("The meaning of life is 42")
 
-	body := `{"model":"gpt-4o","messages":[{"role":"system","content":"you are a assistant"},{"role":"user","content":"ask what is the meaning of life?"}]}`
+	body := `{"model":"gpt-4o","messages":[{"role":"system","content":"You are a helpful cli assistant. Try to answer in a concise way providing the most relevant information. And examples when necesary."},{"role":"user","content":"ask what is the meaning of life?"}]}`
 	mockClient.EXPECT().Post(gomock.Any(), body, gomock.Any()).Return([]byte(httpResponse), nil)
 
 	out := bytes.NewBufferString("")
@@ -78,8 +77,8 @@ func TestUsesModelFromFlag(t *testing.T) {
 	c.Execute()
 
 	//Saves the model from the flag to the cache
-	if cache.Model != "gpt-4o" {
-		t.Errorf("Expected model to be 'gpt-4o' but got %s", cache.Model)
+	if cache.GetCurrModelSlug() != "gpt-4o" {
+		t.Errorf("Expected model to be 'gpt-4o' but got %s", cache.GetCurrModelSlug())
 	}
 }
 
@@ -100,7 +99,7 @@ func TestAppendsFileContentToQuestion(t *testing.T) {
 
 	httpResponse := mockOpenAiResponse("The meaning of life is 42")
 
-	body := `{"model":"gpt-4o-mini","messages":[{"role":"system","content":"you are a assistant"},{"role":"user","content":"ask what is the meaning of life?\nThis is a file content"}]}`
+	body := `{"model":"gpt-4o-mini","messages":[{"role":"system","content":"You are a helpful cli assistant. Try to answer in a concise way providing the most relevant information. And examples when necesary."},{"role":"user","content":"ask what is the meaning of life?\nThis is a file content"}]}`
 	mockClient.EXPECT().Post(gomock.Any(), body, gomock.Any()).Return([]byte(httpResponse), nil)
 
 	out := bytes.NewBufferString("")
@@ -168,6 +167,7 @@ func TestFollowUpAppendsToChatHistory(t *testing.T) {
 	printer := output.NewPrinter(out, nil)
 
 	cache := setupTestCache()
+	cache.CurrProfile.Data = "you are a assistant"
 	oldChat := chat.Chat{}
 	oldChat.AddQuestion("Initial question")
 	oldChat.AddAnswer("Answer to initial question")
@@ -190,36 +190,6 @@ func TestFollowUpAppendsToChatHistory(t *testing.T) {
 
 }
 
-func TestIfNoModelNorProfileInCacheNorFlagUsesDefault(t *testing.T) {
-	ctrl := gomock.NewController(t)
-
-	mockClient := mock_httpclient.NewMockIHttpClient(ctrl)
-
-	httpResponse := mockOpenAiResponse("The meaning of life is 42")
-
-	mockClient.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(httpResponse), nil)
-
-	out := bytes.NewBufferString("")
-
-	printer := output.NewPrinter(out, nil)
-
-	cache := setupTestCache()
-	cache.Profile = nil
-
-	c := NewAskCmd(cache, printer, mockClient)
-
-	c.SetArgs([]string{"ask what is the meaning of life?"})
-	c.Execute()
-
-	//Saves the model from the flag to the cache
-	if cache.Model != string(models.DefaultModel) {
-		t.Errorf("Expected model to be %s  but got %s", string(models.DefaultModel), cache.Model)
-	}
-	if cache.Profile.Slug != "default" {
-		t.Errorf("Expected profile to be default but got %s", cache.Profile.Slug)
-	}
-}
-
 func TestUsesProfileFromFlag(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -234,15 +204,17 @@ func TestUsesProfileFromFlag(t *testing.T) {
 	printer := output.NewPrinter(out, nil)
 
 	cache := setupTestCache()
+	cache.CachedProfiles = map[string]profile.ProfileInfo{
+		"stub_profile": {Filepath: "../internal/cache/test/stub.profile.json"},
+	}
 
 	c := NewAskCmd(cache, printer, mockClient)
 
-	// os.Setenv("GENNIE_PROFILES_PATH",os.Get )
-	c.SetArgs([]string{"ask what is the meaning of life?", "-p=linux"})
+	c.SetArgs([]string{"ask what is the meaning of life?", "-p=stub_profile"})
 	c.Execute()
 
-	if cache.Profile.Slug != "linux" {
-		t.Errorf("Expected profile to be linux but got %s", cache.Profile.Slug)
+	if cache.GetCurrProfile().Data != "just a profile stub for testing" {
+		t.Errorf("Expected profile to be loaded from stub but got %s", cache.GetCurrProfile())
 	}
 }
 
@@ -260,28 +232,20 @@ func TestUsesProfileFromCacheIfNotSpecified(t *testing.T) {
 	printer := output.NewPrinter(out, nil)
 
 	cache := setupTestCache()
+	cache.CurrProfile = profile.Profile{Slug: "test"}
 
 	c := NewAskCmd(cache, printer, mockClient)
 
 	c.SetArgs([]string{"ask what is the meaning of life?"})
 	c.Execute()
 
-	if cache.Profile.Slug != "test" {
-		t.Errorf("Expected profile to be test but got %s", cache.Profile.Slug)
+	if cache.GetCurrProfile().Slug != "test" {
+		t.Errorf("Expected profile to be test but got %s", cache.GetCurrProfile().Slug)
 	}
 }
 
 func setupTestCache() *cache.Storage {
-	return &cache.Storage{
-		Model: "gpt-4o-mini",
-		Profile: &profile.Profile{
-			Name:   "test",
-			Slug:   "test",
-			Data:   "you are a assistant",
-			Author: "test",
-		},
-		ChatHistory: chat.NewChatHistory(),
-	}
+	return cache.NewStorage(".temp")
 }
 
 func mockOpenAiResponse(answer string) string {

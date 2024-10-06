@@ -39,7 +39,7 @@ func NewAskCmd(storage common.IStorage, p *output.Printer, h httpclient.IHttpCli
 			}
 
 			if profileFlag != "" {
-				profile, err := storage.LoadProfileData(input.Profile)
+				profile, err := storage.LoadProfileData(profileFlag)
 				if err != nil {
 					ExitWithError(err)
 				}
@@ -104,6 +104,7 @@ func askModel(storage common.IStorage, p *output.Printer, input *InputOptions, c
 	}
 
 	lastChat, _ := chatHistory.LastChat()
+	storage.SetChatHistory(chatHistory)
 
 	p.PrintLine(output.Yellow)
 	p.PrintWithCodeStyling(lastChat.GetAnswer(), output.Yellow)
