@@ -28,9 +28,10 @@ func NewConfigCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 			}
 			config.ProfilesPath = profileFolder
 
-			//scan profiles folder and update profilesPath in config
-			//return all setup for use
 			storage.SetConfig(config)
+
+			refreshProfiles(storage)
+
 			return nil
 		},
 	}

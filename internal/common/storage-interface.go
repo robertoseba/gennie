@@ -17,5 +17,6 @@ type IStorage interface {
 	SetCurrProfile(profile.Profile)
 	GetCurrModelSlug() string
 	SetCurrModelSlug(string)
+	SetCachedProfiles(map[string]profile.ProfileInfo)
 	Clear()
 }

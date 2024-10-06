@@ -1,8 +1,15 @@
 package cmd
 
 import (
+	"encoding/json"
+	"io"
+	"os"
+	"path"
+	"strings"
+
 	"github.com/robertoseba/gennie/internal/common"
 	"github.com/robertoseba/gennie/internal/output"
+	"github.com/robertoseba/gennie/internal/profile"
 	"github.com/spf13/cobra"
 )
 
@@ -50,7 +57,7 @@ func NewProfilesCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 
 			p.Print("Available Profiles: ", output.Cyan)
 
-			for slug, _ := range availableProfiles {
+			for slug := range availableProfiles {
 				p.Print(slug, output.Gray)
 			}
 			p.PrintLine(output.Yellow)
@@ -61,10 +68,7 @@ func NewProfilesCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 		Use:   "refresh",
 		Short: "Rescan the profiles folder and update the cache with available profiles",
 		Run: func(cmd *cobra.Command, args []string) {
-			// config := persistence.GetConfig()
-			// scan -> config.ProfilesPath
-			// persistence.SetProfileFiles(profileFiles)
-			panic("To be implemented")
+			refreshProfiles(storage)
 			p.Print("Profiles refreshed...", output.Cyan)
 		},
 	}
@@ -73,4 +77,57 @@ func NewProfilesCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 	cmdProfiles.AddCommand(cmdListProfiles)
 
 	return cmdProfiles
+}
+
+func refreshProfiles(storage common.IStorage) {
+	config := storage.GetConfig()
+
+	cachedProfiles, err := scanProfilesFolder(config.ProfilesPath)
+	if err != nil {
+		ExitWithError(err)
+	}
+	storage.SetCachedProfiles(cachedProfiles)
+}
+
+func scanProfilesFolder(dirpath string) (map[string]profile.ProfileInfo, error) {
+	files, err := os.ReadDir(dirpath)
+	if err != nil {
+		return nil, err
+	}
+
+	profileInfo := make(map[string]profile.ProfileInfo, len(files))
+
+	for _, file := range files {
+		if !file.IsDir() {
+			filename := file.Name()
+			if strings.HasSuffix(filename, ".profile.json") {
+				f, err := os.Open(path.Join(dirpath, file.Name()))
+				if err != nil {
+					return nil, err
+				}
+				defer f.Close()
+
+				data, err := io.ReadAll(f)
+				if err != nil {
+					return nil, err
+				}
+				loadedProfile := &profile.Profile{}
+				err = json.Unmarshal(data, loadedProfile)
+
+				if err != nil {
+					return nil, err
+				}
+
+				currInfo := profile.ProfileInfo{
+					Slug:     loadedProfile.Slug,
+					Name:     loadedProfile.Name,
+					Filepath: path.Join(dirpath, file.Name()),
+				}
+
+				profileInfo[currInfo.Slug] = currInfo
+			}
+		}
+	}
+
+	return profileInfo, nil
 }

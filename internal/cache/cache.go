@@ -84,6 +84,10 @@ func (c *Storage) SetChatHistory(chatHistory chat.ChatHistory) {
 	c.ChatHistory = chatHistory
 }
 
+func (c *Storage) SetCachedProfiles(profiles map[string]profile.ProfileInfo) {
+	c.CachedProfiles = profiles
+}
+
 func (c *Storage) LoadProfileData(profileSlug string) (*profile.Profile, error) {
 	if profileSlug == "default" {
 		return profile.DefaultProfile(), nil
