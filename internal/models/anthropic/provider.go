@@ -2,10 +2,8 @@ package anthropic
 
 import (
 	"encoding/json"
-	"os"
 
 	"github.com/robertoseba/gennie/internal/chat"
-	"github.com/robertoseba/gennie/internal/httpclient"
 )
 
 var slugMap = map[string]string{
@@ -13,11 +11,8 @@ var slugMap = map[string]string{
 }
 
 type AnthropicModel struct {
-	url     string
-	model   string
-	client  httpclient.IHttpClient
-	apiKey  string
-	headers map[string]string
+	model  string
+	apiKey string
 }
 
 const roleUser = "user"
@@ -42,10 +37,11 @@ type AnthropicResponse struct {
 	Content []content `json:"content"`
 }
 
-func NewProvider(modelSlug string) *AnthropicModel {
+func NewProvider(modelSlug string, apiKey string) *AnthropicModel {
 
 	return &AnthropicModel{
-		model: slugMap[modelSlug],
+		model:  slugMap[modelSlug],
+		apiKey: apiKey,
 	}
 }
 
@@ -54,9 +50,8 @@ func (m *AnthropicModel) GetUrl() string {
 }
 
 func (m *AnthropicModel) GetHeaders() map[string]string {
-	apiKey := os.Getenv("ANTHROPIC_API_KEY")
 	return map[string]string{
-		"x-api-key":         apiKey,
+		"x-api-key":         m.apiKey,
 		"anthropic-version": "2023-06-01",
 		"Content-Type":      "application/json",
 	}

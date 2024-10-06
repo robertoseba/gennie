@@ -74,9 +74,7 @@ type InputOptions struct {
 
 func askModel(storage common.IStorage, p *output.Printer, input *InputOptions, client httpclient.IHttpClient) {
 
-	var model models.IModel
-
-	model = models.NewModel(models.ModelEnum(storage.GetCurrModelSlug()), client)
+	model := models.NewModel(models.ModelEnum(storage.GetCurrModelSlug()), client, storage.GetConfig())
 
 	chatHistory := storage.GetChatHistory()
 

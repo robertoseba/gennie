@@ -3,13 +3,13 @@ package openai
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/robertoseba/gennie/internal/chat"
 )
 
 type OpenAIModel struct {
-	model string
+	model  string
+	apiKey string
 }
 
 const roleUser = "user"
@@ -32,17 +32,17 @@ type openAiResponse struct {
 	Choices []choice `json:"choices"`
 }
 
-func NewProvider(modelName string) *OpenAIModel {
+func NewProvider(modelName string, apiKey string) *OpenAIModel {
 	return &OpenAIModel{
-		model: modelName,
+		model:  modelName,
+		apiKey: apiKey,
 	}
 }
 
 func (m *OpenAIModel) GetHeaders() map[string]string {
-	apiKey := os.Getenv("OPEN_API_KEY")
 
 	return map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", apiKey),
+		"Authorization": fmt.Sprintf("Bearer %s", m.apiKey),
 		"Content-Type":  "application/json",
 	}
 }

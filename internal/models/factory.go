@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/robertoseba/gennie/internal/common"
 	"github.com/robertoseba/gennie/internal/httpclient"
 	"github.com/robertoseba/gennie/internal/models/anthropic"
 	"github.com/robertoseba/gennie/internal/models/openai"
@@ -32,18 +33,18 @@ func (m ModelEnum) String() string {
 	}
 }
 
-func NewModel(modelType ModelEnum, client httpclient.IHttpClient) IModel {
+func NewModel(modelType ModelEnum, client httpclient.IHttpClient, config common.Config) IModel {
 	switch modelType {
 	case OpenAI:
-		return NewBaseModel(client, openai.NewProvider(string(modelType)))
+		return NewBaseModel(client, openai.NewProvider(string(modelType), config.OpenAiApiKey))
 	case OpenAIMini:
-		return NewBaseModel(client, openai.NewProvider(string(modelType)))
+		return NewBaseModel(client, openai.NewProvider(string(modelType), config.OpenAiApiKey))
 	case ClaudeSonnet:
-		return NewBaseModel(client, anthropic.NewProvider(string(modelType)))
+		return NewBaseModel(client, anthropic.NewProvider(string(modelType), config.AnthropicApiKey))
 	case Maritaca:
 		panic("Not implemented yet")
 	default:
-		return NewBaseModel(client, openai.NewProvider(string(modelType)))
+		return NewBaseModel(client, openai.NewProvider(string(DefaultModel), config.OpenAiApiKey))
 	}
 
 }
