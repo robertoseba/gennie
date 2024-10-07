@@ -32,7 +32,7 @@ func NewAskCmd(storage common.IStorage, p *output.Printer, h httpclient.IHttpCli
 				return fmt.Errorf("Model %s not supported. Please use one of the following:\n%s\n", modelFlag, strings.Join(models.ListModelsSlug(), ", "))
 			}
 
-			input := &InputOptions{
+			input := &inputOptions{
 				Question:   strings.Join(args, " "),
 				IsFollowUp: isFollowUpFlag,
 				AppendFile: appendFileFlag,
@@ -64,15 +64,13 @@ func NewAskCmd(storage common.IStorage, p *output.Printer, h httpclient.IHttpCli
 	return cmdAsk
 }
 
-type InputOptions struct {
+type inputOptions struct {
 	Question   string
 	IsFollowUp bool
 	AppendFile string
-	Model      string
-	Profile    string
 }
 
-func askModel(storage common.IStorage, p *output.Printer, input *InputOptions, client httpclient.IHttpClient) {
+func askModel(storage common.IStorage, p *output.Printer, input *inputOptions, client httpclient.IHttpClient) {
 
 	model := models.NewModel(models.ModelEnum(storage.GetCurrModelSlug()), client, storage.GetConfig())
 
