@@ -6,8 +6,6 @@ import (
 
 	"github.com/robertoseba/gennie/cmd"
 	"github.com/robertoseba/gennie/internal/cache"
-	"github.com/robertoseba/gennie/internal/httpclient"
-	"github.com/robertoseba/gennie/internal/output"
 )
 
 //go:embed version.txt
@@ -24,23 +22,21 @@ func main() {
 	shouldConfig := false
 
 	if err != nil {
-		if errors.Is(err, cache.ErrNoStoreFile) {
-			storage = cache.NewStorage(storagePath)
-			shouldConfig = true
-		} else {
+		if !errors.Is(err, cache.ErrNoStoreFile) {
 			cmd.ExitWithError(err)
 		}
+		storage = cache.NewStorage(storagePath)
+		shouldConfig = true
 	}
 
 	defer storage.Save()
 
-	httpClient := httpclient.NewClient()
-	printer := output.NewPrinter(nil, nil)
+	cmdUtil := cmd.NewCmdUtil(storage, version)
+	command := cmd.NewRootCmd(cmdUtil)
 
-	command := cmd.NewRootCmd(version, storage, printer, httpClient)
 	if shouldConfig {
 		command.SetArgs([]string{"config"})
 	}
-	command.Execute()
 
+	command.Execute()
 }

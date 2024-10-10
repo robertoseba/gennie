@@ -142,7 +142,7 @@ Gennie is a cli assistant with multiple models and profile support.
 Usage:
   gennie [command]
 
-Available Commands:
+AAvailable Commands:
   ask         You can ask anything here
   clear       Clears all the conversation and preferences from cache
   completion  Generate the autocompletion script for the specified shell
@@ -152,10 +152,10 @@ Available Commands:
   model       Configures the model to use.
   profile     Profile management
   status      Shows the current status of gennie
-  version     Print the version of the Gennie
 
 Flags:
-  -h, --help   help for gennie
+  -h, --help      help for gennie
+  -v, --version   version for gennie
 
 Use "gennie [command] --help" for more information about a command.
 ```

@@ -6,11 +6,13 @@ import (
 )
 
 func TestHasRootSubCommands(t *testing.T) {
-	r := NewRootCmd("", nil, nil, nil)
+	cmdUtil := NewCmdUtil(nil, "0.0.1")
+	r := NewRootCmd(cmdUtil)
+
 	if r.Use != "gennie" {
 		t.Errorf("Expected 'gennie' but got %s", r.Use)
 	}
-	expectedCommands := []string{"config", "version", "model", "profile", "ask [question for the llm model]", "status", "export [filename]", "clear"}
+	expectedCommands := []string{"config", "model", "profile", "ask [question for the llm model]", "status", "export [filename]", "clear"}
 
 	for _, c := range r.Commands() {
 		idx := slices.Index(expectedCommands, c.Use)
