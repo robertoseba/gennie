@@ -64,6 +64,10 @@ func TestRestoreFrom(t *testing.T) {
 		t.Errorf("Expected restored cache ChatHistory to be %v, got: %v", c.ChatHistory, restoredCache.ChatHistory)
 	}
 
+	if restoredCache.IsNew() {
+		t.Errorf("Expected restored cache to not be new")
+	}
+
 	os.Remove(cachePath)
 
 }

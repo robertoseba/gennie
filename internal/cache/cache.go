@@ -18,6 +18,7 @@ type Storage struct {
 	CachedProfiles map[string]profile.ProfileInfo // map[profileSlug]ProfileCache
 	ChatHistory    chat.ChatHistory
 	filePath       string
+	isNew          bool
 }
 
 func NewStorage(filePath string) *Storage {
@@ -28,6 +29,7 @@ func NewStorage(filePath string) *Storage {
 		CachedProfiles: map[string]profile.ProfileInfo{},
 		ChatHistory:    chat.NewChatHistory(),
 		filePath:       filePath,
+		isNew:          true,
 	}
 }
 
@@ -112,6 +114,11 @@ func (c *Storage) Clear() {
 	c.Config = common.NewConfig()
 	c.CurrModelSlug = "default"
 	c.CachedProfiles = map[string]profile.ProfileInfo{}
+	c.isNew = true
+}
+
+func (c *Storage) IsNew() bool {
+	return c.isNew
 }
 
 func (c *Storage) GetCachedProfiles() map[string]profile.ProfileInfo {

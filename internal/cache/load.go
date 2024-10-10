@@ -19,6 +19,7 @@ func RestoreFrom(filePath string) (*Storage, error) {
 	}
 
 	store.filePath = filePath
+	store.isNew = false
 
 	return store, nil
 }

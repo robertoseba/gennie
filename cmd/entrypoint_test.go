@@ -6,7 +6,7 @@ import (
 )
 
 func TestHasRootSubCommands(t *testing.T) {
-	cmdUtil := NewCmdUtil(nil, "0.0.1")
+	cmdUtil, _ := NewCmdUtil("0.0.1")
 	r := NewRootCmd(cmdUtil)
 
 	if r.Use != "gennie" {

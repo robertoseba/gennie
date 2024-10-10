@@ -19,4 +19,6 @@ type IStorage interface {
 	SetCurrModelSlug(string)
 	SetCachedProfiles(map[string]profile.ProfileInfo)
 	Clear()
+	IsNew() bool
+	Save() error
 }

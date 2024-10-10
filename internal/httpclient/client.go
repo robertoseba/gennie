@@ -54,7 +54,7 @@ func (c *HttpClient) Post(url string, body string, headers map[string]string) ([
 	}
 
 	if res.StatusCode == http.StatusUnauthorized || res.StatusCode == http.StatusForbidden {
-		return nil, errors.New("Unauthorized request. Please make sure you have set the correct API key in your environment variables")
+		return nil, errors.New("Unauthorized request. Please run 'gennie config' to set your API key.")
 	}
 
 	if res.StatusCode != http.StatusOK {

@@ -2,39 +2,22 @@ package main
 
 import (
 	_ "embed"
-	"errors"
 
 	"github.com/robertoseba/gennie/cmd"
-	"github.com/robertoseba/gennie/internal/cache"
 )
 
 //go:embed version.txt
 var version string
 
 func main() {
-	storagePath, err := cache.GetStorageFilepath()
+	cmdUtil, err := cmd.NewCmdUtil(version)
 	if err != nil {
 		cmd.ExitWithError(err)
 	}
+	defer cmdUtil.Storage.Save()
 
-	storage, err := cache.RestoreFrom(storagePath)
-
-	shouldConfig := false
-
-	if err != nil {
-		if !errors.Is(err, cache.ErrNoStoreFile) {
-			cmd.ExitWithError(err)
-		}
-		storage = cache.NewStorage(storagePath)
-		shouldConfig = true
-	}
-
-	defer storage.Save()
-
-	cmdUtil := cmd.NewCmdUtil(storage, version)
 	command := cmd.NewRootCmd(cmdUtil)
-
-	if shouldConfig {
+	if cmdUtil.Storage.IsNew() {
 		command.SetArgs([]string{"config"})
 	}
 

@@ -19,6 +19,14 @@ func TestNewStorageHasNewConfig(t *testing.T) {
 	}
 }
 
+func TestNewStorageSetAsNew(t *testing.T) {
+	c := NewStorage(".cache")
+
+	if !c.isNew {
+		t.Errorf("Storage should have been set as new")
+	}
+}
+
 func TestNewStorageHasFilepathSet(t *testing.T) {
 	c := NewStorage("/temp/.cache")
 
