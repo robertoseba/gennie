@@ -33,6 +33,10 @@ func NewProfilesCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 
 			selectedProfileSlug := output.MenuProfile(menuMap, storage.GetCurrProfile().Slug)
 
+			if selectedProfileSlug == "" {
+				return
+			}
+
 			profile, err := storage.LoadProfileData(selectedProfileSlug)
 			if err != nil {
 				ExitWithError(err)
