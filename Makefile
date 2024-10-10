@@ -18,7 +18,9 @@ release:
 		exit 1; \
 	fi
 
+	@echo "$(VERSION) - Released at: $$(date +"%Y-%m-%d")" > version.txt
+	git add version.txt
+	git commit -m "Release version $(VERSION)"
 	git tag -a v$(VERSION) -m "Release version $(VERSION)"
 	echo "Building version $(VERSION)" 
-	@echo "$(VERSION) - Released at: $$(date +"%Y-%m-%d")" > version.txt
 	@go build -ldflags="-s -w" -o bin/ .
