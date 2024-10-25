@@ -7,7 +7,7 @@ import (
 )
 
 var slugMap = map[string]string{
-	"sonnet": "claude-3-5-sonnet-20240620",
+	"sonnet": "claude-3-5-sonnet-20241022",
 }
 
 type AnthropicModel struct {
