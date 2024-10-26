@@ -6,6 +6,7 @@ import (
 	"github.com/robertoseba/gennie/internal/models/anthropic"
 	"github.com/robertoseba/gennie/internal/models/groq"
 	"github.com/robertoseba/gennie/internal/models/maritaca"
+	"github.com/robertoseba/gennie/internal/models/ollama"
 	"github.com/robertoseba/gennie/internal/models/openai"
 )
 
@@ -17,6 +18,7 @@ const (
 	ClaudeSonnet ModelEnum = "sonnet"
 	Maritaca     ModelEnum = "maritaca"
 	Groq         ModelEnum = "groq"
+	Ollama       ModelEnum = "ollama"
 )
 
 const DefaultModel = OpenAIMini
@@ -33,6 +35,8 @@ func (m ModelEnum) String() string {
 		return "Maritaca (BR)"
 	case Groq:
 		return "Groq (LLAMA-3.2-3B)"
+	case Ollama:
+		return "Ollama"
 	default:
 		return DefaultModel.String()
 	}
@@ -50,6 +54,8 @@ func NewModel(modelType ModelEnum, client httpclient.IHttpClient, config common.
 		return NewBaseModel(client, maritaca.NewProvider(string(modelType), config.MaritacaApiKey))
 	case Groq:
 		return NewBaseModel(client, groq.NewProvider(string(modelType), config.GroqApiKey))
+	case Ollama:
+		return NewBaseModel(client, ollama.NewProvider(string(modelType), config.OllamaHost, config.OllamaModel))
 	default:
 		return NewBaseModel(client, openai.NewProvider(string(DefaultModel), config.OpenAiApiKey))
 	}
@@ -57,7 +63,7 @@ func NewModel(modelType ModelEnum, client httpclient.IHttpClient, config common.
 }
 
 func ListModels() []ModelEnum {
-	return []ModelEnum{OpenAI, OpenAIMini, ClaudeSonnet, Maritaca, Groq}
+	return []ModelEnum{OpenAI, OpenAIMini, ClaudeSonnet, Maritaca, Groq, Ollama}
 }
 
 func ListModelsSlug() []string {

@@ -35,6 +35,11 @@ func NewStatusCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 			apiKeyStatus("Maritaca API Key", config.MaritacaApiKey, p)
 
 			p.PrintLine(output.Yellow)
+			p.Print("Ollama", output.Cyan)
+			p.Print(fmt.Sprintf("Host: %s", config.OllamaHost), output.Gray)
+			p.Print(fmt.Sprintf("Model: %s", config.OllamaModel), output.Gray)
+
+			p.PrintLine(output.Yellow)
 			p.Print(fmt.Sprintf("Profiles path: %s", config.ProfilesPath), output.Gray)
 			p.Print(fmt.Sprintf("Cache saved at: %s", storage.GetStorageFilepath()), output.Gray)
 			p.PrintLine(output.Yellow)

@@ -7,6 +7,8 @@ type Config struct {
 	MaritacaApiKey  string
 	GroqApiKey      string
 	StyledTerminal  bool
+	OllamaHost      string
+	OllamaModel     string
 }
 
 func NewConfig() Config {
@@ -17,5 +19,7 @@ func NewConfig() Config {
 		MaritacaApiKey:  "",
 		GroqApiKey:      "",
 		StyledTerminal:  true,
+		OllamaHost:      "",
+		OllamaModel:     "",
 	}
 }
