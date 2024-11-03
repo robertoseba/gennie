@@ -24,3 +24,8 @@ release:
 	git tag -a v$(VERSION) -m "Release version $(VERSION)"
 	echo "Building version $(VERSION)" 
 	@go build -ldflags="-s -w" -o bin/ .
+	@read -p "Want to push it to remote? [y/N] " answer; \
+         if [ "$$answer" != "y" ]; then \
+             exit 1; \
+         fi
+	git push origin --follow-tags 
