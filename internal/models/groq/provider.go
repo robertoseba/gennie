@@ -8,7 +8,7 @@ import (
 )
 
 var slugMap = map[string]string{
-	"groq": "llama-3.2-3b-preview",
+	"groq": "llama-3.2-90b-vision-preview",
 }
 
 type GroqModel struct {

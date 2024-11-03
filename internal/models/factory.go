@@ -34,7 +34,7 @@ func (m ModelEnum) String() string {
 	case Maritaca:
 		return "Maritaca (BR)"
 	case Groq:
-		return "Groq (LLAMA-3.2-3B)"
+		return "Groq (LLAMA-3.2-90B)"
 	case Ollama:
 		return "Ollama"
 	default:
