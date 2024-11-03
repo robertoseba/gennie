@@ -17,15 +17,10 @@ func NewConfigCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config := storage.GetConfig()
 
-			config.OpenAiApiKey = askKey(p, "OpenAI", config.OpenAiApiKey)
-			config.AnthropicApiKey = askKey(p, "Anthropic", config.AnthropicApiKey)
-			config.MaritacaApiKey = askKey(p, "Maritaca", config.MaritacaApiKey)
-			config.GroqApiKey = askKey(p, "Groq", config.GroqApiKey)
+			configApiKeys(p, &config)
+			configProfile(p, &config)
+			configOllama(p, &config)
 
-			config.ProfilesPath = askProfileFolder(p, config.ProfilesPath)
-
-			config.OllamaHost = p.Ask("Enter your Ollama host (ex: http://localhost:11434): ", output.Cyan)
-			config.OllamaModel = p.Ask("Enter your Ollama model (ex: qwen2.5:0.5b): ", output.Cyan)
 			storage.SetConfig(config)
 
 			refreshProfiles(storage)
@@ -37,32 +32,44 @@ func NewConfigCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 	return clearCmd
 }
 
-func askKey(p *output.Printer, key string, previousValue string) string {
-	if previousValue != "" {
-		newValue := p.Ask(fmt.Sprintf("Enter your new %s API Key (or press ENTER keep the old one): ", key), output.Cyan)
-		if newValue != "" {
-			return newValue
-		}
-		return previousValue
-	}
-	return p.Ask(fmt.Sprintf("Enter your %s API Key: ", key), output.Cyan)
+func configApiKeys(p *output.Printer, config *common.Config) {
+	config.OpenAiApiKey = askKey(p, "OpenAI", config.OpenAiApiKey)
+	config.AnthropicApiKey = askKey(p, "Anthropic", config.AnthropicApiKey)
+	config.MaritacaApiKey = askKey(p, "Maritaca", config.MaritacaApiKey)
+	config.GroqApiKey = askKey(p, "Groq", config.GroqApiKey)
 }
 
-func askProfileFolder(p *output.Printer, previousValue string) string {
+func askKey(p *output.Printer, key string, previousValue string) string {
+	question := output.NewQuestion(fmt.Sprintf("Enter your %s API Key", key))
+
 	if previousValue != "" {
-		newValue := p.Ask(fmt.Sprintf("Enter your new profiles folder path (or press ENTER keep %s): ", previousValue), output.Cyan)
-		if newValue != "" {
-			return newValue
-		}
-		return previousValue
+		question.WithPrevious(previousValue, true)
 	}
+	return question.Ask(p)
+}
 
-	defaultPath := profile.DefaultProfilePath()
-	profileFolder := p.Ask(fmt.Sprintf("Enter the path to your profiles folder or press ENTER to use Default(%s): ", defaultPath), output.Cyan)
+func configProfile(p *output.Printer, config *common.Config) {
+	previousValue := config.ProfilesPath
+	question := output.NewQuestion("Enter your profiles folder path")
 
-	if profileFolder == "" {
-		profileFolder = defaultPath
+	if previousValue != "" {
+		question.WithPrevious(previousValue, false)
+	} else {
+		question.WithPrevious(profile.DefaultProfilePath(), false)
 	}
+	config.ProfilesPath = question.Ask(p)
+}
 
-	return profileFolder
+func configOllama(p *output.Printer, config *common.Config) {
+	q := output.NewQuestion("What is your Ollama host address?")
+	if config.OllamaHost != "" {
+		q.WithPrevious(config.OllamaHost, false)
+	}
+	config.OllamaHost = q.Ask(p)
+
+	q = output.NewQuestion("What Ollama model would you like to use?")
+	if config.OllamaModel != "" {
+		q.WithPrevious(config.OllamaModel, false)
+	}
+	config.OllamaModel = q.Ask(p)
 }
