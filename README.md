@@ -60,9 +60,6 @@ Current Models:
 - [Anthropic's Claude](https://www.anthropic.com/)
 - [Maritaca AI](https://maritaca.ai/)
 - [Groq's Llama](https://www.groq.com/)
-
-### Coming Soon:
-
 - [Ollama](https://ollama.com/)
 
 ## Extra Features
@@ -71,7 +68,7 @@ Current Models:
 
 ### Follow-Up Questions
 
-Enhance your queries with the `--followup` flag for related questions that build upon your previous interactions:
+Enhance your queries with the `--followup` (or `-f`) flag for related questions that build upon your previous interactions:
 
 ```bash
 $ gennie ask "Create a list of the best movies of 2021"
@@ -91,7 +88,7 @@ $ gennie export chat_history.txt
 
 ### Append Files to Questions
 
-Incorporate context by appending files to your queries using the `--append` flag:
+Incorporate context by appending files to your queries using the `--append` (or `-a`) flag:
 
 ```bash
 $ gennie ask "Build me a unit test for" --append main.go
