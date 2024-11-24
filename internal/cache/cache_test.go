@@ -39,7 +39,6 @@ func TestSavesStorageToFile(t *testing.T) {
 	c := NewStorage(".cache_temp")
 
 	err := c.Save()
-
 	if err != nil {
 		t.Errorf("Error while saving cache: %v", err)
 	}
@@ -58,12 +57,12 @@ func TestGetProfileSlugs(t *testing.T) {
 		"test": {
 			Slug:     "test",
 			Name:     "test",
-			Filepath: "/test.profile.json",
+			Filepath: "/test.profile.toml",
 		},
 		"test2": {
 			Slug:     "test2",
 			Name:     "test2",
-			Filepath: "/test2.profile.json",
+			Filepath: "/test2.profile.toml",
 		},
 	}
 
@@ -77,8 +76,8 @@ func TestGetProfileSlugs(t *testing.T) {
 		if slug != "test" && slug != "test2" {
 			t.Errorf("Expected profile slug to be test or test2, got: %s", slug)
 		}
-		if pInfo.Filepath != "/test.profile.json" && pInfo.Filepath != "/test2.profile.json" {
-			t.Errorf("Expected profile filepath to be /test.profile.json or /test2.profile.json, got: %s", pInfo.Filepath)
+		if pInfo.Filepath != "/test.profile.toml" && pInfo.Filepath != "/test2.profile.toml" {
+			t.Errorf("Expected profile filepath to be /test.profile.toml or /test2.profile.toml, got: %s", pInfo.Filepath)
 		}
 		if pInfo.Name != "test" && pInfo.Name != "test2" {
 			t.Errorf("Expected profile name to be test or test2, got: %s", pInfo.Name)
@@ -93,17 +92,16 @@ func TestLoadsProfileDataFromFile(t *testing.T) {
 		"test": {
 			Slug:     "test",
 			Name:     "test",
-			Filepath: "/test.profile.json",
+			Filepath: "/test.profile.toml",
 		},
 		"stub": {
 			Slug:     "stub",
 			Name:     "profileStub",
-			Filepath: "./test/stub.profile.json",
+			Filepath: "./test/stub.profile.toml",
 		},
 	}
 
 	profile, err := c.LoadProfileData("stub")
-
 	if err != nil {
 		t.Errorf("Error while getting profile: %v", err)
 	}
@@ -131,7 +129,6 @@ func TestGetProfileForDefaultSlug(t *testing.T) {
 	c := NewStorage(".cache_temp")
 
 	profileRetrieved, err := c.LoadProfileData("default")
-
 	if err != nil {
 		t.Errorf("Error while getting profile: %v", err)
 	}
@@ -152,12 +149,12 @@ func TestClear(t *testing.T) {
 		"test": {
 			Slug:     "test",
 			Name:     "test",
-			Filepath: "/test.profile.json",
+			Filepath: "/test.profile.toml",
 		},
 		"test2": {
 			Slug:     "test2",
 			Name:     "test2",
-			Filepath: "/test2.profile.json",
+			Filepath: "/test2.profile.toml",
 		},
 	}
 
@@ -188,5 +185,4 @@ func TestClear(t *testing.T) {
 	if c.CurrModelSlug != "default" {
 		t.Errorf("Expected default model slug, got: %s", c.CurrModelSlug)
 	}
-
 }

@@ -1,12 +1,11 @@
 package cmd
 
 import (
-	"encoding/json"
-	"io"
 	"os"
 	"path"
 	"strings"
 
+	"github.com/BurntSushi/toml"
 	"github.com/robertoseba/gennie/internal/common"
 	"github.com/robertoseba/gennie/internal/output"
 	"github.com/robertoseba/gennie/internal/profile"
@@ -14,7 +13,6 @@ import (
 )
 
 func NewProfilesCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
-
 	cmdProfiles := &cobra.Command{
 		Use:   "profile",
 		Short: "Profile management",
@@ -104,22 +102,15 @@ func scanProfilesFolder(dirpath string) (map[string]profile.ProfileInfo, error) 
 	for _, file := range files {
 		if !file.IsDir() {
 			filename := file.Name()
-			if strings.HasSuffix(filename, ".profile.json") {
-				f, err := os.Open(path.Join(dirpath, file.Name()))
-				if err != nil {
-					return nil, err
-				}
-				defer f.Close()
-
-				data, err := io.ReadAll(f)
-				if err != nil {
-					return nil, err
-				}
+			if strings.HasSuffix(filename, ".profile.toml") {
 				loadedProfile := &profile.Profile{}
-				err = json.Unmarshal(data, loadedProfile)
-
+				_, err := toml.DecodeFile(path.Join(dirpath, file.Name()), loadedProfile)
 				if err != nil {
 					return nil, err
+				}
+
+				if loadedProfile.Slug == "" {
+					continue
 				}
 
 				currInfo := profile.ProfileInfo{

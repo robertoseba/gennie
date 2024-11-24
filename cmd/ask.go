@@ -16,7 +16,6 @@ import (
 )
 
 func NewAskCmd(storage common.IStorage, p *output.Printer, h httpclient.IHttpClient) *cobra.Command {
-
 	var isFollowUpFlag bool
 	var appendFileFlag string
 	var modelFlag string
@@ -66,12 +65,11 @@ func NewAskCmd(storage common.IStorage, p *output.Printer, h httpclient.IHttpCli
 
 type inputOptions struct {
 	Question   string
-	IsFollowUp bool
 	AppendFile string
+	IsFollowUp bool
 }
 
 func askModel(storage common.IStorage, p *output.Printer, input *inputOptions, client httpclient.IHttpClient) {
-
 	model := models.NewModel(models.ModelEnum(storage.GetCurrModelSlug()), client, storage.GetConfig())
 
 	chatHistory := storage.GetChatHistory()
@@ -111,7 +109,6 @@ func askModel(storage common.IStorage, p *output.Printer, input *inputOptions, c
 	p.Print(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(storage.GetCurrModelSlug()), storage.GetCurrProfile().Name), output.Cyan)
 	p.Print(fmt.Sprintf("Answered in: %0.2f seconds", lastChat.DurationSeconds()), output.Cyan)
 	p.Print("", "")
-
 }
 
 func readFileContents(filePath string) (string, error) {
@@ -126,7 +123,6 @@ func readFileContents(filePath string) (string, error) {
 	defer file.Close()
 
 	content, err := io.ReadAll(file)
-
 	if err != nil {
 		return "", fmt.Errorf("Error reading file %s: %s", filePath, err)
 	}
