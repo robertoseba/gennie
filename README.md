@@ -15,6 +15,8 @@ A powerful CLI assistant designed to support multiple models and profiles to sui
 
 ## 📁 Profiles
 
+> **⚠️ Important:** Gennie v.1.\* is a breaking change from previous versions. In order to improve profiles functionality and add new features, I decided to use `.toml` files to store profiles. If you had created personal profiles in previous versions, you will need to convert them to the new format. You can find examples of profiles in the [profiles](profiles) directory.
+
 ![Profile Menu](docs/images/profile_menu.png)
 
 **Profiles act like personal assistants.** Create profiles for different topics and switch between them effortlessly. For example, have a profile for:
@@ -27,7 +29,7 @@ Use `gennie profile` to manage your profiles or the `--profile` flag with the `a
 
 **Profiles are cached locally for performance:**
 
-- Default location: `~/.config/gennie/profiles`
+- Default location: `~/.config/gennie/profiles` (\*must be created by user before using gennie)
 - Refresh your cached profiles with `gennie profile refresh`.
 
 _You can download sample profiles from the [profiles](profiles) directory._
