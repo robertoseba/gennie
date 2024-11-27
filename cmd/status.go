@@ -18,10 +18,15 @@ func NewStatusCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			profile := storage.GetCurrProfile()
 
+			profilePath := storage.GetCachedProfiles()[profile.Slug].Filepath
+
 			p.PrintLine(output.Yellow)
 			p.Print(fmt.Sprintf("Model: %s ", models.ModelEnum(storage.GetCurrModelSlug())), output.Cyan)
 			p.PrintLine(output.Yellow)
 			p.Print(fmt.Sprintf("Loaded profile: %s (%s)", profile.Name, profile.Slug), output.Gray)
+			if profilePath != "" {
+				p.Print(fmt.Sprintf("File: %s", profilePath), output.Gray)
+			}
 
 			config := storage.GetConfig()
 
