@@ -152,7 +152,7 @@ Gennie is a cli assistant with multiple models and profile support.
 Usage:
   gennie [command]
 
-AAvailable Commands:
+Available Commands:
   ask         You can ask anything here
   clear       Clears all the conversation and preferences from cache
   completion  Generate the autocompletion script for the specified shell
