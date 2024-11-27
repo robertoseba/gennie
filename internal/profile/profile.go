@@ -6,10 +6,10 @@ import (
 )
 
 type Profile struct {
-	Name   string `json:"name"`
-	Slug   string `json:"slug"`
-	Author string `json:"author"`
-	Data   string `json:"data"`
+	Name   string `toml:"name"`
+	Slug   string `toml:"slug"`
+	Author string `toml:"author"`
+	Data   string `toml:"data"`
 }
 
 type ProfileInfo struct {
@@ -32,7 +32,6 @@ func DefaultProfilePath() string {
 	const gennieProfilesDir = "profiles"
 
 	configDir, err := os.UserConfigDir()
-
 	if err != nil {
 		return ""
 	}

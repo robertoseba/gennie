@@ -10,21 +10,23 @@ import (
 )
 
 func NewStatusCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
-
 	cmdStatus := &cobra.Command{
 		Use:   "status",
 		Short: "Shows the current status of gennie",
 		Long:  `Use it to check the current status of ginnie. You can check the model, profile and more!`,
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-
 			profile := storage.GetCurrProfile()
+
+			profilePath := storage.GetCachedProfiles()[profile.Slug].Filepath
 
 			p.PrintLine(output.Yellow)
 			p.Print(fmt.Sprintf("Model: %s ", models.ModelEnum(storage.GetCurrModelSlug())), output.Cyan)
 			p.PrintLine(output.Yellow)
-			p.Print(fmt.Sprintf("Profile name: %s", profile.Name), output.Gray)
-			p.Print(fmt.Sprintf("Profile description: %s", profile.Data), output.Gray)
+			p.Print(fmt.Sprintf("Loaded profile: %s (%s)", profile.Name, profile.Slug), output.Gray)
+			if profilePath != "" {
+				p.Print(fmt.Sprintf("File: %s", profilePath), output.Gray)
+			}
 
 			config := storage.GetConfig()
 

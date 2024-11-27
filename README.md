@@ -7,13 +7,15 @@
 
 ---
 
-## 👋 Hi, I'm Gennie!
+## 👋 Hi, I'm Gennie
 
 <img src="docs/images/awk.gif" width=500>
 
 A powerful CLI assistant designed to support multiple models and profiles to suit your needs. Whether you're working on programming, researching movies, or diving into database management, I'm here to assist!
 
 ## 📁 Profiles
+
+> **⚠️ Important:** Gennie v.1.\* is a breaking change from previous versions. In order to improve profiles functionality and add new features, I decided to use `.toml` files to store profiles. If you had created personal profiles in previous versions, you will need to convert them to the new format. You can find examples of profiles in the [profiles](profiles) directory.
 
 ![Profile Menu](docs/images/profile_menu.png)
 
@@ -27,26 +29,37 @@ Use `gennie profile` to manage your profiles or the `--profile` flag with the `a
 
 **Profiles are cached locally for performance:**
 
-- Default location: `~/.config/gennie/profiles`
+- Default location: `~/.config/gennie/profiles` (\*must be created by user before using gennie)
 - Refresh your cached profiles with `gennie profile refresh`.
 
 _You can download sample profiles from the [profiles](profiles) directory._
 
 ### Creating new profiles
 
-Profiles must be json files ending with `profile.json`.
+Profiles must be toml files ending with `profile.toml`.
 
 Here's a simple example for a sql profile to help you out with database related questions.
 
-File: `sql.profile.json`
+File: `sql.profile.toml`
 
-```json
-{
-  "name": "SQL", //This is the name that will show up in the profile menu. Can be more descriptive than the slug
-  "slug": "sql", //Slug is used to identify the profile when using the --profile flag
-  "author": "Roberto Seba",
-  "data": "You are expert database administrator especially in MySQL and PostgreSQL. Try to keep your answers short. It's always important to think about query performance and data integrity." //Data is where you prep the assistant before you ask questions. It can be as long as you want.
-}
+```toml
+name = "SQL"
+slug = "sql"
+author = "Roberto Seba"
+
+data = '''
+You are expert database administrator. Try to keep your answers short.
+When provided with a question go through the following steps:
+1. Understand the requirements
+2. Asses if is a question about a given schema/scenario or a general question
+3. If not provided with a Database type, assume Postgres
+4. Think about the best way to solve the problem
+5. If the question is for a query, write the query with only the provided data or ask for more information
+6. If its a general question, provide an answer following best practices
+7. Always think about performance and data integrity
+
+Do not repeat the steps in the answer. Only provide the solution to the problem.
+'''
 ```
 
 ## 🤖 Supported Models / AI Companies
@@ -71,8 +84,8 @@ Current Models:
 Enhance your queries with the `--followup` (or `-f`) flag for related questions that build upon your previous interactions:
 
 ```bash
-$ gennie ask "Create a list of the best movies of 2021"
-$ gennie ask "Are there any movies in that list by Martin Scorcese?" --followup
+gennie ask "Create a list of the best movies of 2021"
+gennie ask "Are there any movies in that list by Martin Scorcese?" --followup
 ```
 
 > ⚠️ **Note**: Without a follow-up, your chat history is cleared. Use `--followup` to maintain context or export your history with the `export` command.
@@ -82,8 +95,8 @@ $ gennie ask "Are there any movies in that list by Martin Scorcese?" --followup
 Effortlessly save your chat interactions using the `export` command:
 
 ```bash
-$ gennie ask "Create a list of the best movies of 2021"
-$ gennie export chat_history.txt
+gennie ask "Create a list of the best movies of 2021"
+gennie export chat_history.txt
 ```
 
 ### Append Files to Questions
@@ -91,7 +104,7 @@ $ gennie export chat_history.txt
 Incorporate context by appending files to your queries using the `--append` (or `-a`) flag:
 
 ```bash
-$ gennie ask "Build me a unit test for" --append main.go
+gennie ask "Build me a unit test for" --append main.go
 ```
 
 ### Check Status
@@ -99,15 +112,15 @@ $ gennie ask "Build me a unit test for" --append main.go
 Keep track of your current model and profile with:
 
 ```bash
-$ gennie status
+gennie status
 ```
 
 ## 🚀 Installation
 
-### Using Go:
+### Using Go
 
 ```bash
-$ go install github.com/robertoseba/gennie@latest
+go install github.com/robertoseba/gennie@latest
 ```
 
 If after installation you receive a `command not found` error, ensure that your `$GOPATH/bin` is in your `$PATH`.
@@ -117,7 +130,7 @@ Here's how you can add it:
 export PATH=${PATH}:`go env GOPATH`/bin
 ```
 
-### Downloading the Binary:
+### Downloading the Binary
 
 Visit the [releases page](https://github.com/robertoseba/gennie/releases) to download the appropriate binary for your system.
 
@@ -126,7 +139,7 @@ Visit the [releases page](https://github.com/robertoseba/gennie/releases) to dow
 After installing you must configure keys and profiles folder. You can do this by running the following command:
 
 ```bash
-$ gennie config
+gennie config
 ```
 
 ## 📖 Usage

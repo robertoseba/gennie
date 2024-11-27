@@ -6,7 +6,7 @@ build:
 	@go build -ldflags="-s -w" -o bin/ .
 
 test:
-	@go test -v ./...
+	@go test -v ./... | colorize.sh
 
 release:
 	@if [ -z "$(VERSION)" ]; then \

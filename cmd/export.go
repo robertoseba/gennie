@@ -10,7 +10,6 @@ import (
 )
 
 func NewExportCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
-
 	cmdExport := &cobra.Command{
 		Use:   "export [filename]",
 		Short: "Export the chat history to a file",
@@ -37,12 +36,12 @@ func exportChatHistory(storage common.IStorage, filename string) error {
 
 	for _, chat := range chatHistory.Responses {
 		var err error
-		_, err = f.WriteString(fmt.Sprintf("## Question: %s\n", chat.GetQuestion()))
+		_, err = fmt.Fprintf(f, "## Question: %s\n", chat.GetQuestion())
 		if err != nil {
 			return err
 		}
 
-		_, err = f.WriteString(fmt.Sprintf("## Answer: %s\n", chat.GetAnswer()))
+		_, err = fmt.Fprintf(f, "## Answer: %s\n", chat.GetAnswer())
 		if err != nil {
 			return err
 		}

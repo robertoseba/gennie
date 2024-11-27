@@ -76,14 +76,13 @@ func TestUsesModelFromFlag(t *testing.T) {
 	c.SetArgs([]string{"ask what is the meaning of life?", "--model", "gpt-4o"})
 	c.Execute()
 
-	//Saves the model from the flag to the cache
+	// Saves the model from the flag to the cache
 	if cache.GetCurrModelSlug() != "gpt-4o" {
 		t.Errorf("Expected model to be 'gpt-4o' but got %s", cache.GetCurrModelSlug())
 	}
 }
 
 func TestAppendsFileContentToQuestion(t *testing.T) {
-
 	fileContent := "This is a file content"
 
 	f, err := os.Create("./test.csv")
@@ -149,7 +148,6 @@ func TestResetsChatHistoryIfNotFollowUp(t *testing.T) {
 	if chat.GetAnswer() != "The meaning of life is 42" || chat.GetQuestion() != "ask what is the meaning of life?" {
 		t.Errorf("Expected chat history to have only the last question and answer but got %v", chat)
 	}
-
 }
 
 func TestFollowUpAppendsToChatHistory(t *testing.T) {
@@ -187,7 +185,6 @@ func TestFollowUpAppendsToChatHistory(t *testing.T) {
 	if chats[0].GetAnswer() != "Answer to initial question" || chats[1].GetAnswer() != "The meaning of life is 42" {
 		t.Errorf("Failed to append to chat history. Expected chat history to have both answers, but got: %v", chats)
 	}
-
 }
 
 func TestUsesProfileFromFlag(t *testing.T) {
@@ -205,7 +202,7 @@ func TestUsesProfileFromFlag(t *testing.T) {
 
 	cache := setupTestCache()
 	cache.CachedProfiles = map[string]profile.ProfileInfo{
-		"stub_profile": {Filepath: "../internal/cache/test/stub.profile.json"},
+		"stub_profile": {Filepath: "../internal/cache/test/stub.profile.toml"},
 	}
 
 	c := NewAskCmd(cache, printer, mockClient)

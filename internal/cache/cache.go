@@ -2,22 +2,22 @@ package cache
 
 import (
 	"encoding/gob"
-	"encoding/json"
 	"io"
 	"os"
 
+	"github.com/BurntSushi/toml"
 	"github.com/robertoseba/gennie/internal/chat"
 	"github.com/robertoseba/gennie/internal/common"
 	"github.com/robertoseba/gennie/internal/profile"
 )
 
 type Storage struct {
-	Config         common.Config
-	CurrModelSlug  string
-	CurrProfile    profile.Profile
-	CachedProfiles map[string]profile.ProfileInfo // map[profileSlug]ProfileCache
-	ChatHistory    chat.ChatHistory
 	filePath       string
+	CurrModelSlug  string
+	CachedProfiles map[string]profile.ProfileInfo // map[profileSlug]ProfileCache
+	CurrProfile    profile.Profile
+	Config         common.Config
+	ChatHistory    chat.ChatHistory
 	isNew          bool
 }
 
@@ -100,12 +100,13 @@ func (c *Storage) LoadProfileData(profileSlug string) (*profile.Profile, error) 
 		return nil, ErrNoProfileSlug
 	}
 
-	data, err := loadFile(profileInfo.Filepath)
+	profile := &profile.Profile{}
+	_, err := toml.DecodeFile(profileInfo.Filepath, profile)
 	if err != nil {
 		return nil, err
 	}
 
-	return jsonToProfile(data)
+	return profile, nil
 }
 
 func (c *Storage) Clear() {
@@ -138,16 +139,4 @@ func loadFile(path string) ([]byte, error) {
 		return nil, err
 	}
 	return data, err
-}
-
-func jsonToProfile(data []byte) (*profile.Profile, error) {
-	profile := &profile.Profile{}
-
-	err := json.Unmarshal(data, profile)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return profile, nil
 }
