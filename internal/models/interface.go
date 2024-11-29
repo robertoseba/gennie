@@ -8,6 +8,7 @@ type IModel interface {
 	* It also receives a system prompt that can be used to generate the answer.
 	* Once succeded the model will fill out the answer in the last conversation.
 	 */
+	//TODO: make CompleteChat return duration,error
 	CompleteChat(chatHistory *conversation.Conversation, systemPrompt string) error
 }
 

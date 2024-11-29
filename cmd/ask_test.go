@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/robertoseba/gennie/internal/cache"
-	"github.com/robertoseba/gennie/internal/conversation"
 	mock_httpclient "github.com/robertoseba/gennie/internal/httpclient/mock"
 	"github.com/robertoseba/gennie/internal/output"
 	"github.com/robertoseba/gennie/internal/profile"
@@ -129,9 +128,8 @@ func TestResetsChatHistoryIfNotFollowUp(t *testing.T) {
 	printer := output.NewPrinter(out, nil)
 
 	cache := setupTestCache()
-	oldChat := conversation.NewQA("Initial question")
-	oldChat.AddAnswer("Answer to initial question")
-	cache.ChatHistory.AddQA(*oldChat)
+	cache.ChatHistory.NewQuestion("Initial question")
+	cache.ChatHistory.AnswerLastQuestion("Answer to initial question")
 
 	c := NewAskCmd(cache, printer, mockClient)
 
@@ -142,10 +140,10 @@ func TestResetsChatHistoryIfNotFollowUp(t *testing.T) {
 		t.Errorf("Expected chat history to have 1 item but got %d", cache.ChatHistory.Len())
 	}
 
-	chat, _ := cache.ChatHistory.LastQA()
+	qa, _ := cache.ChatHistory.LastQA()
 
-	if chat.GetAnswer() != "The meaning of life is 42" || chat.GetQuestion() != "ask what is the meaning of life?" {
-		t.Errorf("Expected chat history to have only the last question and answer but got %v", chat)
+	if qa.GetAnswer() != "The meaning of life is 42" || qa.GetQuestion() != "ask what is the meaning of life?" {
+		t.Errorf("Expected chat history to have only the last question and answer but got %v", qa)
 	}
 }
 
@@ -165,9 +163,8 @@ func TestFollowUpAppendsToChatHistory(t *testing.T) {
 
 	cache := setupTestCache()
 	cache.CurrProfile.Data = "you are a assistant"
-	oldChat := conversation.NewQA("Initial question")
-	oldChat.AddAnswer("Answer to initial question")
-	cache.ChatHistory.AddQA(*oldChat)
+	cache.ChatHistory.NewQuestion("Initial question")
+	cache.ChatHistory.AnswerLastQuestion("Answer to initial question")
 
 	c := NewAskCmd(cache, printer, mockClient)
 

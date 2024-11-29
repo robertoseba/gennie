@@ -33,10 +33,8 @@ func TestRestoreFrom(t *testing.T) {
 	cachePath := ".cache_temp"
 	c := NewStorage(cachePath)
 
-	chatHistory := conversation.NewConversation()
-	chat := conversation.NewQA("question")
-	chatHistory.AddQA(*chat)
-	c.ChatHistory = chatHistory
+	c.ChatHistory = conversation.NewConversation()
+	c.ChatHistory.NewQuestion("question")
 
 	c.CurrModelSlug = "testModelSlug"
 

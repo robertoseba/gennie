@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/robertoseba/gennie/internal/common"
-	"github.com/robertoseba/gennie/internal/conversation"
 	"github.com/robertoseba/gennie/internal/profile"
 )
 
@@ -158,9 +157,8 @@ func TestClear(t *testing.T) {
 		},
 	}
 
-	chat := conversation.NewQA("testing question")
-	chat.AddAnswer("testing answer")
-	c.ChatHistory.AddQA(*chat)
+	c.ChatHistory.NewQuestion("testing question")
+	c.ChatHistory.AnswerLastQuestion("testing answer")
 
 	c.Config.AnthropicApiKey = "test_key"
 

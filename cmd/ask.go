@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/robertoseba/gennie/internal/common"
-	"github.com/robertoseba/gennie/internal/conversation"
 	"github.com/robertoseba/gennie/internal/httpclient"
 	"github.com/robertoseba/gennie/internal/models"
 	"github.com/robertoseba/gennie/internal/output"
@@ -87,11 +86,12 @@ func askModel(storage common.IStorage, p *output.Printer, input *inputOptions, c
 
 	}
 
-	chat := conversation.NewQA(input.Question)
-	chatHistory.AddQA(*chat)
+	chatHistory.NewQuestion(input.Question)
 
 	spinner := output.NewSpinner("Thinking...")
 	spinner.Start()
+
+	//TODO: make CompleteChat return duration,error
 	err := model.CompleteChat(&chatHistory, storage.GetCurrProfile().Data)
 	spinner.Stop()
 
@@ -99,15 +99,15 @@ func askModel(storage common.IStorage, p *output.Printer, input *inputOptions, c
 		ExitWithError(err)
 	}
 
-	lastChat, _ := chatHistory.LastQA()
+	lastQA, _ := chatHistory.LastQA()
 	storage.SetChatHistory(chatHistory)
 
 	p.PrintLine(output.Yellow)
-	p.PrintWithCodeStyling(lastChat.GetAnswer(), output.Yellow)
+	p.PrintWithCodeStyling(lastQA.GetAnswer(), output.Yellow)
 	p.PrintLine(output.Yellow)
 
 	p.Print(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(storage.GetCurrModelSlug()), storage.GetCurrProfile().Name), output.Cyan)
-	p.Print(fmt.Sprintf("Answered in: %0.2f seconds", lastChat.DurationSeconds()), output.Cyan)
+	p.Print(fmt.Sprintf("Answered in: %0.2f seconds", lastQA.DurationSeconds()), output.Cyan)
 	p.Print("", "")
 }
 

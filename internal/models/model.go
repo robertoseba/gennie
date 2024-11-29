@@ -49,5 +49,5 @@ func (m *BaseModel) CompleteChat(chatHistory *conversation.Conversation, systemP
 		return err
 	}
 
-	return chatHistory.SetNewAnswerToLastChat(parsedResponse)
+	return chatHistory.AnswerLastQuestion(parsedResponse)
 }
