@@ -12,18 +12,6 @@ func NewConversation() Conversation {
 	}
 }
 
-/**
- * Returns the last question/answer in the conversation.
- * If there are no responses, it returns false with empty QA.
- */
-//TODO: remove lastQA and use LastQuestion and LastAnswer
-func (c Conversation) LastQA() (qa, bool) {
-	if len(c.QAs) == 0 {
-		return qa{}, false
-	}
-	return c.QAs[len(c.QAs)-1], true
-}
-
 func (c *Conversation) Clear() {
 	c.QAs = make([]qa, 0)
 }
@@ -58,4 +46,4 @@ func (c *Conversation) AnswerLastQuestion(answer string) error {
 	return c.QAs[len(c.QAs)-1].addAnswer(answer)
 }
 
-//TODO: create encoder/decoder for conversation
+//TODO: create encoder/decoder for conversation so we dont have to expose QA?

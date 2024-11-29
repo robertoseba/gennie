@@ -47,10 +47,8 @@ func TestSavesChatToCache(t *testing.T) {
 	c.SetArgs([]string{"ask what is the meaning of life?"})
 	c.Execute()
 
-	actualResponse, _ := cache.ChatHistory.LastQA()
-
-	if actualResponse.GetAnswer() != "The meaning of life is 42" {
-		t.Errorf("Expected 'The meaning of life is 42' but got %s", actualResponse.GetAnswer())
+	if cache.ChatHistory.LastAnswer() != "The meaning of life is 42" {
+		t.Errorf("Expected 'The meaning of life is 42' but got %s", cache.ChatHistory.LastAnswer())
 	}
 }
 
@@ -140,10 +138,8 @@ func TestResetsChatHistoryIfNotFollowUp(t *testing.T) {
 		t.Errorf("Expected chat history to have 1 item but got %d", cache.ChatHistory.Len())
 	}
 
-	qa, _ := cache.ChatHistory.LastQA()
-
-	if qa.GetAnswer() != "The meaning of life is 42" || qa.GetQuestion() != "ask what is the meaning of life?" {
-		t.Errorf("Expected chat history to have only the last question and answer but got %v", qa)
+	if cache.ChatHistory.LastAnswer() != "The meaning of life is 42" || cache.ChatHistory.LastQuestion() != "ask what is the meaning of life?" {
+		t.Errorf("Expected chat history to have only the last question")
 	}
 }
 

@@ -2,7 +2,6 @@ package conversation
 
 import (
 	"errors"
-	"time"
 )
 
 var ErrAnswerAlreadySet = errors.New("answer already set")
@@ -10,20 +9,17 @@ var ErrAnswerAlreadySet = errors.New("answer already set")
 type qa struct {
 	Answer   message
 	Question message
-	Duration time.Duration
 }
 type message struct {
-	Content   string
-	Role      string
-	Timestamp time.Time
+	Content string
+	Role    string
 }
 
 func NewQA(question string) *qa {
 	return &qa{
 		Question: message{
-			Content:   question,
-			Role:      userRole,
-			Timestamp: time.Now(),
+			Content: question,
+			Role:    userRole,
 		},
 	}
 }
@@ -46,15 +42,9 @@ func (r *qa) addAnswer(answer string) error {
 	}
 
 	r.Answer = message{
-		Content:   answer,
-		Role:      assistantRole,
-		Timestamp: time.Now(),
+		Content: answer,
+		Role:    assistantRole,
 	}
-	r.Duration = r.Answer.Timestamp.Sub(r.Question.Timestamp)
 
 	return nil
-}
-
-func (r *qa) DurationSeconds() float64 {
-	return r.Duration.Seconds()
 }

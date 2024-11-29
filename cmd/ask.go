@@ -6,6 +6,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/robertoseba/gennie/internal/common"
 	"github.com/robertoseba/gennie/internal/httpclient"
@@ -88,26 +89,27 @@ func askModel(storage common.IStorage, p *output.Printer, input *inputOptions, c
 
 	chatHistory.NewQuestion(input.Question)
 
+	startProcessingTime := time.Now()
 	spinner := output.NewSpinner("Thinking...")
 	spinner.Start()
 
 	//TODO: make CompleteChat return duration,error
 	err := model.CompleteChat(&chatHistory, storage.GetCurrProfile().Data)
 	spinner.Stop()
+	endProcessingTime := time.Now()
 
 	if err != nil {
 		ExitWithError(err)
 	}
 
-	lastQA, _ := chatHistory.LastQA()
 	storage.SetChatHistory(chatHistory)
 
 	p.PrintLine(output.Yellow)
-	p.PrintWithCodeStyling(lastQA.GetAnswer(), output.Yellow)
+	p.PrintWithCodeStyling(chatHistory.LastAnswer(), output.Yellow)
 	p.PrintLine(output.Yellow)
 
 	p.Print(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(storage.GetCurrModelSlug()), storage.GetCurrProfile().Name), output.Cyan)
-	p.Print(fmt.Sprintf("Answered in: %0.2f seconds", lastQA.DurationSeconds()), output.Cyan)
+	p.Print(fmt.Sprintf("Answered in: %0.2f seconds", endProcessingTime.Sub(startProcessingTime).Seconds()), output.Cyan)
 	p.Print("", "")
 }
 
