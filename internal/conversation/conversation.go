@@ -1,37 +1,37 @@
-package chat
+package conversation
 
 type Conversation struct {
-	QAs []QA
+	QAs []qa
 }
 
 func NewConversation() Conversation {
 	return Conversation{
-		QAs: make([]QA, 0),
+		QAs: make([]qa, 0),
 	}
 }
 
 /**
- * Returns the last question/answer in the history.
+ * Returns the last question/answer in the conversation.
  * If there are no responses, it returns false with empty QA.
  */
-func (c Conversation) LastQA() (QA, bool) {
+func (c Conversation) LastQA() (qa, bool) {
 	if len(c.QAs) == 0 {
-		return QA{}, false
+		return qa{}, false
 	}
 	return c.QAs[len(c.QAs)-1], true
 }
 
 /**
- * Adds a question/answer to the history.
+ * Adds a question/answer to the conversation.
  * The QAs can can still be incomplete, but it must have at least a question.
  * The answer will be added later by the model.
  */
-func (c *Conversation) AddQA(qa QA) {
+func (c *Conversation) AddQA(qa qa) {
 	c.QAs = append(c.QAs, qa)
 }
 
 func (c *Conversation) Clear() {
-	c.QAs = make([]QA, 0)
+	c.QAs = make([]qa, 0)
 }
 
 func (c *Conversation) Len() int {

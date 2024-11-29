@@ -3,7 +3,7 @@ package anthropic
 import (
 	"encoding/json"
 
-	"github.com/robertoseba/gennie/internal/chat"
+	"github.com/robertoseba/gennie/internal/conversation"
 )
 
 var slugMap = map[string]string{
@@ -57,18 +57,18 @@ func (m *AnthropicModel) GetHeaders() map[string]string {
 	}
 }
 
-func (m *AnthropicModel) PreparePayload(chatHistory *chat.Conversation, systemPrompt string) (string, error) {
+func (m *AnthropicModel) PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error) {
 
 	messages := make([]message, 0, chatHistory.Len())
-	for _, chat := range chatHistory.QAs {
+	for _, qa := range chatHistory.QAs {
 		messages = append(messages, message{
 			Role:    roleUser,
-			Content: chat.GetQuestion(),
+			Content: qa.GetQuestion(),
 		})
-		if chat.HasAnswer() {
+		if qa.HasAnswer() {
 			messages = append(messages, message{
 				Role:    roleAssistant,
-				Content: chat.GetAnswer(),
+				Content: qa.GetAnswer(),
 			})
 		}
 	}

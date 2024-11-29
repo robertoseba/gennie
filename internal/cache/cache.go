@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
-	"github.com/robertoseba/gennie/internal/chat"
 	"github.com/robertoseba/gennie/internal/common"
+	"github.com/robertoseba/gennie/internal/conversation"
 	"github.com/robertoseba/gennie/internal/profile"
 )
 
@@ -17,7 +17,7 @@ type Storage struct {
 	CachedProfiles map[string]profile.ProfileInfo // map[profileSlug]ProfileCache
 	CurrProfile    profile.Profile
 	Config         common.Config
-	ChatHistory    chat.Conversation
+	ChatHistory    conversation.Conversation
 	isNew          bool
 }
 
@@ -27,7 +27,7 @@ func NewStorage(filePath string) *Storage {
 		CurrModelSlug:  "default",
 		CurrProfile:    *profile.DefaultProfile(),
 		CachedProfiles: map[string]profile.ProfileInfo{},
-		ChatHistory:    chat.NewConversation(),
+		ChatHistory:    conversation.NewConversation(),
 		filePath:       filePath,
 		isNew:          true,
 	}
@@ -78,11 +78,11 @@ func (c *Storage) SetConfig(config common.Config) {
 	c.Config = config
 }
 
-func (c *Storage) GetChatHistory() chat.Conversation {
+func (c *Storage) GetChatHistory() conversation.Conversation {
 	return c.ChatHistory
 }
 
-func (c *Storage) SetChatHistory(chatHistory chat.Conversation) {
+func (c *Storage) SetChatHistory(chatHistory conversation.Conversation) {
 	c.ChatHistory = chatHistory
 }
 
@@ -111,7 +111,7 @@ func (c *Storage) LoadProfileData(profileSlug string) (*profile.Profile, error) 
 
 func (c *Storage) Clear() {
 	c.CurrProfile = *profile.DefaultProfile()
-	c.ChatHistory = chat.NewConversation()
+	c.ChatHistory = conversation.NewConversation()
 	c.Config = common.NewConfig()
 	c.CurrModelSlug = "default"
 	c.CachedProfiles = map[string]profile.ProfileInfo{}

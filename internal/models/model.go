@@ -3,7 +3,7 @@ package models
 import (
 	"errors"
 
-	"github.com/robertoseba/gennie/internal/chat"
+	"github.com/robertoseba/gennie/internal/conversation"
 	"github.com/robertoseba/gennie/internal/httpclient"
 )
 
@@ -22,7 +22,7 @@ func NewBaseModel(client httpclient.IHttpClient, modelProvider IModelProvider) *
 	}
 }
 
-func (m *BaseModel) CompleteChat(chatHistory *chat.Conversation, systemPrompt string) error {
+func (m *BaseModel) CompleteChat(chatHistory *conversation.Conversation, systemPrompt string) error {
 	lastChat, ok := chatHistory.LastQA()
 	if !ok {
 		//TODO: error here is wrong. this means that the chat history is empty without a question

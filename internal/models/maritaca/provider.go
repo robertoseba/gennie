@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/robertoseba/gennie/internal/chat"
+	"github.com/robertoseba/gennie/internal/conversation"
 )
 
 var slugMap = map[string]string{
@@ -52,10 +52,10 @@ func (m *MaritacaModel) GetHeaders() map[string]string {
 }
 
 func (m *MaritacaModel) GetUrl() string {
-	return "https://chat.maritaca.ai/api/chat/completions"
+	return "https://conversation.maritaca.ai/api/chat/completions"
 }
 
-func (m *MaritacaModel) PreparePayload(chatHistory *chat.Conversation, systemPrompt string) (string, error) {
+func (m *MaritacaModel) PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error) {
 	p := prompt{
 		Model: m.model,
 		Messages: []message{
@@ -66,15 +66,15 @@ func (m *MaritacaModel) PreparePayload(chatHistory *chat.Conversation, systemPro
 		},
 	}
 
-	for _, chat := range chatHistory.QAs {
+	for _, qa := range chatHistory.QAs {
 		p.Messages = append(p.Messages, message{
 			Role:    roleUser,
-			Content: chat.GetQuestion(),
+			Content: qa.GetQuestion(),
 		})
-		if chat.HasAnswer() {
+		if qa.HasAnswer() {
 			p.Messages = append(p.Messages, message{
 				Role:    roleAssistant,
-				Content: chat.GetAnswer(),
+				Content: qa.GetAnswer(),
 			})
 		}
 	}

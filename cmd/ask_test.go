@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/robertoseba/gennie/internal/cache"
-	"github.com/robertoseba/gennie/internal/chat"
+	"github.com/robertoseba/gennie/internal/conversation"
 	mock_httpclient "github.com/robertoseba/gennie/internal/httpclient/mock"
 	"github.com/robertoseba/gennie/internal/output"
 	"github.com/robertoseba/gennie/internal/profile"
@@ -129,7 +129,7 @@ func TestResetsChatHistoryIfNotFollowUp(t *testing.T) {
 	printer := output.NewPrinter(out, nil)
 
 	cache := setupTestCache()
-	oldChat := chat.NewQA("Initial question")
+	oldChat := conversation.NewQA("Initial question")
 	oldChat.AddAnswer("Answer to initial question")
 	cache.ChatHistory.AddQA(*oldChat)
 
@@ -165,7 +165,7 @@ func TestFollowUpAppendsToChatHistory(t *testing.T) {
 
 	cache := setupTestCache()
 	cache.CurrProfile.Data = "you are a assistant"
-	oldChat := chat.NewQA("Initial question")
+	oldChat := conversation.NewQA("Initial question")
 	oldChat.AddAnswer("Answer to initial question")
 	cache.ChatHistory.AddQA(*oldChat)
 
@@ -259,7 +259,7 @@ func mockOpenAiResponse(answer string) string {
 		"created": 1677664795,
 		"id": "chatcmpl",
 		"model": "gpt-4o-mini",
-		"object": "chat.completion",
+		"object": "conversation.completion",
 		"usage": {
 			"completion_tokens": 17,
 			"prompt_tokens": 57,

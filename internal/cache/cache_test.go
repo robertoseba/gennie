@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/robertoseba/gennie/internal/chat"
 	"github.com/robertoseba/gennie/internal/common"
+	"github.com/robertoseba/gennie/internal/conversation"
 	"github.com/robertoseba/gennie/internal/profile"
 )
 
@@ -158,7 +158,7 @@ func TestClear(t *testing.T) {
 		},
 	}
 
-	chat := chat.NewQA("testing question")
+	chat := conversation.NewQA("testing question")
 	chat.AddAnswer("testing answer")
 	c.ChatHistory.AddQA(*chat)
 

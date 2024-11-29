@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/robertoseba/gennie/internal/chat"
+	"github.com/robertoseba/gennie/internal/conversation"
 )
 
 type OpenAIModel struct {
@@ -51,7 +51,7 @@ func (m *OpenAIModel) GetUrl() string {
 	return "https://api.openai.com/v1/chat/completions"
 }
 
-func (m *OpenAIModel) PreparePayload(chatHistory *chat.Conversation, systemPrompt string) (string, error) {
+func (m *OpenAIModel) PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error) {
 	p := prompt{
 		Model: m.model,
 		Messages: []message{
@@ -62,15 +62,15 @@ func (m *OpenAIModel) PreparePayload(chatHistory *chat.Conversation, systemPromp
 		},
 	}
 
-	for _, chat := range chatHistory.QAs {
+	for _, qa := range chatHistory.QAs {
 		p.Messages = append(p.Messages, message{
 			Role:    roleUser,
-			Content: chat.GetQuestion(),
+			Content: qa.GetQuestion(),
 		})
-		if chat.HasAnswer() {
+		if qa.HasAnswer() {
 			p.Messages = append(p.Messages, message{
 				Role:    roleAssistant,
-				Content: chat.GetAnswer(),
+				Content: qa.GetAnswer(),
 			})
 		}
 	}

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/robertoseba/gennie/internal/chat"
+	"github.com/robertoseba/gennie/internal/conversation"
 )
 
 func TestStorageDefaultPath(t *testing.T) {
@@ -33,8 +33,8 @@ func TestRestoreFrom(t *testing.T) {
 	cachePath := ".cache_temp"
 	c := NewStorage(cachePath)
 
-	chatHistory := chat.NewConversation()
-	chat := chat.NewQA("question")
+	chatHistory := conversation.NewConversation()
+	chat := conversation.NewQA("question")
 	chatHistory.AddQA(*chat)
 	c.ChatHistory = chatHistory
 

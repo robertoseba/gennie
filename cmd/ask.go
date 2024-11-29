@@ -7,8 +7,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/robertoseba/gennie/internal/chat"
 	"github.com/robertoseba/gennie/internal/common"
+	"github.com/robertoseba/gennie/internal/conversation"
 	"github.com/robertoseba/gennie/internal/httpclient"
 	"github.com/robertoseba/gennie/internal/models"
 	"github.com/robertoseba/gennie/internal/output"
@@ -87,7 +87,7 @@ func askModel(storage common.IStorage, p *output.Printer, input *inputOptions, c
 
 	}
 
-	chat := chat.NewQA(input.Question)
+	chat := conversation.NewQA(input.Question)
 	chatHistory.AddQA(*chat)
 
 	spinner := output.NewSpinner("Thinking...")
