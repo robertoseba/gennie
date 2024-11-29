@@ -34,7 +34,7 @@ func TestRestoreFrom(t *testing.T) {
 	c := NewStorage(cachePath)
 
 	chatHistory := chat.NewChatHistory()
-	chat := chat.NewChat("question")
+	chat := chat.NewQA("question")
 	chatHistory.AddChat(*chat)
 	c.ChatHistory = chatHistory
 

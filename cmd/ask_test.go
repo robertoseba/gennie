@@ -129,10 +129,9 @@ func TestResetsChatHistoryIfNotFollowUp(t *testing.T) {
 	printer := output.NewPrinter(out, nil)
 
 	cache := setupTestCache()
-	oldChat := chat.Chat{}
-	oldChat.AddQuestion("Initial question")
+	oldChat := chat.NewQA("Initial question")
 	oldChat.AddAnswer("Answer to initial question")
-	cache.ChatHistory.AddChat(oldChat)
+	cache.ChatHistory.AddChat(*oldChat)
 
 	c := NewAskCmd(cache, printer, mockClient)
 
@@ -166,10 +165,9 @@ func TestFollowUpAppendsToChatHistory(t *testing.T) {
 
 	cache := setupTestCache()
 	cache.CurrProfile.Data = "you are a assistant"
-	oldChat := chat.Chat{}
-	oldChat.AddQuestion("Initial question")
+	oldChat := chat.NewQA("Initial question")
 	oldChat.AddAnswer("Answer to initial question")
-	cache.ChatHistory.AddChat(oldChat)
+	cache.ChatHistory.AddChat(*oldChat)
 
 	c := NewAskCmd(cache, printer, mockClient)
 

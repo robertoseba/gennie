@@ -48,8 +48,5 @@ func (m *BaseModel) CompleteChat(chatHistory *chat.ChatHistory, systemPrompt str
 		return err
 	}
 
-	chatHistory.SetNewAnswerToLastChat(parsedResponse)
-
-	return nil
-
+	return chatHistory.SetNewAnswerToLastChat(parsedResponse)
 }

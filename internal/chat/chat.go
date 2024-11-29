@@ -1,10 +1,15 @@
 package chat
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 const UserRole = "user"
 const AssistantRole = "assistant"
 const SystemRole = "system"
+
+var ErrAnswerAlreadySet = errors.New("answer already set")
 
 // Data sent to the model
 type message struct {
@@ -13,14 +18,14 @@ type message struct {
 	Timestamp time.Time
 }
 
-type Chat struct {
+type QA struct {
 	Answer   message
 	Question message
 	Duration time.Duration
 }
 
-func NewChat(question string) *Chat {
-	return &Chat{
+func NewQA(question string) *QA {
+	return &QA{
 		Question: message{
 			Content:   question,
 			Role:      UserRole,
@@ -29,35 +34,33 @@ func NewChat(question string) *Chat {
 	}
 }
 
-func (r *Chat) HasAnswer() bool {
+func (r *QA) HasAnswer() bool {
 	return r.Answer.Content != ""
 }
 
-func (r *Chat) GetAnswer() string {
+func (r *QA) GetAnswer() string {
 	return r.Answer.Content
 }
 
-func (r *Chat) GetQuestion() string {
+func (r *QA) GetQuestion() string {
 	return r.Question.Content
 }
 
-func (r *Chat) AddQuestion(question string) {
-	r.Question = message{
-		Content:   question,
-		Role:      UserRole,
-		Timestamp: time.Now(),
+func (r *QA) AddAnswer(answer string) error {
+	if r.HasAnswer() {
+		return ErrAnswerAlreadySet
 	}
-}
 
-func (r *Chat) AddAnswer(answer string) {
 	r.Answer = message{
 		Content:   answer,
 		Role:      AssistantRole,
 		Timestamp: time.Now(),
 	}
 	r.Duration = r.Answer.Timestamp.Sub(r.Question.Timestamp)
+
+	return nil
 }
 
-func (r *Chat) DurationSeconds() float64 {
+func (r *QA) DurationSeconds() float64 {
 	return r.Duration.Seconds()
 }

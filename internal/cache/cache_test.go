@@ -158,7 +158,7 @@ func TestClear(t *testing.T) {
 		},
 	}
 
-	chat := chat.NewChat("testing question")
+	chat := chat.NewQA("testing question")
 	chat.AddAnswer("testing answer")
 	c.ChatHistory.AddChat(*chat)
 

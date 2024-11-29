@@ -1,7 +1,7 @@
 package chat
 
 type ChatHistory struct {
-	Responses []Chat
+	Responses []QA
 }
 
 func NewChatHistory() ChatHistory {
@@ -11,9 +11,9 @@ func NewChatHistory() ChatHistory {
 }
 
 // Returns the last chat in the chat history. If there are no responses, it returns false with empty Chat.
-func (c ChatHistory) LastChat() (Chat, bool) {
+func (c ChatHistory) LastChat() (QA, bool) {
 	if len(c.Responses) == 0 {
-		return Chat{}, false
+		return QA{}, false
 	}
 	return c.Responses[len(c.Responses)-1], true
 }
@@ -23,7 +23,7 @@ func (c ChatHistory) LastChat() (Chat, bool) {
  * The chat can can still be incomplete, but it must have at least a question.
  * The answer will be added later by the model.
  */
-func (c *ChatHistory) AddChat(chat Chat) {
+func (c *ChatHistory) AddChat(chat QA) {
 	c.Responses = append(c.Responses, chat)
 }
 
@@ -49,6 +49,6 @@ func (c *ChatHistory) LastQuestion() string {
 	return c.Responses[len(c.Responses)-1].GetQuestion()
 }
 
-func (c *ChatHistory) SetNewAnswerToLastChat(answer string) {
-	c.Responses[len(c.Responses)-1].AddAnswer(answer)
+func (c *ChatHistory) SetNewAnswerToLastChat(answer string) error {
+	return c.Responses[len(c.Responses)-1].AddAnswer(answer)
 }
