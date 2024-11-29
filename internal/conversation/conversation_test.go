@@ -106,4 +106,25 @@ func TestConversation(t *testing.T) {
 			t.Errorf("Expected error to be ErrNewQuestionBeforeAnswer, got %v", err)
 		}
 	})
+
+	t.Run("Clears conversation", func(t *testing.T) {
+		c := NewConversation()
+		if err := c.NewQuestion("What is your name?"); err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+
+		if c.Len() != 1 {
+			t.Errorf("Expected length to be 1, got %d", c.Len())
+		}
+
+		c.Clear()
+
+		if c.Len() != 0 {
+			t.Errorf("Expected length to be 0, got %d", c.Len())
+		}
+
+		if c.LastQuestion() != "" {
+			t.Errorf("Expected last question to be '', got %s", c.LastQuestion())
+		}
+	})
 }
