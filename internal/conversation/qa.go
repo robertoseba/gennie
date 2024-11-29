@@ -7,17 +7,15 @@ import (
 
 var ErrAnswerAlreadySet = errors.New("answer already set")
 
-// Data sent to the model
-type message struct {
-	Content   string
-	Role      string
-	Timestamp time.Time
-}
-
 type qa struct {
 	Answer   message
 	Question message
 	Duration time.Duration
+}
+type message struct {
+	Content   string
+	Role      string
+	Timestamp time.Time
 }
 
 func NewQA(question string) *qa {
@@ -42,7 +40,7 @@ func (r *qa) GetQuestion() string {
 	return r.Question.Content
 }
 
-func (r *qa) AddAnswer(answer string) error {
+func (r *qa) addAnswer(answer string) error {
 	if r.HasAnswer() {
 		return ErrAnswerAlreadySet
 	}

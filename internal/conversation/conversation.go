@@ -55,7 +55,7 @@ func (c *Conversation) NewQuestion(question string) error {
 }
 
 func (c *Conversation) AnswerLastQuestion(answer string) error {
-	return c.QAs[len(c.QAs)-1].AddAnswer(answer)
+	return c.QAs[len(c.QAs)-1].addAnswer(answer)
 }
 
 //TODO: create encoder/decoder for conversation
