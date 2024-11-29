@@ -15,14 +15,14 @@ type message struct {
 }
 
 type qa struct {
-	answer   message
-	question message
-	duration time.Duration
+	Answer   message
+	Question message
+	Duration time.Duration
 }
 
 func NewQA(question string) *qa {
 	return &qa{
-		question: message{
+		Question: message{
 			Content:   question,
 			Role:      userRole,
 			Timestamp: time.Now(),
@@ -31,15 +31,15 @@ func NewQA(question string) *qa {
 }
 
 func (r *qa) HasAnswer() bool {
-	return r.answer.Content != ""
+	return r.Answer.Content != ""
 }
 
 func (r *qa) GetAnswer() string {
-	return r.answer.Content
+	return r.Answer.Content
 }
 
 func (r *qa) GetQuestion() string {
-	return r.question.Content
+	return r.Question.Content
 }
 
 func (r *qa) AddAnswer(answer string) error {
@@ -47,16 +47,16 @@ func (r *qa) AddAnswer(answer string) error {
 		return ErrAnswerAlreadySet
 	}
 
-	r.answer = message{
+	r.Answer = message{
 		Content:   answer,
 		Role:      assistantRole,
 		Timestamp: time.Now(),
 	}
-	r.duration = r.answer.Timestamp.Sub(r.question.Timestamp)
+	r.Duration = r.Answer.Timestamp.Sub(r.Question.Timestamp)
 
 	return nil
 }
 
 func (r *qa) DurationSeconds() float64 {
-	return r.duration.Seconds()
+	return r.Duration.Seconds()
 }
