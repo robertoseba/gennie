@@ -35,6 +35,7 @@ func NewStatusCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 			apiKeyStatus("Open AI API Key", config.OpenAiApiKey, p)
 			apiKeyStatus("Anthropic API Key", config.AnthropicApiKey, p)
 			apiKeyStatus("Maritaca API Key", config.MaritacaApiKey, p)
+			apiKeyStatus("Groq API Key", config.GroqApiKey, p)
 
 			p.PrintLine(output.Yellow)
 			p.Print("Ollama", output.Cyan)
