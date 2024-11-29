@@ -46,4 +46,17 @@ func TestQA(t *testing.T) {
 			t.Errorf("Expected error to be ErrAnswerAlreadySet, got %v", err)
 		}
 	})
+
+	t.Run("Roles are assigned correctly", func(t *testing.T) {
+		qa := NewQA("question")
+		qa.addAnswer("answer")
+
+		if qa.Question.Role != userRole {
+			t.Errorf("Expected role to be %s, got %s", userRole, qa.Question.Role)
+		}
+
+		if qa.Answer.Role != assistantRole {
+			t.Errorf("Expected role to be %s, got %s", assistantRole, qa.Answer.Role)
+		}
+	})
 }
