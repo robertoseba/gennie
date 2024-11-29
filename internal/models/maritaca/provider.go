@@ -55,7 +55,7 @@ func (m *MaritacaModel) GetUrl() string {
 	return "https://chat.maritaca.ai/api/chat/completions"
 }
 
-func (m *MaritacaModel) PreparePayload(chatHistory *chat.ChatHistory, systemPrompt string) (string, error) {
+func (m *MaritacaModel) PreparePayload(chatHistory *chat.Conversation, systemPrompt string) (string, error) {
 	p := prompt{
 		Model: m.model,
 		Messages: []message{

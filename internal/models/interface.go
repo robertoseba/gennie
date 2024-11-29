@@ -10,7 +10,7 @@ type IModel interface {
 	* It also receives a system prompt that can be used to generate the answer.
 	* Once succeded the model will fill out the answer in the last chat.
 	 */
-	CompleteChat(chatHistory *chat.ChatHistory, systemPrompt string) error
+	CompleteChat(chatHistory *chat.Conversation, systemPrompt string) error
 }
 
 /**
@@ -19,7 +19,7 @@ type IModel interface {
 * and parsing the response back to the system.
  */
 type IModelProvider interface {
-	PreparePayload(chatHistory *chat.ChatHistory, systemPrompt string) (string, error)
+	PreparePayload(chatHistory *chat.Conversation, systemPrompt string) (string, error)
 	ParseResponse(response []byte) (string, error)
 	GetHeaders() map[string]string
 	GetUrl() string

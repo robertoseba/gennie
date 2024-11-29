@@ -51,7 +51,7 @@ func (m *OpenAIModel) GetUrl() string {
 	return "https://api.openai.com/v1/chat/completions"
 }
 
-func (m *OpenAIModel) PreparePayload(chatHistory *chat.ChatHistory, systemPrompt string) (string, error) {
+func (m *OpenAIModel) PreparePayload(chatHistory *chat.Conversation, systemPrompt string) (string, error) {
 	p := prompt{
 		Model: m.model,
 		Messages: []message{

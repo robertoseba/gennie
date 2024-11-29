@@ -57,7 +57,7 @@ func (m *AnthropicModel) GetHeaders() map[string]string {
 	}
 }
 
-func (m *AnthropicModel) PreparePayload(chatHistory *chat.ChatHistory, systemPrompt string) (string, error) {
+func (m *AnthropicModel) PreparePayload(chatHistory *chat.Conversation, systemPrompt string) (string, error) {
 
 	messages := make([]message, 0, chatHistory.Len())
 	for _, chat := range chatHistory.QAs {

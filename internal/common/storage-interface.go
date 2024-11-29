@@ -10,8 +10,8 @@ type IStorage interface {
 	SetConfig(Config)
 	LoadProfileData(string) (*profile.Profile, error)
 	GetCachedProfiles() map[string]profile.ProfileInfo
-	GetChatHistory() chat.ChatHistory
-	SetChatHistory(chat.ChatHistory)
+	GetChatHistory() chat.Conversation
+	SetChatHistory(chat.Conversation)
 	GetStorageFilepath() string
 	GetCurrProfile() profile.Profile
 	SetCurrProfile(profile.Profile)

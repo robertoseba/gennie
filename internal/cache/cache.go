@@ -17,7 +17,7 @@ type Storage struct {
 	CachedProfiles map[string]profile.ProfileInfo // map[profileSlug]ProfileCache
 	CurrProfile    profile.Profile
 	Config         common.Config
-	ChatHistory    chat.ChatHistory
+	ChatHistory    chat.Conversation
 	isNew          bool
 }
 
@@ -27,7 +27,7 @@ func NewStorage(filePath string) *Storage {
 		CurrModelSlug:  "default",
 		CurrProfile:    *profile.DefaultProfile(),
 		CachedProfiles: map[string]profile.ProfileInfo{},
-		ChatHistory:    chat.NewChatHistory(),
+		ChatHistory:    chat.NewConversation(),
 		filePath:       filePath,
 		isNew:          true,
 	}
@@ -78,11 +78,11 @@ func (c *Storage) SetConfig(config common.Config) {
 	c.Config = config
 }
 
-func (c *Storage) GetChatHistory() chat.ChatHistory {
+func (c *Storage) GetChatHistory() chat.Conversation {
 	return c.ChatHistory
 }
 
-func (c *Storage) SetChatHistory(chatHistory chat.ChatHistory) {
+func (c *Storage) SetChatHistory(chatHistory chat.Conversation) {
 	c.ChatHistory = chatHistory
 }
 
@@ -111,7 +111,7 @@ func (c *Storage) LoadProfileData(profileSlug string) (*profile.Profile, error) 
 
 func (c *Storage) Clear() {
 	c.CurrProfile = *profile.DefaultProfile()
-	c.ChatHistory = chat.NewChatHistory()
+	c.ChatHistory = chat.NewConversation()
 	c.Config = common.NewConfig()
 	c.CurrModelSlug = "default"
 	c.CachedProfiles = map[string]profile.ProfileInfo{}

@@ -55,7 +55,7 @@ func (m *GroqModel) GetUrl() string {
 	return "https://api.groq.com/openai/v1/chat/completions"
 }
 
-func (m *GroqModel) PreparePayload(chatHistory *chat.ChatHistory, systemPrompt string) (string, error) {
+func (m *GroqModel) PreparePayload(chatHistory *chat.Conversation, systemPrompt string) (string, error) {
 	p := prompt{
 		Model: m.model,
 		Messages: []message{

@@ -22,9 +22,10 @@ func NewBaseModel(client httpclient.IHttpClient, modelProvider IModelProvider) *
 	}
 }
 
-func (m *BaseModel) CompleteChat(chatHistory *chat.ChatHistory, systemPrompt string) error {
+func (m *BaseModel) CompleteChat(chatHistory *chat.Conversation, systemPrompt string) error {
 	lastChat, ok := chatHistory.LastQA()
 	if !ok {
+		//TODO: error here is wrong. this means that the chat history is empty without a question
 		return ErrLastChatCompleted
 	}
 
