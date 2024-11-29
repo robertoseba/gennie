@@ -2,6 +2,8 @@ package conversation
 
 import "errors"
 
+var ErrNewQuestionBeforeAnswer = errors.New("previous question hasn't been answered yet")
+
 type Conversation struct {
 	QAs []qa
 }
@@ -36,8 +38,9 @@ func (c *Conversation) LastQuestion() string {
 
 func (c *Conversation) NewQuestion(question string) error {
 	if len(c.QAs) > 0 && c.LastAnswer() == "" {
-		return errors.New("previous question hasn't been answered yet")
+		return ErrNewQuestionBeforeAnswer
 	}
+
 	c.QAs = append(c.QAs, *NewQA(question))
 	return nil
 }
