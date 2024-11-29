@@ -48,7 +48,7 @@ func TestSavesChatToCache(t *testing.T) {
 	c.SetArgs([]string{"ask what is the meaning of life?"})
 	c.Execute()
 
-	actualResponse, _ := cache.ChatHistory.LastChat()
+	actualResponse, _ := cache.ChatHistory.LastQA()
 
 	if actualResponse.GetAnswer() != "The meaning of life is 42" {
 		t.Errorf("Expected 'The meaning of life is 42' but got %s", actualResponse.GetAnswer())
@@ -131,7 +131,7 @@ func TestResetsChatHistoryIfNotFollowUp(t *testing.T) {
 	cache := setupTestCache()
 	oldChat := chat.NewQA("Initial question")
 	oldChat.AddAnswer("Answer to initial question")
-	cache.ChatHistory.AddChat(*oldChat)
+	cache.ChatHistory.AddQA(*oldChat)
 
 	c := NewAskCmd(cache, printer, mockClient)
 
@@ -142,7 +142,7 @@ func TestResetsChatHistoryIfNotFollowUp(t *testing.T) {
 		t.Errorf("Expected chat history to have 1 item but got %d", cache.ChatHistory.Len())
 	}
 
-	chat, _ := cache.ChatHistory.LastChat()
+	chat, _ := cache.ChatHistory.LastQA()
 
 	if chat.GetAnswer() != "The meaning of life is 42" || chat.GetQuestion() != "ask what is the meaning of life?" {
 		t.Errorf("Expected chat history to have only the last question and answer but got %v", chat)
@@ -167,7 +167,7 @@ func TestFollowUpAppendsToChatHistory(t *testing.T) {
 	cache.CurrProfile.Data = "you are a assistant"
 	oldChat := chat.NewQA("Initial question")
 	oldChat.AddAnswer("Answer to initial question")
-	cache.ChatHistory.AddChat(*oldChat)
+	cache.ChatHistory.AddQA(*oldChat)
 
 	c := NewAskCmd(cache, printer, mockClient)
 
@@ -178,7 +178,7 @@ func TestFollowUpAppendsToChatHistory(t *testing.T) {
 		t.Errorf("Expected chat history to have 2 item but got %d", cache.ChatHistory.Len())
 	}
 
-	chats := cache.ChatHistory.Responses
+	chats := cache.ChatHistory.QAs
 
 	if chats[0].GetAnswer() != "Answer to initial question" || chats[1].GetAnswer() != "The meaning of life is 42" {
 		t.Errorf("Failed to append to chat history. Expected chat history to have both answers, but got: %v", chats)

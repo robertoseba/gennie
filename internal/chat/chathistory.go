@@ -1,54 +1,57 @@
 package chat
 
 type ChatHistory struct {
-	Responses []QA
+	QAs []QA
 }
 
 func NewChatHistory() ChatHistory {
 	return ChatHistory{
-		Responses: nil,
+		QAs: make([]QA, 0),
 	}
-}
-
-// Returns the last chat in the chat history. If there are no responses, it returns false with empty Chat.
-func (c ChatHistory) LastChat() (QA, bool) {
-	if len(c.Responses) == 0 {
-		return QA{}, false
-	}
-	return c.Responses[len(c.Responses)-1], true
 }
 
 /**
- * Adds a chat to the chat history.
- * The chat can can still be incomplete, but it must have at least a question.
+ * Returns the last question/answer in the history.
+ * If there are no responses, it returns false with empty QA.
+ */
+func (c ChatHistory) LastQA() (QA, bool) {
+	if len(c.QAs) == 0 {
+		return QA{}, false
+	}
+	return c.QAs[len(c.QAs)-1], true
+}
+
+/**
+ * Adds a question/answer to the history.
+ * The QAs can can still be incomplete, but it must have at least a question.
  * The answer will be added later by the model.
  */
-func (c *ChatHistory) AddChat(chat QA) {
-	c.Responses = append(c.Responses, chat)
+func (c *ChatHistory) AddQA(qa QA) {
+	c.QAs = append(c.QAs, qa)
 }
 
 func (c *ChatHistory) Clear() {
-	c.Responses = nil
+	c.QAs = make([]QA, 0)
 }
 
 func (c *ChatHistory) Len() int {
-	return len(c.Responses)
+	return len(c.QAs)
 }
 
 func (c *ChatHistory) LastAnswer() string {
-	if len(c.Responses) == 0 {
+	if len(c.QAs) == 0 {
 		return ""
 	}
-	return c.Responses[len(c.Responses)-1].GetAnswer()
+	return c.QAs[len(c.QAs)-1].GetAnswer()
 }
 
 func (c *ChatHistory) LastQuestion() string {
-	if len(c.Responses) == 0 {
+	if len(c.QAs) == 0 {
 		return ""
 	}
-	return c.Responses[len(c.Responses)-1].GetQuestion()
+	return c.QAs[len(c.QAs)-1].GetQuestion()
 }
 
 func (c *ChatHistory) SetNewAnswerToLastChat(answer string) error {
-	return c.Responses[len(c.Responses)-1].AddAnswer(answer)
+	return c.QAs[len(c.QAs)-1].AddAnswer(answer)
 }

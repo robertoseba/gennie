@@ -66,7 +66,7 @@ func (m *GroqModel) PreparePayload(chatHistory *chat.ChatHistory, systemPrompt s
 		},
 	}
 
-	for _, chat := range chatHistory.Responses {
+	for _, chat := range chatHistory.QAs {
 		p.Messages = append(p.Messages, message{
 			Role:    roleUser,
 			Content: chat.GetQuestion(),

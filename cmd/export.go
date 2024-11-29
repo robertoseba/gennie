@@ -34,7 +34,7 @@ func exportChatHistory(storage common.IStorage, filename string) error {
 
 	chatHistory := storage.GetChatHistory()
 
-	for _, chat := range chatHistory.Responses {
+	for _, chat := range chatHistory.QAs {
 		var err error
 		_, err = fmt.Fprintf(f, "## Question: %s\n", chat.GetQuestion())
 		if err != nil {

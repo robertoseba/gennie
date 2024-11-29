@@ -5,10 +5,6 @@ import (
 	"time"
 )
 
-const UserRole = "user"
-const AssistantRole = "assistant"
-const SystemRole = "system"
-
 var ErrAnswerAlreadySet = errors.New("answer already set")
 
 // Data sent to the model
@@ -28,7 +24,7 @@ func NewQA(question string) *QA {
 	return &QA{
 		Question: message{
 			Content:   question,
-			Role:      UserRole,
+			Role:      userRole,
 			Timestamp: time.Now(),
 		},
 	}
@@ -53,7 +49,7 @@ func (r *QA) AddAnswer(answer string) error {
 
 	r.Answer = message{
 		Content:   answer,
-		Role:      AssistantRole,
+		Role:      assistantRole,
 		Timestamp: time.Now(),
 	}
 	r.Duration = r.Answer.Timestamp.Sub(r.Question.Timestamp)

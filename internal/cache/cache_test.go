@@ -160,7 +160,7 @@ func TestClear(t *testing.T) {
 
 	chat := chat.NewQA("testing question")
 	chat.AddAnswer("testing answer")
-	c.ChatHistory.AddChat(*chat)
+	c.ChatHistory.AddQA(*chat)
 
 	c.Config.AnthropicApiKey = "test_key"
 

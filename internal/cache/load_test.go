@@ -35,7 +35,7 @@ func TestRestoreFrom(t *testing.T) {
 
 	chatHistory := chat.NewChatHistory()
 	chat := chat.NewQA("question")
-	chatHistory.AddChat(*chat)
+	chatHistory.AddQA(*chat)
 	c.ChatHistory = chatHistory
 
 	c.CurrModelSlug = "testModelSlug"

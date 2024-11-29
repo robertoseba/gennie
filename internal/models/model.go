@@ -23,7 +23,7 @@ func NewBaseModel(client httpclient.IHttpClient, modelProvider IModelProvider) *
 }
 
 func (m *BaseModel) CompleteChat(chatHistory *chat.ChatHistory, systemPrompt string) error {
-	lastChat, ok := chatHistory.LastChat()
+	lastChat, ok := chatHistory.LastQA()
 	if !ok {
 		return ErrLastChatCompleted
 	}

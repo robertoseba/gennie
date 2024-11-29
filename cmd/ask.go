@@ -88,7 +88,7 @@ func askModel(storage common.IStorage, p *output.Printer, input *inputOptions, c
 	}
 
 	chat := chat.NewQA(input.Question)
-	chatHistory.AddChat(*chat)
+	chatHistory.AddQA(*chat)
 
 	spinner := output.NewSpinner("Thinking...")
 	spinner.Start()
@@ -99,7 +99,7 @@ func askModel(storage common.IStorage, p *output.Printer, input *inputOptions, c
 		ExitWithError(err)
 	}
 
-	lastChat, _ := chatHistory.LastChat()
+	lastChat, _ := chatHistory.LastQA()
 	storage.SetChatHistory(chatHistory)
 
 	p.PrintLine(output.Yellow)
