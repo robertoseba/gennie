@@ -45,19 +45,19 @@ func (m ModelEnum) String() string {
 func NewModel(modelType ModelEnum, client apiclient.IApiClient, config common.Config) IModel {
 	switch modelType {
 	case OpenAI:
-		return NewBaseModel(client, openai.NewProvider(string(modelType), config.OpenAiApiKey))
+		return newBaseModel(client, openai.NewProvider(string(modelType), config.OpenAiApiKey))
 	case OpenAIMini:
-		return NewBaseModel(client, openai.NewProvider(string(modelType), config.OpenAiApiKey))
+		return newBaseModel(client, openai.NewProvider(string(modelType), config.OpenAiApiKey))
 	case ClaudeSonnet:
-		return NewBaseModel(client, anthropic.NewProvider(string(modelType), config.AnthropicApiKey))
+		return newBaseModel(client, anthropic.NewProvider(string(modelType), config.AnthropicApiKey))
 	case Maritaca:
-		return NewBaseModel(client, maritaca.NewProvider(string(modelType), config.MaritacaApiKey))
+		return newBaseModel(client, maritaca.NewProvider(string(modelType), config.MaritacaApiKey))
 	case Groq:
-		return NewBaseModel(client, groq.NewProvider(string(modelType), config.GroqApiKey))
+		return newBaseModel(client, groq.NewProvider(string(modelType), config.GroqApiKey))
 	case Ollama:
-		return NewBaseModel(client, ollama.NewProvider(string(modelType), config.OllamaHost, config.OllamaModel))
+		return newBaseModel(client, ollama.NewProvider(string(modelType), config.OllamaHost, config.OllamaModel))
 	default:
-		return NewBaseModel(client, openai.NewProvider(string(DefaultModel), config.OpenAiApiKey))
+		return newBaseModel(client, openai.NewProvider(string(DefaultModel), config.OpenAiApiKey))
 	}
 
 }

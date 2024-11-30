@@ -16,7 +16,7 @@ type IModel interface {
 * formatting it accordinly to the model's requirements
 * and parsing the response back to the system.
  */
-type IModelProvider interface {
+type iModelProvider interface {
 	PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error)
 	ParseResponse(response []byte) (string, error)
 	GetHeaders() map[string]string

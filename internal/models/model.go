@@ -7,32 +7,32 @@ import (
 	"github.com/robertoseba/gennie/internal/conversation"
 )
 
-var ErrEmptyChatHistory = errors.New("Chat history is empty")
-var ErrLastChatCompleted = errors.New("Last chat is already completed with answer")
+var ErrEmptyConversation = errors.New("Chat history is empty")
+var ErrLastQuestionAlreadyAnswered = errors.New("Last chat is already completed with answer")
 
 type BaseModel struct {
 	client        apiclient.IApiClient
-	modelProvider IModelProvider
+	modelProvider iModelProvider
 }
 
-func NewBaseModel(client apiclient.IApiClient, modelProvider IModelProvider) *BaseModel {
+func newBaseModel(client apiclient.IApiClient, modelProvider iModelProvider) *BaseModel {
 	return &BaseModel{
 		client:        client,
 		modelProvider: modelProvider,
 	}
 }
 
-func (m *BaseModel) CompleteChat(chatHistory *conversation.Conversation, systemPrompt string) error {
+func (m *BaseModel) CompleteChat(conversation *conversation.Conversation, systemPrompt string) error {
 
-	if chatHistory.LastAnswer() != "" {
-		return ErrLastChatCompleted
+	if conversation.LastAnswer() != "" {
+		return ErrLastQuestionAlreadyAnswered
 	}
 
-	if chatHistory.Len() == 0 {
-		return ErrEmptyChatHistory
+	if conversation.Len() == 0 {
+		return ErrEmptyConversation
 	}
 
-	payload, err := m.modelProvider.PreparePayload(chatHistory, systemPrompt)
+	payload, err := m.modelProvider.PreparePayload(conversation, systemPrompt)
 	if err != nil {
 		return err
 	}
@@ -48,5 +48,5 @@ func (m *BaseModel) CompleteChat(chatHistory *conversation.Conversation, systemP
 		return err
 	}
 
-	return chatHistory.AnswerLastQuestion(parsedResponse)
+	return conversation.AnswerLastQuestion(parsedResponse)
 }
