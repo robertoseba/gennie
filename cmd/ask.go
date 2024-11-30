@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewAskCmd(storage common.IStorage, p *output.Printer, h httpclient.IHttpClient) *cobra.Command {
+func NewAskCmd(storage common.IStorage, p *output.Printer, h httpclient.IApiClient) *cobra.Command {
 	var isFollowUpFlag bool
 	var appendFileFlag string
 	var modelFlag string
@@ -69,7 +69,7 @@ type inputOptions struct {
 	IsFollowUp bool
 }
 
-func askModel(storage common.IStorage, p *output.Printer, input *inputOptions, client httpclient.IHttpClient) {
+func askModel(storage common.IStorage, p *output.Printer, input *inputOptions, client httpclient.IApiClient) {
 	model := models.NewModel(models.ModelEnum(storage.GetCurrModelSlug()), client, storage.GetConfig())
 
 	chatHistory := storage.GetChatHistory()

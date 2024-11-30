@@ -42,7 +42,7 @@ func (m ModelEnum) String() string {
 	}
 }
 
-func NewModel(modelType ModelEnum, client httpclient.IHttpClient, config common.Config) IModel {
+func NewModel(modelType ModelEnum, client httpclient.IApiClient, config common.Config) IModel {
 	switch modelType {
 	case OpenAI:
 		return NewBaseModel(client, openai.NewProvider(string(modelType), config.OpenAiApiKey))

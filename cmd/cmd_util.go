@@ -10,14 +10,14 @@ import (
 )
 
 type CmdUtil struct {
-	HttpClient func() httpclient.IHttpClient
+	HttpClient func() httpclient.IApiClient
 	Printer    *output.Printer
 	Storage    common.IStorage
 	Version    string
 }
 
-func (c *CmdUtil) NewHttpClient() httpclient.IHttpClient {
-	return httpclient.NewClient()
+func (c *CmdUtil) NewHttpClient() httpclient.IApiClient {
+	return httpclient.NewApiClient()
 }
 
 func NewCmdUtil(version string) (*CmdUtil, error) {
@@ -34,8 +34,8 @@ func NewCmdUtil(version string) (*CmdUtil, error) {
 }
 
 // Client gets instanciated only when needed.
-func newHttpClient() httpclient.IHttpClient {
-	return httpclient.NewClient()
+func newHttpClient() httpclient.IApiClient {
+	return httpclient.NewApiClient()
 }
 
 func getStorage() (common.IStorage, error) {

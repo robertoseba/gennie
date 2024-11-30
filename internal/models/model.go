@@ -11,11 +11,11 @@ var ErrEmptyChatHistory = errors.New("Chat history is empty")
 var ErrLastChatCompleted = errors.New("Last chat is already completed with answer")
 
 type BaseModel struct {
-	client        httpclient.IHttpClient
+	client        httpclient.IApiClient
 	modelProvider IModelProvider
 }
 
-func NewBaseModel(client httpclient.IHttpClient, modelProvider IModelProvider) *BaseModel {
+func NewBaseModel(client httpclient.IApiClient, modelProvider IModelProvider) *BaseModel {
 	return &BaseModel{
 		client:        client,
 		modelProvider: modelProvider,
