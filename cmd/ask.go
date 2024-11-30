@@ -8,14 +8,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/robertoseba/gennie/internal/apiclient"
 	"github.com/robertoseba/gennie/internal/common"
-	"github.com/robertoseba/gennie/internal/httpclient"
 	"github.com/robertoseba/gennie/internal/models"
 	"github.com/robertoseba/gennie/internal/output"
 	"github.com/spf13/cobra"
 )
 
-func NewAskCmd(storage common.IStorage, p *output.Printer, h httpclient.IApiClient) *cobra.Command {
+func NewAskCmd(storage common.IStorage, p *output.Printer, h apiclient.IApiClient) *cobra.Command {
 	var isFollowUpFlag bool
 	var appendFileFlag string
 	var modelFlag string
@@ -69,7 +69,7 @@ type inputOptions struct {
 	IsFollowUp bool
 }
 
-func askModel(storage common.IStorage, p *output.Printer, input *inputOptions, client httpclient.IApiClient) {
+func askModel(storage common.IStorage, p *output.Printer, input *inputOptions, client apiclient.IApiClient) {
 	model := models.NewModel(models.ModelEnum(storage.GetCurrModelSlug()), client, storage.GetConfig())
 
 	chatHistory := storage.GetChatHistory()

@@ -3,19 +3,19 @@ package models
 import (
 	"errors"
 
+	"github.com/robertoseba/gennie/internal/apiclient"
 	"github.com/robertoseba/gennie/internal/conversation"
-	"github.com/robertoseba/gennie/internal/httpclient"
 )
 
 var ErrEmptyChatHistory = errors.New("Chat history is empty")
 var ErrLastChatCompleted = errors.New("Last chat is already completed with answer")
 
 type BaseModel struct {
-	client        httpclient.IApiClient
+	client        apiclient.IApiClient
 	modelProvider IModelProvider
 }
 
-func NewBaseModel(client httpclient.IApiClient, modelProvider IModelProvider) *BaseModel {
+func NewBaseModel(client apiclient.IApiClient, modelProvider IModelProvider) *BaseModel {
 	return &BaseModel{
 		client:        client,
 		modelProvider: modelProvider,

@@ -1,8 +1,8 @@
 package models
 
 import (
+	"github.com/robertoseba/gennie/internal/apiclient"
 	"github.com/robertoseba/gennie/internal/common"
-	"github.com/robertoseba/gennie/internal/httpclient"
 	"github.com/robertoseba/gennie/internal/models/anthropic"
 	"github.com/robertoseba/gennie/internal/models/groq"
 	"github.com/robertoseba/gennie/internal/models/maritaca"
@@ -42,7 +42,7 @@ func (m ModelEnum) String() string {
 	}
 }
 
-func NewModel(modelType ModelEnum, client httpclient.IApiClient, config common.Config) IModel {
+func NewModel(modelType ModelEnum, client apiclient.IApiClient, config common.Config) IModel {
 	switch modelType {
 	case OpenAI:
 		return NewBaseModel(client, openai.NewProvider(string(modelType), config.OpenAiApiKey))

@@ -3,21 +3,21 @@ package cmd
 import (
 	"errors"
 
+	"github.com/robertoseba/gennie/internal/apiclient"
 	"github.com/robertoseba/gennie/internal/cache"
 	"github.com/robertoseba/gennie/internal/common"
-	"github.com/robertoseba/gennie/internal/httpclient"
 	"github.com/robertoseba/gennie/internal/output"
 )
 
 type CmdUtil struct {
-	HttpClient func() httpclient.IApiClient
+	HttpClient func() apiclient.IApiClient
 	Printer    *output.Printer
 	Storage    common.IStorage
 	Version    string
 }
 
-func (c *CmdUtil) NewHttpClient() httpclient.IApiClient {
-	return httpclient.NewApiClient()
+func (c *CmdUtil) NewHttpClient() apiclient.IApiClient {
+	return apiclient.NewApiClient()
 }
 
 func NewCmdUtil(version string) (*CmdUtil, error) {
@@ -34,8 +34,8 @@ func NewCmdUtil(version string) (*CmdUtil, error) {
 }
 
 // Client gets instanciated only when needed.
-func newHttpClient() httpclient.IApiClient {
-	return httpclient.NewApiClient()
+func newHttpClient() apiclient.IApiClient {
+	return apiclient.NewApiClient()
 }
 
 func getStorage() (common.IStorage, error) {
