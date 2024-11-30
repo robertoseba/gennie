@@ -1,0 +1,7 @@
+#stub test profile assistant
+
+name = "Test Profile"
+slug = "test"
+author = "Roberto Seba"
+
+data = '''just a profile stub for testing'''
