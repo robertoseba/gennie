@@ -1,8 +1,9 @@
 package conversation
 
 import (
-	"errors"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestQA(t *testing.T) {
@@ -16,25 +17,16 @@ func TestQA(t *testing.T) {
 	t.Run("answer is empty", func(t *testing.T) {
 		qa := NewQA("question")
 
-		if qa.HasAnswer() {
-			t.Errorf("Expected HasAnswer to be false, got true")
-		}
-
-		if qa.GetAnswer() != "" {
-			t.Errorf("Expected answer to be '', got %s", qa.GetAnswer())
-		}
+		assert.False(t, qa.HasAnswer())
+		assert.Equal(t, "", qa.GetAnswer())
 	})
 
 	t.Run("has already filled", func(t *testing.T) {
 		qa := NewQA("question")
 		qa.addAnswer("answer")
-		if qa.GetAnswer() != "answer" {
-			t.Errorf("Expected answer to be 'answer', got %s", qa.GetAnswer())
-		}
 
-		if !qa.HasAnswer() {
-			t.Errorf("Expected HasAnswer to be true, got false")
-		}
+		assert.True(t, qa.HasAnswer())
+		assert.Equal(t, "answer", qa.GetAnswer())
 	})
 
 	t.Run("Can change answer already set", func(t *testing.T) {
@@ -42,21 +34,14 @@ func TestQA(t *testing.T) {
 		qa.addAnswer("answer")
 		err := qa.addAnswer("answer2")
 
-		if !errors.Is(err, ErrAnswerAlreadySet) {
-			t.Errorf("Expected error to be ErrAnswerAlreadySet, got %v", err)
-		}
+		assert.ErrorIs(t, err, ErrAnswerAlreadySet)
 	})
 
 	t.Run("Roles are assigned correctly", func(t *testing.T) {
 		qa := NewQA("question")
 		qa.addAnswer("answer")
 
-		if qa.Question.Role != userRole {
-			t.Errorf("Expected role to be %s, got %s", userRole, qa.Question.Role)
-		}
-
-		if qa.Answer.Role != assistantRole {
-			t.Errorf("Expected role to be %s, got %s", assistantRole, qa.Answer.Role)
-		}
+		assert.Equal(t, userRole, qa.Question.Role)
+		assert.Equal(t, assistantRole, qa.Answer.Role)
 	})
 }
