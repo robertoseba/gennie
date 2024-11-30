@@ -6,6 +6,8 @@ var ErrNewQuestionBeforeAnswer = errors.New("previous question hasn't been answe
 
 type Conversation struct {
 	QAs []qa
+	//CreatedAt time.Time
+	//UpdatedAt time.Time
 }
 
 func NewConversation() Conversation {
