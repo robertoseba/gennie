@@ -42,26 +42,6 @@ func (m ModelEnum) String() string {
 	}
 }
 
-func NewModel(modelType ModelEnum, client apiclient.IApiClient, config common.Config) IModel {
-	switch modelType {
-	case OpenAI:
-		return newBaseModel(client, openai.NewProvider(string(modelType), config.OpenAiApiKey))
-	case OpenAIMini:
-		return newBaseModel(client, openai.NewProvider(string(modelType), config.OpenAiApiKey))
-	case ClaudeSonnet:
-		return newBaseModel(client, anthropic.NewProvider(string(modelType), config.AnthropicApiKey))
-	case Maritaca:
-		return newBaseModel(client, maritaca.NewProvider(string(modelType), config.MaritacaApiKey))
-	case Groq:
-		return newBaseModel(client, groq.NewProvider(string(modelType), config.GroqApiKey))
-	case Ollama:
-		return newBaseModel(client, ollama.NewProvider(string(modelType), config.OllamaHost, config.OllamaModel))
-	default:
-		return newBaseModel(client, openai.NewProvider(string(DefaultModel), config.OpenAiApiKey))
-	}
-
-}
-
 func ListModels() []ModelEnum {
 	return []ModelEnum{OpenAI, OpenAIMini, ClaudeSonnet, Maritaca, Groq, Ollama}
 }
@@ -75,4 +55,27 @@ func ListModelsSlug() []string {
 	}
 
 	return modelsSlug
+}
+
+func NewModel(modelType ModelEnum, client apiclient.IApiClient, config common.Config) IModel {
+	return newBaseModel(client, providerFactory(modelType, config))
+}
+
+func providerFactory(modelType ModelEnum, config common.Config) iModelProvider {
+	switch modelType {
+	case OpenAI:
+		return openai.NewProvider(string(modelType), config.OpenAiApiKey)
+	case OpenAIMini:
+		return openai.NewProvider(string(modelType), config.OpenAiApiKey)
+	case ClaudeSonnet:
+		return anthropic.NewProvider(string(modelType), config.AnthropicApiKey)
+	case Maritaca:
+		return maritaca.NewProvider(string(modelType), config.MaritacaApiKey)
+	case Groq:
+		return groq.NewProvider(string(modelType), config.GroqApiKey)
+	case Ollama:
+		return ollama.NewProvider(string(modelType), config.OllamaHost, config.OllamaModel)
+	default:
+		return openai.NewProvider(string(DefaultModel), config.OpenAiApiKey)
+	}
 }

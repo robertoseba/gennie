@@ -11,13 +11,13 @@ var ErrEmptyConversation = errors.New("Chat history is empty")
 var ErrLastQuestionAlreadyAnswered = errors.New("Last chat is already completed with answer")
 
 type BaseModel struct {
-	client        apiclient.IApiClient
+	apiClient     apiclient.IApiClient
 	modelProvider iModelProvider
 }
 
 func newBaseModel(client apiclient.IApiClient, modelProvider iModelProvider) *BaseModel {
 	return &BaseModel{
-		client:        client,
+		apiClient:     client,
 		modelProvider: modelProvider,
 	}
 }
@@ -37,7 +37,7 @@ func (m *BaseModel) CompleteChat(conversation *conversation.Conversation, system
 		return err
 	}
 
-	postRes, err := m.client.Post(m.modelProvider.GetUrl(), payload, m.modelProvider.GetHeaders())
+	postRes, err := m.apiClient.Post(m.modelProvider.GetUrl(), payload, m.modelProvider.GetHeaders())
 
 	if err != nil {
 		return err
