@@ -45,3 +45,8 @@ func (c *Config) SetCacheDir(path string) {
 func (c *Config) SetProfilesDir(path string) {
 	c.ProfilesDirPath = path
 }
+
+func (c *Config) SetOllama(host, model string) {
+	c.Ollama.Host = host
+	c.Ollama.Model = model
+}
