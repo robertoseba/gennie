@@ -1,11 +1,14 @@
 package config
 
+import "time"
+
 type Config struct {
 	APIKeys          ProviderApiKeys
 	Ollama           OllamaConfig
 	IsTerminalPretty bool
 	CacheDirPath     string
 	ProfilesDirPath  string
+	HttpTimeout      time.Duration
 }
 
 type ProviderApiKeys struct {
@@ -35,6 +38,7 @@ func NewConfig() Config {
 		IsTerminalPretty: true,
 		CacheDirPath:     "",
 		ProfilesDirPath:  "",
+		HttpTimeout:      time.Second * 60,
 	}
 }
 

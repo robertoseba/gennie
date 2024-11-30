@@ -18,6 +18,7 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, true, c.IsTerminalPretty)
 	assert.Equal(t, "", c.CacheDirPath)
 	assert.Equal(t, "", c.ProfilesDirPath)
+	assert.Equal(t, float64(60), c.HttpTimeout.Seconds())
 
 	t.Run("SetCacheDir", func(t *testing.T) {
 		c := NewConfig()
