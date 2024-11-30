@@ -9,6 +9,12 @@ import (
 	"github.com/robertoseba/gennie/internal/config"
 )
 
+type ProfileRepositoryInterface interface {
+	ListAll() map[string]string
+	FindBySlug(slug string) (*Profile, error)
+	RefreshProfiles() error
+}
+
 type ProfileRepository struct {
 	profilesInfo map[string]ProfileInfo
 	config       *config.Config
