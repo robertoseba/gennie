@@ -68,6 +68,12 @@ func TestFindBySlug(t *testing.T) {
 		assert.EqualError(t, err, "profile not found. Try using refresh command if you're sure the profile exists")
 		assert.Nil(t, profile)
 	})
+
+	t.Run("file cant be loaded", func(t *testing.T) {
+		profile, err := pr.FindBySlug("test2")
+		assert.EqualError(t, err, "error loading toml file")
+		assert.Nil(t, profile)
+	})
 }
 
 func TestRefreshProfiles(t *testing.T) {
