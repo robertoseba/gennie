@@ -1,17 +1,17 @@
-package groq
+package maritaca
 
 import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/robertoseba/gennie/internal/conversation"
+	"github.com/robertoseba/gennie/internal/core/conversation"
 )
 
 var slugMap = map[string]string{
-	"groq": "llama-3.2-90b-vision-preview",
+	"maritaca": "sabia-3",
 }
 
-type GroqModel struct {
+type MaritacaModel struct {
 	model  string
 	apiKey string
 }
@@ -36,14 +36,14 @@ type openAiResponse struct {
 	Choices []choice `json:"choices"`
 }
 
-func NewProvider(modelSlug string, apiKey string) *GroqModel {
-	return &GroqModel{
+func NewProvider(modelSlug string, apiKey string) *MaritacaModel {
+	return &MaritacaModel{
 		model:  slugMap[modelSlug],
 		apiKey: apiKey,
 	}
 }
 
-func (m *GroqModel) GetHeaders() map[string]string {
+func (m *MaritacaModel) GetHeaders() map[string]string {
 
 	return map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", m.apiKey),
@@ -51,11 +51,11 @@ func (m *GroqModel) GetHeaders() map[string]string {
 	}
 }
 
-func (m *GroqModel) GetUrl() string {
-	return "https://api.groq.com/openai/v1/chat/completions"
+func (m *MaritacaModel) GetUrl() string {
+	return "https://conversation.maritaca.ai/api/chat/completions"
 }
 
-func (m *GroqModel) PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error) {
+func (m *MaritacaModel) PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error) {
 	p := prompt{
 		Model: m.model,
 		Messages: []message{
@@ -88,7 +88,7 @@ func (m *GroqModel) PreparePayload(chatHistory *conversation.Conversation, syste
 	return string(jsonData), nil
 }
 
-func (m *GroqModel) ParseResponse(rawRes []byte) (string, error) {
+func (m *MaritacaModel) ParseResponse(rawRes []byte) (string, error) {
 	var response openAiResponse
 	err := json.Unmarshal(rawRes, &response)
 	if err != nil {

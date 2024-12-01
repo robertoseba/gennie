@@ -1,16 +1,19 @@
-package ollama
+package groq
 
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
-	"github.com/robertoseba/gennie/internal/conversation"
+	"github.com/robertoseba/gennie/internal/core/conversation"
 )
 
-type OllamaAIModel struct {
-	model string
-	host  string
+var slugMap = map[string]string{
+	"groq": "llama-3.2-90b-vision-preview",
+}
+
+type GroqModel struct {
+	model  string
+	apiKey string
 }
 
 const roleUser = "user"
@@ -24,35 +27,35 @@ type message struct {
 type prompt struct {
 	Model    string    `json:"model"`
 	Messages []message `json:"messages"`
-	Stream   bool      `json:"stream"`
 }
 
-type response struct {
+type choice struct {
 	Message message `json:"message"`
 }
-
-func NewProvider(modelName string, host string, model string) *OllamaAIModel {
-	host = strings.TrimSuffix(host, "/")
-
-	return &OllamaAIModel{
-		model: model,
-		host:  host,
-	}
-
+type openAiResponse struct {
+	Choices []choice `json:"choices"`
 }
 
-func (m *OllamaAIModel) GetHeaders() map[string]string {
+func NewProvider(modelSlug string, apiKey string) *GroqModel {
+	return &GroqModel{
+		model:  slugMap[modelSlug],
+		apiKey: apiKey,
+	}
+}
+
+func (m *GroqModel) GetHeaders() map[string]string {
 
 	return map[string]string{
-		"Content-Type": "application/json",
+		"Authorization": fmt.Sprintf("Bearer %s", m.apiKey),
+		"Content-Type":  "application/json",
 	}
 }
 
-func (m *OllamaAIModel) GetUrl() string {
-	return fmt.Sprintf("%s/api/chat", m.host)
+func (m *GroqModel) GetUrl() string {
+	return "https://api.groq.com/openai/v1/chat/completions"
 }
 
-func (m *OllamaAIModel) PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error) {
+func (m *GroqModel) PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error) {
 	p := prompt{
 		Model: m.model,
 		Messages: []message{
@@ -61,7 +64,6 @@ func (m *OllamaAIModel) PreparePayload(chatHistory *conversation.Conversation, s
 				Content: systemPrompt,
 			},
 		},
-		Stream: false,
 	}
 
 	for _, qa := range chatHistory.QAs {
@@ -86,12 +88,12 @@ func (m *OllamaAIModel) PreparePayload(chatHistory *conversation.Conversation, s
 	return string(jsonData), nil
 }
 
-func (m *OllamaAIModel) ParseResponse(rawRes []byte) (string, error) {
-	var response response
+func (m *GroqModel) ParseResponse(rawRes []byte) (string, error) {
+	var response openAiResponse
 	err := json.Unmarshal(rawRes, &response)
 	if err != nil {
 		return "", err
 	}
 
-	return response.Message.Content, nil
+	return response.Choices[0].Message.Content, nil
 }

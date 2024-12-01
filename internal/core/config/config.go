@@ -6,7 +6,7 @@ type Config struct {
 	APIKeys          ProviderApiKeys
 	Ollama           OllamaConfig
 	IsTerminalPretty bool
-	CacheDirPath     string
+	CacheFilename    string
 	ProfilesDirPath  string
 	HttpTimeout      time.Duration
 }
@@ -23,8 +23,8 @@ type OllamaConfig struct {
 	Model string
 }
 
-func NewConfig() Config {
-	return Config{
+func NewConfig() *Config {
+	return &Config{
 		APIKeys: ProviderApiKeys{
 			OpenAiApiKey:    "",
 			AnthropicApiKey: "",
@@ -36,18 +36,18 @@ func NewConfig() Config {
 			Model: "",
 		},
 		IsTerminalPretty: true,
-		CacheDirPath:     "",
+		CacheFilename:    "",
 		ProfilesDirPath:  "",
 		HttpTimeout:      time.Second * 60,
 	}
 }
 
-func (c *Config) SetCacheDir(path string) {
-	c.CacheDirPath = path
+func (c *Config) SetCacheTo(filepath string) {
+	c.CacheFilename = filepath
 }
 
-func (c *Config) SetProfilesDir(path string) {
-	c.ProfilesDirPath = path
+func (c *Config) SetProfilesDir(dirPath string) {
+	c.ProfilesDirPath = dirPath
 }
 
 func (c *Config) SetOllama(host, model string) {

@@ -8,10 +8,6 @@ import (
 	"time"
 )
 
-type IApiClient interface {
-	Post(url string, body string, headers map[string]string) ([]byte, error)
-}
-
 type IhttpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }

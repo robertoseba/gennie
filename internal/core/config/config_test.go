@@ -16,14 +16,14 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(t, "", c.Ollama.Host)
 	assert.Equal(t, "", c.Ollama.Model)
 	assert.Equal(t, true, c.IsTerminalPretty)
-	assert.Equal(t, "", c.CacheDirPath)
+	assert.Equal(t, "", c.CacheFilename)
 	assert.Equal(t, "", c.ProfilesDirPath)
 	assert.Equal(t, float64(60), c.HttpTimeout.Seconds())
 
 	t.Run("SetCacheDir", func(t *testing.T) {
 		c := NewConfig()
-		c.SetCacheDir("cache")
-		assert.Equal(t, "cache", c.CacheDirPath)
+		c.SetCacheTo("cache")
+		assert.Equal(t, "cache", c.CacheFilename)
 	})
 
 	t.Run("SetProfilesDir", func(t *testing.T) {

@@ -3,7 +3,7 @@ package anthropic
 import (
 	"encoding/json"
 
-	"github.com/robertoseba/gennie/internal/conversation"
+	"github.com/robertoseba/gennie/internal/core/conversation"
 )
 
 var slugMap = map[string]string{

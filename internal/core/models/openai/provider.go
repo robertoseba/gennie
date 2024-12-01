@@ -1,17 +1,13 @@
-package maritaca
+package openai
 
 import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/robertoseba/gennie/internal/conversation"
+	"github.com/robertoseba/gennie/internal/core/conversation"
 )
 
-var slugMap = map[string]string{
-	"maritaca": "sabia-3",
-}
-
-type MaritacaModel struct {
+type OpenAIModel struct {
 	model  string
 	apiKey string
 }
@@ -36,14 +32,14 @@ type openAiResponse struct {
 	Choices []choice `json:"choices"`
 }
 
-func NewProvider(modelSlug string, apiKey string) *MaritacaModel {
-	return &MaritacaModel{
-		model:  slugMap[modelSlug],
+func NewProvider(modelName string, apiKey string) *OpenAIModel {
+	return &OpenAIModel{
+		model:  modelName,
 		apiKey: apiKey,
 	}
 }
 
-func (m *MaritacaModel) GetHeaders() map[string]string {
+func (m *OpenAIModel) GetHeaders() map[string]string {
 
 	return map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", m.apiKey),
@@ -51,11 +47,11 @@ func (m *MaritacaModel) GetHeaders() map[string]string {
 	}
 }
 
-func (m *MaritacaModel) GetUrl() string {
-	return "https://conversation.maritaca.ai/api/chat/completions"
+func (m *OpenAIModel) GetUrl() string {
+	return "https://api.openai.com/v1/chat/completions"
 }
 
-func (m *MaritacaModel) PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error) {
+func (m *OpenAIModel) PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error) {
 	p := prompt{
 		Model: m.model,
 		Messages: []message{
@@ -88,7 +84,7 @@ func (m *MaritacaModel) PreparePayload(chatHistory *conversation.Conversation, s
 	return string(jsonData), nil
 }
 
-func (m *MaritacaModel) ParseResponse(rawRes []byte) (string, error) {
+func (m *OpenAIModel) ParseResponse(rawRes []byte) (string, error) {
 	var response openAiResponse
 	err := json.Unmarshal(rawRes, &response)
 	if err != nil {

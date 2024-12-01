@@ -7,7 +7,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/robertoseba/gennie/internal/common"
-	"github.com/robertoseba/gennie/internal/conversation"
+	"github.com/robertoseba/gennie/internal/core/conversation"
 	"github.com/robertoseba/gennie/internal/profile"
 )
 

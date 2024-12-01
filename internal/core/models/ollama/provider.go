@@ -1,15 +1,16 @@
-package openai
+package ollama
 
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
-	"github.com/robertoseba/gennie/internal/conversation"
+	"github.com/robertoseba/gennie/internal/core/conversation"
 )
 
-type OpenAIModel struct {
-	model  string
-	apiKey string
+type OllamaAIModel struct {
+	model string
+	host  string
 }
 
 const roleUser = "user"
@@ -23,35 +24,35 @@ type message struct {
 type prompt struct {
 	Model    string    `json:"model"`
 	Messages []message `json:"messages"`
+	Stream   bool      `json:"stream"`
 }
 
-type choice struct {
+type response struct {
 	Message message `json:"message"`
 }
-type openAiResponse struct {
-	Choices []choice `json:"choices"`
-}
 
-func NewProvider(modelName string, apiKey string) *OpenAIModel {
-	return &OpenAIModel{
-		model:  modelName,
-		apiKey: apiKey,
+func NewProvider(modelName string, host string, model string) *OllamaAIModel {
+	host = strings.TrimSuffix(host, "/")
+
+	return &OllamaAIModel{
+		model: model,
+		host:  host,
 	}
+
 }
 
-func (m *OpenAIModel) GetHeaders() map[string]string {
+func (m *OllamaAIModel) GetHeaders() map[string]string {
 
 	return map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", m.apiKey),
-		"Content-Type":  "application/json",
+		"Content-Type": "application/json",
 	}
 }
 
-func (m *OpenAIModel) GetUrl() string {
-	return "https://api.openai.com/v1/chat/completions"
+func (m *OllamaAIModel) GetUrl() string {
+	return fmt.Sprintf("%s/api/chat", m.host)
 }
 
-func (m *OpenAIModel) PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error) {
+func (m *OllamaAIModel) PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error) {
 	p := prompt{
 		Model: m.model,
 		Messages: []message{
@@ -60,6 +61,7 @@ func (m *OpenAIModel) PreparePayload(chatHistory *conversation.Conversation, sys
 				Content: systemPrompt,
 			},
 		},
+		Stream: false,
 	}
 
 	for _, qa := range chatHistory.QAs {
@@ -84,12 +86,12 @@ func (m *OpenAIModel) PreparePayload(chatHistory *conversation.Conversation, sys
 	return string(jsonData), nil
 }
 
-func (m *OpenAIModel) ParseResponse(rawRes []byte) (string, error) {
-	var response openAiResponse
+func (m *OllamaAIModel) ParseResponse(rawRes []byte) (string, error) {
+	var response response
 	err := json.Unmarshal(rawRes, &response)
 	if err != nil {
 		return "", err
 	}
 
-	return response.Choices[0].Message.Content, nil
+	return response.Message.Content, nil
 }

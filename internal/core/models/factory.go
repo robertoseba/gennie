@@ -1,13 +1,12 @@
 package models
 
 import (
-	"github.com/robertoseba/gennie/internal/apiclient"
 	"github.com/robertoseba/gennie/internal/common"
-	"github.com/robertoseba/gennie/internal/models/anthropic"
-	"github.com/robertoseba/gennie/internal/models/groq"
-	"github.com/robertoseba/gennie/internal/models/maritaca"
-	"github.com/robertoseba/gennie/internal/models/ollama"
-	"github.com/robertoseba/gennie/internal/models/openai"
+	"github.com/robertoseba/gennie/internal/core/models/anthropic"
+	"github.com/robertoseba/gennie/internal/core/models/groq"
+	"github.com/robertoseba/gennie/internal/core/models/maritaca"
+	"github.com/robertoseba/gennie/internal/core/models/ollama"
+	"github.com/robertoseba/gennie/internal/core/models/openai"
 )
 
 type ModelEnum string
@@ -57,7 +56,7 @@ func ListModelsSlug() []string {
 	return modelsSlug
 }
 
-func NewModel(modelType ModelEnum, client apiclient.IApiClient, config common.Config) IModel {
+func NewModel(modelType ModelEnum, client IApiClient, config common.Config) IModel {
 	return newBaseModel(client, providerFactory(modelType, config))
 }
 

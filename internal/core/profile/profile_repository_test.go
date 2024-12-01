@@ -3,7 +3,7 @@ package profile
 import (
 	"testing"
 
-	"github.com/robertoseba/gennie/internal/config"
+	"github.com/robertoseba/gennie/internal/core/config"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/robertoseba/gennie/internal/config"
+	"github.com/robertoseba/gennie/internal/core/config"
 )
 
 type ProfileRepositoryInterface interface {

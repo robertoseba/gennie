@@ -1,6 +1,6 @@
 package models
 
-import "github.com/robertoseba/gennie/internal/conversation"
+import "github.com/robertoseba/gennie/internal/core/conversation"
 
 type IModel interface {
 	/**
@@ -21,4 +21,8 @@ type iModelProvider interface {
 	ParseResponse(response []byte) (string, error)
 	GetHeaders() map[string]string
 	GetUrl() string
+}
+
+type IApiClient interface {
+	Post(url string, body string, headers map[string]string) ([]byte, error)
 }

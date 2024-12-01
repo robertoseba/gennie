@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/robertoseba/gennie/internal/conversation"
+	"github.com/robertoseba/gennie/internal/core/conversation"
 )
 
 func TestStorageDefaultPath(t *testing.T) {
