@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/robertoseba/gennie/internal/common"
+	"github.com/robertoseba/gennie/internal/core/config"
 	"github.com/robertoseba/gennie/internal/core/models/anthropic"
 	"github.com/robertoseba/gennie/internal/core/models/groq"
 	"github.com/robertoseba/gennie/internal/core/models/maritaca"
@@ -56,25 +56,25 @@ func ListModelsSlug() []string {
 	return modelsSlug
 }
 
-func NewModel(modelType ModelEnum, client IApiClient, config common.Config) IModel {
+func NewModel(modelType ModelEnum, client IApiClient, config config.Config) IModel {
 	return newBaseModel(client, providerFactory(modelType, config))
 }
 
-func providerFactory(modelType ModelEnum, config common.Config) iModelProvider {
+func providerFactory(modelType ModelEnum, config config.Config) iModelProvider {
 	switch modelType {
 	case OpenAI:
-		return openai.NewProvider(string(modelType), config.OpenAiApiKey)
+		return openai.NewProvider(string(modelType), config.APIKeys.OpenAiApiKey)
 	case OpenAIMini:
-		return openai.NewProvider(string(modelType), config.OpenAiApiKey)
+		return openai.NewProvider(string(modelType), config.APIKeys.OpenAiApiKey)
 	case ClaudeSonnet:
-		return anthropic.NewProvider(string(modelType), config.AnthropicApiKey)
+		return anthropic.NewProvider(string(modelType), config.APIKeys.AnthropicApiKey)
 	case Maritaca:
-		return maritaca.NewProvider(string(modelType), config.MaritacaApiKey)
+		return maritaca.NewProvider(string(modelType), config.APIKeys.MaritacaApiKey)
 	case Groq:
-		return groq.NewProvider(string(modelType), config.GroqApiKey)
+		return groq.NewProvider(string(modelType), config.APIKeys.GroqApiKey)
 	case Ollama:
-		return ollama.NewProvider(string(modelType), config.OllamaHost, config.OllamaModel)
+		return ollama.NewProvider(string(modelType), config.Ollama.Host, config.Ollama.Model)
 	default:
-		return openai.NewProvider(string(DefaultModel), config.OpenAiApiKey)
+		return openai.NewProvider(string(DefaultModel), config.APIKeys.OpenAiApiKey)
 	}
 }

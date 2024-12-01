@@ -1,8 +1,6 @@
 package output
 
-import (
-	"github.com/robertoseba/gennie/internal/models"
-)
+import "github.com/robertoseba/gennie/internal/core/models"
 
 // TODO: create in menu a NewMenu that receivees titles and items[names, values] and returns a menu
 func MenuModel(m []models.ModelEnum, selected models.ModelEnum) string {
