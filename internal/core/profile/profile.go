@@ -6,19 +6,12 @@ import (
 )
 
 const DefaultProfileSlug = "default"
-const profileFileExtension = ".profile.toml"
 
 type Profile struct {
 	Name   string `toml:"name"`
-	Slug   string `toml:"slug"`
+	Slug   string `toml:"_"`
 	Author string `toml:"author"`
 	Data   string `toml:"data"`
-}
-
-type ProfileInfo struct {
-	Slug     string
-	Name     string
-	Filepath string
 }
 
 func DefaultProfile() *Profile {
