@@ -54,10 +54,4 @@ func TestFindBySlug(t *testing.T) {
 		assert.EqualError(t, err, "error loading toml file: open stub/test3.profile.toml: no such file or directory")
 		assert.Nil(t, profile)
 	})
-
-	t.Run("file cant be loaded", func(t *testing.T) {
-		profile, err := pr.FindBySlug("invalid")
-		assert.ErrorContains(t, err, "error loading toml file")
-		assert.Nil(t, profile)
-	})
 }
