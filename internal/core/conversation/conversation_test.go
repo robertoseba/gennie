@@ -13,6 +13,7 @@ func TestConversation(t *testing.T) {
 		assert.Equal(t, 0, c.Len())
 		assert.Equal(t, "", c.LastQuestion())
 		assert.Equal(t, "", c.LastAnswer())
+		assert.Equal(t, c.CreatedAt, c.UpdatedAt)
 	})
 
 	t.Run("Adds a question", func(t *testing.T) {
@@ -23,6 +24,7 @@ func TestConversation(t *testing.T) {
 		assert.Equal(t, 1, c.Len())
 		assert.Equal(t, "What is your name?", c.LastQuestion())
 		assert.Equal(t, "", c.LastAnswer())
+		assert.True(t, c.CreatedAt.Before(c.UpdatedAt))
 	})
 
 	t.Run("Answers question", func(t *testing.T) {
