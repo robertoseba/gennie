@@ -20,6 +20,8 @@ func NewConfigRepository(configDir string) (*ConfigRepository, error) {
 	}, nil
 }
 
+// Loads the config from a gob file into the Config struct
+// If the file does not exist, it returns a new Config with default values
 func (cr *ConfigRepository) Load() (*config.Config, error) {
 	file := cr.ConfigFile()
 	if _, err := os.Stat(file); os.IsNotExist(err) {
@@ -42,10 +44,12 @@ func (cr *ConfigRepository) Load() (*config.Config, error) {
 	return &config, nil
 }
 
+// Returns the full path to the config file
 func (cr *ConfigRepository) ConfigFile() string {
 	return path.Join(cr.dirPath, cr.filename)
 }
 
+// Saves the config to a gob file
 func (cr *ConfigRepository) Save(config *config.Config) error {
 	file, err := os.Create(cr.ConfigFile())
 	if err != nil {
@@ -59,6 +63,9 @@ func (cr *ConfigRepository) Save(config *config.Config) error {
 	return nil
 }
 
+// Uses two strategies to define the config directory:
+// 1. If the system has a user config directory, it uses it and creates a gennie directory inside it
+// 2. If the system does not have a user config directory, it uses the executable directory
 func CreateConfigDir() (string, error) {
 	systemConfigDir, err := os.UserConfigDir()
 
