@@ -8,16 +8,18 @@ import (
 
 func TestConversation(t *testing.T) {
 	t.Run("NewConversation", func(t *testing.T) {
-		c := NewConversation()
+		c := NewConversation("profile-slug", "model-slug")
 
 		assert.Equal(t, 0, c.Len())
 		assert.Equal(t, "", c.LastQuestion())
 		assert.Equal(t, "", c.LastAnswer())
 		assert.Equal(t, c.CreatedAt, c.UpdatedAt)
+		assert.Equal(t, "profile-slug", c.ProfileSlug)
+		assert.Equal(t, "model-slug", c.ModelSlug)
 	})
 
 	t.Run("Adds a question", func(t *testing.T) {
-		c := NewConversation()
+		c := NewConversation("profile-slug", "model-slug")
 
 		assert.NoError(t, c.NewQuestion("What is your name?"))
 
@@ -28,7 +30,7 @@ func TestConversation(t *testing.T) {
 	})
 
 	t.Run("Answers question", func(t *testing.T) {
-		c := NewConversation()
+		c := NewConversation("profile-slug", "model-slug")
 
 		assert.NoError(t, c.NewQuestion("What is your name?"))
 		assert.NoError(t, c.AnswerLastQuestion("My name is Assistant"))
@@ -39,7 +41,7 @@ func TestConversation(t *testing.T) {
 	})
 
 	t.Run("Adds new question after answering previous one", func(t *testing.T) {
-		c := NewConversation()
+		c := NewConversation("profile-slug", "model-slug")
 
 		assert.NoError(t, c.NewQuestion("What is your name?"))
 		assert.NoError(t, c.AnswerLastQuestion("My name is Assistant"))
@@ -55,14 +57,15 @@ func TestConversation(t *testing.T) {
 	})
 
 	t.Run("Fail when adding new question before answering previous one", func(t *testing.T) {
-		c := NewConversation()
+		c := NewConversation("profile-slug", "model-slug")
 
 		assert.NoError(t, c.NewQuestion("What is your name?"))
 		assert.ErrorIs(t, ErrNewQuestionBeforeAnswer, c.NewQuestion("What is your age?"))
 	})
 
 	t.Run("Clears conversation", func(t *testing.T) {
-		c := NewConversation()
+		c := NewConversation("profile-slug", "model-slug")
+
 		assert.NoError(t, c.NewQuestion("What is your name?"))
 		assert.Equal(t, 1, c.Len())
 
