@@ -6,6 +6,12 @@ type ExportConversationService struct {
 	conversationRepo conversation.ConversationRepository
 }
 
+func NewExportConversationService(conversationRepo conversation.ConversationRepository) *ExportConversationService {
+	return &ExportConversationService{
+		conversationRepo: conversationRepo,
+	}
+}
+
 func (s *ExportConversationService) Execute(filename string) error {
 	conv, err := s.conversationRepo.LoadActive()
 	if err != nil {

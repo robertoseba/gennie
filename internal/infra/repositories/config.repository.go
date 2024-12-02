@@ -13,11 +13,11 @@ type ConfigRepository struct {
 	dirPath  string
 }
 
-func NewConfigRepository(configDir string) (*ConfigRepository, error) {
+func NewConfigRepository(configDir string) *ConfigRepository {
 	return &ConfigRepository{
 		filename: "gennie_config.gob",
 		dirPath:  configDir,
-	}, nil
+	}
 }
 
 // Loads the config from a gob file into the Config struct

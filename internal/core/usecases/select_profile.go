@@ -10,6 +10,13 @@ type SelectProfileService struct {
 	conversationRepo conversation.ConversationRepository
 }
 
+func NewSelectProfileService(profileRepo profile.ProfileRepositoryInterface, conversationRepo conversation.ConversationRepository) *SelectProfileService {
+	return &SelectProfileService{
+		profileRepo:      profileRepo,
+		conversationRepo: conversationRepo,
+	}
+}
+
 func (s *SelectProfileService) ListAll() (map[string]*profile.Profile, error) {
 	return s.profileRepo.ListAll()
 }

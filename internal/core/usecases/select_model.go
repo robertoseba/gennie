@@ -9,6 +9,12 @@ type SelectModelService struct {
 	conversationRepo conversation.ConversationRepository
 }
 
+func NewSelectModelService(conversationRepo conversation.ConversationRepository) *SelectModelService {
+	return &SelectModelService{
+		conversationRepo: conversationRepo,
+	}
+}
+
 func (s *SelectModelService) ListAll() map[models.ModelEnum]string {
 	return models.ListModels()
 }

@@ -12,9 +12,7 @@ func TestNewConfigRepository(t *testing.T) {
 	os.Setenv("XDG_CONFIG_HOME", ".") //sets config home to current directory
 
 	t.Run("creates new config repo", func(t *testing.T) {
-		repo, err := NewConfigRepository("./config")
-
-		assert.Nil(t, err)
+		repo := NewConfigRepository("./config")
 		assert.Equal(t, "config/gennie_config.gob", repo.ConfigFile())
 	})
 
@@ -26,11 +24,10 @@ func TestNewConfigRepository(t *testing.T) {
 		config.APIKeys.GroqApiKey = "groq"
 		config.APIKeys.MaritacaApiKey = "maritaca"
 		config.APIKeys.OpenAiApiKey = "openai"
-		repo, err := NewConfigRepository(".")
-		assert.Nil(t, err)
+		repo := NewConfigRepository(".")
 		assert.True(t, config.IsNew())
 
-		err = repo.Save(config)
+		err := repo.Save(config)
 		assert.Nil(t, err)
 		assert.Equal(t, false, config.IsNew())
 
@@ -48,10 +45,9 @@ func TestNewConfigRepository(t *testing.T) {
 		config.APIKeys.GroqApiKey = "groq"
 		config.APIKeys.MaritacaApiKey = "maritaca"
 		config.APIKeys.OpenAiApiKey = "openai"
-		repo, err := NewConfigRepository(".")
-		assert.Nil(t, err)
+		repo := NewConfigRepository(".")
 
-		err = repo.Save(config)
+		err := repo.Save(config)
 		assert.Nil(t, err)
 
 		loadedConfig, err := repo.Load()
@@ -64,9 +60,7 @@ func TestNewConfigRepository(t *testing.T) {
 	})
 
 	t.Run("loads default config if file does not exist and sets as new", func(t *testing.T) {
-		repo, err := NewConfigRepository(".")
-		assert.Nil(t, err)
-
+		repo := NewConfigRepository(".")
 		loadedConfig, err := repo.Load()
 		assert.Nil(t, err)
 
