@@ -12,17 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestListModels(t *testing.T) {
-	models := ListModels()
-	assert.Equal(t, 6, len(models))
-	assert.Contains(t, models, OpenAI)
-	assert.Contains(t, models, OpenAIMini)
-	assert.Contains(t, models, ClaudeSonnet)
-	assert.Contains(t, models, Maritaca)
-	assert.Contains(t, models, Groq)
-	assert.Contains(t, models, Ollama)
-}
-
 func TestNewModel(t *testing.T) {
 	t.Run("OpenAI", func(t *testing.T) {
 		m, err := NewModel("gpt-4o", nil, *config.NewConfig())

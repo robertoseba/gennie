@@ -13,25 +13,28 @@ const (
 
 const DefaultModel = OpenAIMini
 
-func (m ModelEnum) String() string {
-	switch m {
-	case OpenAIMini:
-		return "GPT-4o-mini (OPENAI)"
-	case OpenAI:
-		return "GPT-4o (OPENAI)"
-	case ClaudeSonnet:
-		return "Claude Sonnet 3.5 (ANTHROPIC)"
-	case Maritaca:
-		return "Maritaca (BR)"
-	case Groq:
-		return "Groq (LLAMA-3.2-90B)"
-	case Ollama:
-		return "Ollama"
-	default:
-		return "Invalid Model"
-	}
+var availableModels = map[ModelEnum]string{
+	OpenAIMini:   "GPT-4o-mini (OPENAI)",
+	OpenAI:       "GPT-4o (OPENAI)",
+	ClaudeSonnet: "Claude Sonnet 3.5 (ANTHROPIC)",
+	Maritaca:     "Maritaca (BR)",
+	Groq:         "Groq (LLAMA-3.2-90B)",
+	Ollama:       "Ollama",
 }
 
-func allModels() []ModelEnum {
-	return []ModelEnum{OpenAI, OpenAIMini, ClaudeSonnet, Maritaca, Groq, Ollama}
+func (m ModelEnum) String() string {
+	return availableModels[m]
+}
+
+func ParseFrom(modelSlug string) (ModelEnum, bool) {
+	_, ok := availableModels[ModelEnum(modelSlug)]
+	if !ok {
+		return DefaultModel, false
+	}
+
+	return ModelEnum(modelSlug), true
+}
+
+func ListModels() map[ModelEnum]string {
+	return availableModels
 }
