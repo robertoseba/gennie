@@ -8,6 +8,9 @@ build:
 test:
 	@go test -v ./... | colorize.sh
 
+test-cover:
+	go test ./... -coverprofile=coverage.out && go tool cover -html=coverage.out
+
 release:
 	@if [ -z "$(VERSION)" ]; then \
 		echo "VERSION variable is required"; \
