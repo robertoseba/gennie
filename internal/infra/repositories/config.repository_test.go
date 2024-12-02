@@ -21,7 +21,7 @@ func TestNewConfigRepository(t *testing.T) {
 	t.Run("saves config to file", func(t *testing.T) {
 		config := config.NewConfig()
 		config.SetProfilesDir("./profiles")
-		config.SetCacheTo("./cache.gob")
+		config.SetConversationCacheTo("./cache.gob")
 		config.APIKeys.AnthropicApiKey = "anthropic"
 		config.APIKeys.GroqApiKey = "groq"
 		config.APIKeys.MaritacaApiKey = "maritaca"
@@ -41,7 +41,7 @@ func TestNewConfigRepository(t *testing.T) {
 	t.Run("loads config from file", func(t *testing.T) {
 		config := config.NewConfig()
 		config.SetProfilesDir("./profiles")
-		config.SetCacheTo("./cache.gob")
+		config.SetConversationCacheTo("./cache.gob")
 		config.APIKeys.AnthropicApiKey = "anthropic"
 		config.APIKeys.GroqApiKey = "groq"
 		config.APIKeys.MaritacaApiKey = "maritaca"
@@ -74,6 +74,16 @@ func TestNewConfigRepository(t *testing.T) {
 func TestCreateConfigDir(t *testing.T) {
 	t.Run("creates config dir based on XDG_CONFIG_HOME", func(t *testing.T) {
 		os.Setenv("XDG_CONFIG_HOME", ".") //sets config home to current directory
+		dir, err := CreateConfigDir()
+
+		assert.Nil(t, err)
+		assert.Equal(t, "gennie", dir)
+		os.Remove(dir)
+	})
+
+	t.Run("if already exists, returns the existing dir", func(t *testing.T) {
+		os.Setenv("XDG_CONFIG_HOME", ".") //sets config home to current directory
+		os.Mkdir("gennie", 0755)
 		dir, err := CreateConfigDir()
 
 		assert.Nil(t, err)

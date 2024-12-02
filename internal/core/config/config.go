@@ -3,12 +3,12 @@ package config
 import "time"
 
 type Config struct {
-	APIKeys          ProviderApiKeys
-	Ollama           OllamaConfig
-	IsTerminalPretty bool
-	CacheFilename    string
-	ProfilesDirPath  string
-	HttpTimeout      time.Duration
+	APIKeys              ProviderApiKeys
+	Ollama               OllamaConfig
+	IsTerminalPretty     bool
+	ConversationCacheDir string
+	ProfilesDirPath      string
+	HttpTimeout          time.Duration
 }
 
 type ProviderApiKeys struct {
@@ -35,15 +35,15 @@ func NewConfig() *Config {
 			Host:  "",
 			Model: "",
 		},
-		IsTerminalPretty: true,
-		CacheFilename:    "",
-		ProfilesDirPath:  "",
-		HttpTimeout:      time.Second * 60,
+		IsTerminalPretty:     true,
+		ConversationCacheDir: "",
+		ProfilesDirPath:      "",
+		HttpTimeout:          time.Second * 60,
 	}
 }
 
-func (c *Config) SetCacheTo(filepath string) {
-	c.CacheFilename = filepath
+func (c *Config) SetConversationCacheTo(filepath string) {
+	c.ConversationCacheDir = filepath
 }
 
 func (c *Config) SetProfilesDir(dirPath string) {
