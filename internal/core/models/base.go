@@ -6,19 +6,25 @@ import (
 	"github.com/robertoseba/gennie/internal/core/conversation"
 )
 
-var ErrEmptyConversation = errors.New("Chat history is empty")
-var ErrLastQuestionAlreadyAnswered = errors.New("Last chat is already completed with answer")
+var ErrEmptyConversation = errors.New("there are no questions to answer")
+var ErrLastQuestionAlreadyAnswered = errors.New("last conversation has already been answered")
 
 type BaseModel struct {
+	model         ModelEnum
 	apiClient     IApiClient
 	modelProvider iModelProvider
 }
 
-func newBaseModel(client IApiClient, modelProvider iModelProvider) *BaseModel {
+func newBaseModel(model ModelEnum, client IApiClient, modelProvider iModelProvider) *BaseModel {
 	return &BaseModel{
+		model:         model,
 		apiClient:     client,
 		modelProvider: modelProvider,
 	}
+}
+
+func (m *BaseModel) Model() ModelEnum {
+	return m.model
 }
 
 func (m *BaseModel) CompleteChat(conversation *conversation.Conversation, systemPrompt string) error {
