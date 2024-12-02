@@ -13,11 +13,12 @@ import (
 func TestCompleteChat(t *testing.T) {
 	t.Run("Completes Conversation", func(t *testing.T) {
 		apiMockClient := ApiClientMock{}
-		apiMockClient.On("Post", mock.Anything, mock.Anything, mock.Anything).Return(stubOpenAIResponse(), nil)
+
+		apiMockClient.On("Post", "https://api.openai.com/v1/chat/completions", openAiPayload(), map[string]string{"Authorization": "Bearer api-key 123", "Content-Type": "application/json"}).Return(stubOpenAIResponse(), nil)
 
 		conv := conversation.NewConversation("profile-slug", "model-slug")
 		conv.NewQuestion("question")
-		model := newBaseModel(ModelEnum(OpenAI), &apiMockClient, openai.NewProvider(string(OpenAI), "api-key"))
+		model := newBaseModel(ModelEnum(OpenAI), &apiMockClient, openai.NewProvider(string(OpenAI), "api-key 123"))
 
 		err := model.Complete(conv, "system-prompt")
 
@@ -100,4 +101,8 @@ func stubOpenAIResponse() []byte {
 			}
 		]
 	}`)
+}
+
+func openAiPayload() string {
+	return `{"model":"gpt-4o","messages":[{"role":"system","content":"system-prompt"},{"role":"user","content":"question"}]}`
 }
