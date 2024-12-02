@@ -27,8 +27,7 @@ func (m *BaseModel) Model() ModelEnum {
 	return m.model
 }
 
-func (m *BaseModel) CompleteChat(conversation *conversation.Conversation, systemPrompt string) error {
-
+func (m *BaseModel) Complete(conversation *conversation.Conversation, systemPrompt string) error {
 	if conversation.LastAnswer() != "" {
 		return ErrLastQuestionAlreadyAnswered
 	}

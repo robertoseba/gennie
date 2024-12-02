@@ -28,7 +28,6 @@ func main() {
 // Main should loadCache(), cache.GetConfig(), cache.GetProfilesInfo(), cache.GetActiveSession()
 // session: {profileSlug, modelSlug, conversation}
 // session.SetModel(model), session.SetProfile(profile)
-// TODO: Should I pass the session to the CompleteChat()?
 // NewProfileRepository(cache.GetProfilesInfo())
 //cmd.NewRootCmd(config, cache)
 // cache.setConfig(), cache.setProfilesInfo(), cache.setActive()

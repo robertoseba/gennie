@@ -93,8 +93,7 @@ func askModel(storage common.IStorage, p *output.Printer, input *inputOptions, c
 	spinner := output.NewSpinner("Thinking...")
 	spinner.Start()
 
-	//TODO: make CompleteChat return duration,error
-	err := model.CompleteChat(&chatHistory, storage.GetCurrProfile().Data)
+	err := model.Complete(&chatHistory, storage.GetCurrProfile().Data)
 	spinner.Stop()
 	endProcessingTime := time.Now()
 
