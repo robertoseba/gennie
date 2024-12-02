@@ -51,7 +51,7 @@ func (m *OpenAIModel) GetUrl() string {
 	return "https://api.openai.com/v1/chat/completions"
 }
 
-func (m *OpenAIModel) PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error) {
+func (m *OpenAIModel) PreparePayload(conversation *conversation.Conversation, systemPrompt string) (string, error) {
 	p := prompt{
 		Model: m.model,
 		Messages: []message{
@@ -62,7 +62,7 @@ func (m *OpenAIModel) PreparePayload(chatHistory *conversation.Conversation, sys
 		},
 	}
 
-	for _, qa := range chatHistory.QAs {
+	for _, qa := range conversation.QAs {
 		p.Messages = append(p.Messages, message{
 			Role:    roleUser,
 			Content: qa.GetQuestion(),
