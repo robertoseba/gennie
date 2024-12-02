@@ -28,9 +28,11 @@ func TestNewConfigRepository(t *testing.T) {
 		config.APIKeys.OpenAiApiKey = "openai"
 		repo, err := NewConfigRepository(".")
 		assert.Nil(t, err)
+		assert.True(t, config.IsNew())
 
 		err = repo.Save(config)
 		assert.Nil(t, err)
+		assert.Equal(t, false, config.IsNew())
 
 		assert.FileExists(t, repo.ConfigFile())
 		assert.Nil(t, err)
@@ -54,19 +56,21 @@ func TestNewConfigRepository(t *testing.T) {
 
 		loadedConfig, err := repo.Load()
 		assert.Nil(t, err)
+		assert.False(t, loadedConfig.IsNew())
 
 		assert.Equal(t, *config, *loadedConfig)
 
 		os.Remove(repo.ConfigFile())
 	})
 
-	t.Run("loads default config if file does not exist", func(t *testing.T) {
+	t.Run("loads default config if file does not exist and sets as new", func(t *testing.T) {
 		repo, err := NewConfigRepository(".")
 		assert.Nil(t, err)
 
 		loadedConfig, err := repo.Load()
 		assert.Nil(t, err)
 
+		assert.True(t, loadedConfig.IsNew())
 		assert.Equal(t, *config.NewConfig(), *loadedConfig)
 	})
 }

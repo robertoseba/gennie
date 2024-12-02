@@ -10,11 +10,10 @@ import (
 var version string
 
 func main() {
-	cmdUtil, err := cmd.NewCmdUtil(version)
-	if err != nil {
-		cmd.ExitWithError(err)
-	}
-	defer cmdUtil.Storage.Save()
+	//TODO: loadConfig(configDir)
+	//TODO: Build dependencies and inject them (repositories and httpclient)
+
+	//TODO: check if config is new?
 
 	command := cmd.NewRootCmd(cmdUtil)
 	if cmdUtil.Storage.IsNew() {
@@ -23,12 +22,3 @@ func main() {
 
 	command.Execute()
 }
-
-//TODO:
-// Main should loadCache(), cache.GetConfig(), cache.GetProfilesInfo(), cache.GetActiveSession()
-// session: {profileSlug, modelSlug, conversation}
-// session.SetModel(model), session.SetProfile(profile)
-// NewProfileRepository(cache.GetProfilesInfo())
-//cmd.NewRootCmd(config, cache)
-// cache.setConfig(), cache.setProfilesInfo(), cache.setActive()
-// cache.save()

@@ -38,4 +38,12 @@ func TestNewConfig(t *testing.T) {
 		assert.Equal(t, "host", c.Ollama.Host)
 		assert.Equal(t, "model", c.Ollama.Model)
 	})
+
+	t.Run("Is new", func(t *testing.T) {
+		c := NewConfig()
+		assert.Equal(t, true, c.IsNew())
+
+		c.MarkAsNotNew()
+		assert.Equal(t, false, c.IsNew())
+	})
 }

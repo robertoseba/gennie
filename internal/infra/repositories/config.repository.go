@@ -57,6 +57,7 @@ func (cr *ConfigRepository) Save(config *config.Config) error {
 	}
 	encoder := gob.NewEncoder(file)
 
+	config.MarkAsNotNew()
 	if err := encoder.Encode(*config); err != nil {
 		return err
 	}

@@ -9,6 +9,7 @@ type Config struct {
 	ConversationCacheDir string
 	ProfilesDirPath      string
 	HttpTimeout          time.Duration
+	isNew                bool
 }
 
 type ProviderApiKeys struct {
@@ -39,6 +40,7 @@ func NewConfig() *Config {
 		ConversationCacheDir: "",
 		ProfilesDirPath:      "",
 		HttpTimeout:          time.Second * 60,
+		isNew:                true,
 	}
 }
 
@@ -53,4 +55,12 @@ func (c *Config) SetProfilesDir(dirPath string) {
 func (c *Config) SetOllama(host, model string) {
 	c.Ollama.Host = host
 	c.Ollama.Model = model
+}
+
+func (c *Config) IsNew() bool {
+	return c.isNew
+}
+
+func (c *Config) MarkAsNotNew() {
+	c.isNew = false
 }
