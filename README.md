@@ -25,12 +25,11 @@ A powerful CLI assistant designed to support multiple models and profiles to sui
 - **Film Buff**: Recommendations and insights on movies.
 - **Unit Testing**: Guidance on writing reliable unit tests.
 
-Use `gennie profile` to manage your profiles or the `--profile` flag with the `ask` command.
+Use `gennie profile` to manage your profiles or the `--profile (-p)` flag with the `ask` command.
 
-**Profiles are cached locally for performance:**
+**Profile slugs are derived from the filename. Ie: `go.profile.toml` can be used with the flag `-p=go`**
 
 - Default location: `~/.config/gennie/profiles` (\*must be created by user before using gennie)
-- Refresh your cached profiles with `gennie profile refresh`.
 
 _You can download sample profiles from the [profiles](profiles) directory._
 
@@ -44,7 +43,6 @@ File: `sql.profile.toml`
 
 ```toml
 name = "SQL"
-slug = "sql"
 author = "Roberto Seba"
 
 data = '''
@@ -88,15 +86,15 @@ gennie ask "Create a list of the best movies of 2021"
 gennie ask "Are there any movies in that list by Martin Scorcese?" --followup
 ```
 
-> ⚠️ **Note**: Without a follow-up, your chat history is cleared. Use `--followup` to maintain context or export your history with the `export` command.
+> ⚠️ **Note**: Without a follow-up, your conversation is cleared. Use `--followup (-f)` to maintain context or export your conversation with the `export` command.
 
-### Export Chat History
+### Export Conversation
 
-Effortlessly save your chat interactions using the `export` command:
+Effortlessly save your interactions using the `export` command:
 
 ```bash
 gennie ask "Create a list of the best movies of 2021"
-gennie export chat_history.txt
+gennie export conversation.json
 ```
 
 ### Append Files to Questions
@@ -157,7 +155,7 @@ AAvailable Commands:
   clear       Clears all the conversation and preferences from cache
   completion  Generate the autocompletion script for the specified shell
   config      Configures Gennie
-  export      Export the chat history to a file
+  export      Export the conversation to a file
   help        Help about any command
   model       Configures the model to use.
   profile     Profile management
@@ -178,6 +176,8 @@ Use the `gennie config` command to set your API keys.
 ## 🐛 Issues and Suggestions
 
 Gennie is an **OPEN** source project in its early stages. We welcome any bugs, issues, or suggestions you may have. Feel free to create an issue or contact me directly, and I'll respond as soon as possible!
+
+Since this is a very early version and a personal project, breaking changes may occur more often than in a more stable project. I'll try to keep the changes as minimal as possible, but I can't guarantee that they won't happen.
 
 ## 📄 License
 
