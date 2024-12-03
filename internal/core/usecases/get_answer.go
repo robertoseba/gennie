@@ -28,30 +28,21 @@ func NewGetAnswerService(
 }
 
 func (s *GetAnswerService) Execute(question string, profileSlugInput string, modelInput string, isFollowUp bool) (*conversation.Conversation, error) {
-	conv := conversation.NewConversation(profileSlugInput, modelInput)
-	var err error
-
-	if isFollowUp {
-		conv, err = s.conversationRepo.LoadActive()
-		if err != nil {
-			return nil, err
-		}
+	conv, err := s.conversationRepo.LoadActive()
+	if err != nil {
+		return nil, err
 	}
 
-	//TODO: write tests for this
 	if profileSlugInput == "" {
-		if conv.ProfileSlug == "" {
-			conv.ProfileSlug = profile.DefaultProfileSlug
-		}
 		profileSlugInput = conv.ProfileSlug
 	}
 
-	//TODO: write tests for this
 	if modelInput == "" {
-		if conv.ModelSlug == "" {
-			conv.ModelSlug = string(models.DefaultModel)
-		}
 		modelInput = conv.ModelSlug
+	}
+
+	if isFollowUp {
+		conv = conversation.NewConversation(profileSlugInput, modelInput)
 	}
 
 	conv.NewQuestion(question)
