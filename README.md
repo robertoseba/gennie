@@ -152,7 +152,6 @@ Usage:
 
 AAvailable Commands:
   ask         You can ask anything here
-  clear       Clears all the conversation and preferences from cache
   completion  Generate the autocompletion script for the specified shell
   config      Configures Gennie
   export      Export the conversation to a file
