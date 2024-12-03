@@ -8,6 +8,8 @@ import (
 	"path"
 
 	"github.com/robertoseba/gennie/internal/core/conversation"
+	"github.com/robertoseba/gennie/internal/core/models"
+	"github.com/robertoseba/gennie/internal/core/profile"
 )
 
 var ErrNoActiveConversation = errors.New("no active conversation")
@@ -26,11 +28,13 @@ func NewConversationRepository(cacheDir string) *ConversationRepository {
 // Loads the last conversation that has been active
 // If there is no active conversation, it returns an error
 func (r *ConversationRepository) LoadActive() (*conversation.Conversation, error) {
+	//TODO: cache conversation loaded
+	//TODO: instead of error load new conversation
 	c, err := r.loadFrom(path.Join(r.cacheDir, ActiveConversationFileName))
 
 	if err != nil {
 		if errors.Is(err, ErrConversationNotFound) {
-			return nil, ErrNoActiveConversation
+			return conversation.NewConversation(profile.DefaultProfileSlug, string(models.DefaultModel)), nil
 		}
 		return nil, err
 	}

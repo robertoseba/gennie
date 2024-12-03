@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -9,6 +10,8 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/robertoseba/gennie/internal/core/profile"
 )
+
+var ErrNoProfilesDir = fmt.Errorf("no profiles directory found")
 
 type ProfileRepository struct {
 	profilesDir   string
@@ -23,10 +26,14 @@ func NewProfileRepository(profilesDir string) *ProfileRepository {
 }
 
 // Lists all profiles found in the profiles directory, plus a default profile created in the application
+// If dir does not exist, returns the default profile only and the error ErrNoProfilesDir
 func (pr *ProfileRepository) ListAll() (map[string]*profile.Profile, error) {
 	profiles, err := pr.scanProfiles()
 
 	if err != nil {
+		if errors.Is(err, ErrNoProfilesDir) {
+			return map[string]*profile.Profile{profile.DefaultProfileSlug: profile.DefaultProfile()}, err
+		}
 		return nil, err
 	}
 
@@ -51,7 +58,7 @@ func (pr *ProfileRepository) scanProfiles() (map[string]*profile.Profile, error)
 
 	files, err := os.ReadDir(prDir)
 	if err != nil {
-		return nil, fmt.Errorf("error reading profiles directory: %w", err)
+		return nil, ErrNoProfilesDir
 	}
 
 	profiles := make(map[string]*profile.Profile, len(files))

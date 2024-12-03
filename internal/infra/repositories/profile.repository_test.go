@@ -3,6 +3,7 @@ package repositories
 import (
 	"testing"
 
+	"github.com/robertoseba/gennie/internal/core/profile"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,8 +32,9 @@ func TestListAll(t *testing.T) {
 		pr := NewProfileRepository("./invalid")
 		allProfiles, err := pr.ListAll()
 
-		assert.EqualError(t, err, "error reading profiles directory: open ./invalid: no such file or directory")
-		assert.Nil(t, allProfiles)
+		assert.EqualError(t, err, "no profiles directory found")
+		assert.Equal(t, 1, len(allProfiles))
+		assert.Equal(t, profile.DefaultProfile().Name, allProfiles[profile.DefaultProfileSlug].Name)
 	})
 }
 

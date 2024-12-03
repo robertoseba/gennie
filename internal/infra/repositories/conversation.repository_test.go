@@ -14,10 +14,12 @@ func TestNew(t *testing.T) {
 }
 
 func TestSaveAndLoadActive(t *testing.T) {
-	t.Run("No active conversation", func(t *testing.T) {
+	t.Run("when no active conversation, returns a new one", func(t *testing.T) {
 		repo := NewConversationRepository(".")
-		_, err := repo.LoadActive()
-		assert.ErrorIs(t, ErrNoActiveConversation, err)
+		conv, err := repo.LoadActive()
+
+		assert.NoError(t, err)
+		assert.Equal(t, 0, conv.Len())
 	})
 
 	repo := NewConversationRepository("./stub")

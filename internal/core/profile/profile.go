@@ -23,6 +23,7 @@ func DefaultProfile() *Profile {
 	}
 }
 
+// TODO: Move this to repository infra
 func DefaultProfilePath() string {
 	const gennieConfigDir = "gennie"
 	const gennieProfilesDir = "profiles"
