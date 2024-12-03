@@ -13,7 +13,7 @@ func TestNewConfigRepository(t *testing.T) {
 
 	t.Run("creates new config repo", func(t *testing.T) {
 		repo := NewConfigRepository("./config")
-		assert.Equal(t, "config/config.json", repo.ConfigFile())
+		assert.Equal(t, "config/config.json", repo.configFile())
 	})
 
 	t.Run("saves config to file", func(t *testing.T) {
@@ -31,10 +31,10 @@ func TestNewConfigRepository(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, false, config.IsNew())
 
-		assert.FileExists(t, repo.ConfigFile())
+		assert.FileExists(t, repo.configFile())
 		assert.Nil(t, err)
 
-		os.Remove(repo.ConfigFile())
+		os.Remove(repo.configFile())
 	})
 
 	t.Run("loads config from file", func(t *testing.T) {
@@ -56,7 +56,7 @@ func TestNewConfigRepository(t *testing.T) {
 
 		assert.Equal(t, *config, *loadedConfig)
 
-		os.Remove(repo.ConfigFile())
+		os.Remove(repo.configFile())
 	})
 
 	t.Run("loads default config if file does not exist and sets as new", func(t *testing.T) {

@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path"
 
@@ -24,15 +23,11 @@ func NewConfigRepository(configDir string) *ConfigRepository {
 // Loads the config from a gob file into the Config struct
 // If the file does not exist, it returns a new Config with default values
 func (cr *ConfigRepository) Load() (*config.Config, error) {
-	file := cr.ConfigFile()
+	file := cr.configFile()
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		config := config.NewConfig()
-
-		if config.ConversationCacheDir == "" {
-			//Default cache dir is the same as config path
-			fmt.Println("Setting cache dir to", cr.dirPath)
-			config.ConversationCacheDir = cr.dirPath
-		}
+		//Default cache dir is the same as config path
+		config.ConversationCacheDir = cr.dirPath
 		return config, nil
 	}
 
@@ -50,7 +45,7 @@ func (cr *ConfigRepository) Load() (*config.Config, error) {
 }
 
 // Returns the full path to the config file
-func (cr *ConfigRepository) ConfigFile() string {
+func (cr *ConfigRepository) configFile() string {
 	return path.Join(cr.dirPath, cr.filename)
 }
 
@@ -61,7 +56,7 @@ func (cr *ConfigRepository) Save(config *config.Config) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(cr.ConfigFile(), content, 0644)
+	err = os.WriteFile(cr.configFile(), content, 0644)
 	if err != nil {
 		return err
 	}

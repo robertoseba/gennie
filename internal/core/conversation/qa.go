@@ -7,12 +7,12 @@ import (
 var ErrAnswerAlreadySet = errors.New("answer already set")
 
 type qa struct {
-	Answer   message
-	Question message
+	Question message `json:"question"`
+	Answer   message `json:"answer"`
 }
 type message struct {
-	Content string
-	Role    string
+	Content string `json:"content"`
+	Role    string `json:"role"`
 }
 
 func NewQA(question string) *qa {

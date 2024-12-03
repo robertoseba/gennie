@@ -8,11 +8,11 @@ import (
 var ErrNewQuestionBeforeAnswer = errors.New("previous question hasn't been answered yet")
 
 type Conversation struct {
-	QAs         []qa `json:"QAs,omitempty"`
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	ProfileSlug string
-	ModelSlug   string
+	QAs         []qa      `json:"qa,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	ProfileSlug string    `json:"profile_slug"`
+	ModelSlug   string    `json:"model_slug"`
 }
 
 func NewConversation(profileSlug string, modelSlug string) *Conversation {
@@ -75,5 +75,3 @@ func (c *Conversation) SetModelTo(modelSlug string) {
 func (c *Conversation) markAsUpdated() {
 	c.UpdatedAt = time.Now()
 }
-
-//TODO: create encoder/decoder for conversation so we dont have to expose QA?

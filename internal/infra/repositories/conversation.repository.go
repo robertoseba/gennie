@@ -26,10 +26,9 @@ func NewConversationRepository(cacheDir string) *ConversationRepository {
 }
 
 // Loads the last conversation that has been active
-// If there is no active conversation, it returns an error
+// If there is no active conversation, creates a new one with the default profile and model
 func (r *ConversationRepository) LoadActive() (*conversation.Conversation, error) {
 	//TODO: cache conversation loaded
-	//TODO: instead of error load new conversation
 	c, err := r.loadFrom(path.Join(r.cacheDir, ActiveConversationFileName))
 
 	if err != nil {
@@ -47,7 +46,7 @@ func (r *ConversationRepository) LoadFromFile(filepath string) (*conversation.Co
 }
 
 func (r *ConversationRepository) ExportToFile(conversation *conversation.Conversation, filepath string) error {
-	content, err := json.Marshal(conversation)
+	content, err := json.MarshalIndent(conversation, "", "  ")
 	if err != nil {
 		return err
 	}
