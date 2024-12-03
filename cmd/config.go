@@ -24,8 +24,7 @@ func NewConfigCmd(configRepo config.IConfigRepository, p *output.Printer) *cobra
 			configProfile(p, config)
 			configOllama(p, config)
 
-			configRepo.Save(config)
-			return nil
+			return configRepo.Save(config)
 		},
 	}
 

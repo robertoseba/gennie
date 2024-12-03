@@ -27,7 +27,5 @@ func (s *SelectProfileService) SetAsActive(profile *profile.Profile) error {
 		return err
 	}
 	conv.SetProfileTo(profile.Slug)
-	s.conversationRepo.SaveAsActive(conv)
-
-	return nil
+	return s.conversationRepo.SaveAsActive(conv)
 }

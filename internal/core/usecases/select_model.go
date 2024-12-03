@@ -25,7 +25,5 @@ func (s *SelectModelService) SetAsActive(model models.ModelEnum) error {
 		return err
 	}
 	conv.SetModelTo(string(model))
-	s.conversationRepo.SaveAsActive(conv)
-
-	return nil
+	return s.conversationRepo.SaveAsActive(conv)
 }

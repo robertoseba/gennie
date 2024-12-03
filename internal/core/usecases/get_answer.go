@@ -67,7 +67,10 @@ func (s *GetAnswerService) Execute(input *InputDTO) (*conversation.Conversation,
 		input.Question = input.Question + "\n" + content
 	}
 
-	conv.NewQuestion(input.Question)
+	if err := conv.NewQuestion(input.Question); err != nil {
+		return nil, err
+	}
+
 	err = s.completeConversation(conv, input.ProfileSlug, input.Model)
 	if err != nil {
 		return nil, err

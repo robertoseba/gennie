@@ -46,5 +46,8 @@ func main() {
 		command.SetArgs([]string{"config"})
 	}
 
-	command.Execute()
+	err = command.Execute()
+	if err != nil {
+		panic(err)
+	}
 }

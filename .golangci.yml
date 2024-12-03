@@ -1,0 +1,21 @@
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+        - goconst
+
+linters:
+  enable:
+    - govet
+    - gosimple
+    - errcheck
+    - staticcheck
+    - unused
+    - ineffassign
+    - goconst
+    - typecheck
+    - bodyclose
+    - errname
+    - testifylint
+    - tenv

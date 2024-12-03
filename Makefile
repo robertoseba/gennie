@@ -8,6 +8,9 @@ build:
 test:
 	@go test -v ./... | colorize.sh
 
+lint:
+	@golangci-lint run ./...
+
 test-cover:
 	go test ./... -coverprofile=coverage.out && go tool cover -html=coverage.out
 

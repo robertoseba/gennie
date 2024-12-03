@@ -17,6 +17,5 @@ func (s *ExportConversationService) Execute(filename string) error {
 	if err != nil {
 		return err
 	}
-	s.conversationRepo.ExportToFile(conv, filename)
-	return nil
+	return s.conversationRepo.ExportToFile(conv, filename)
 }

@@ -81,21 +81,17 @@ func TestNewConfigRepository(t *testing.T) {
 
 func TestCreateConfigDir(t *testing.T) {
 	t.Run("creates config dir based on XDG_CONFIG_HOME", func(t *testing.T) {
-		previousXDGConfigHome := os.Getenv("XDG_CONFIG_HOME")
-		os.Setenv("XDG_CONFIG_HOME", ".") //sets config home to current directory
+		t.Setenv("XDG_CONFIG_HOME", ".") //sets config home to current directory
 
 		dir, err := CreateConfigDir()
 
 		assert.Nil(t, err)
 		assert.Equal(t, "gennie", dir)
 		os.Remove(dir)
-
-		os.Setenv("XDG_CONFIG_HOME", previousXDGConfigHome)
 	})
 
 	t.Run("if already exists, returns the existing dir", func(t *testing.T) {
-		previousXDGConfigHome := os.Getenv("XDG_CONFIG_HOME")
-		os.Setenv("XDG_CONFIG_HOME", ".") //sets config home to current directory
+		t.Setenv("XDG_CONFIG_HOME", ".") //sets config home to current directory
 
 		os.Mkdir("gennie", 0755)
 		dir, err := CreateConfigDir()
@@ -103,8 +99,6 @@ func TestCreateConfigDir(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, "gennie", dir)
 		os.Remove(dir)
-
-		os.Setenv("XDG_CONFIG_HOME", previousXDGConfigHome)
 	})
 
 }
