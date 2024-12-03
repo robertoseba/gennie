@@ -28,7 +28,10 @@ func NewGetAnswerService(
 }
 
 func (s *GetAnswerService) Execute(question string, profileSlugInput string, modelInput string, isFollowUp bool) (*conversation.Conversation, error) {
-	conv, err := s.conversationRepo.LoadActive()
+	var conv *conversation.Conversation
+	var err error
+
+	conv, err = s.conversationRepo.LoadActive()
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +44,7 @@ func (s *GetAnswerService) Execute(question string, profileSlugInput string, mod
 		modelInput = conv.ModelSlug
 	}
 
-	if isFollowUp {
+	if !isFollowUp {
 		conv = conversation.NewConversation(profileSlugInput, modelInput)
 	}
 

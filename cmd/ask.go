@@ -34,6 +34,7 @@ func NewAskCmd(askCmd *usecases.GetAnswerService, p *output.Printer) *cobra.Comm
 				ExitWithError(err)
 			}
 
+			p.PrintLine(output.Yellow)
 			p.PrintWithCodeStyling(conversation.LastAnswer(), output.Yellow)
 			p.PrintLine(output.Yellow)
 

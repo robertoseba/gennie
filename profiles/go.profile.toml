@@ -1,7 +1,6 @@
 #Go profile assistant
 
 name = "Go"
-slug = "go"
 author = "Roberto Seba"
 
 data = ''' 
