@@ -1,6 +1,6 @@
 package profile
 
-type ProfileRepositoryInterface interface {
+type IProfileRepository interface {
 	ListAll() (map[string]*Profile, error)
 	FindBySlug(slug string) (*Profile, error)
 }

@@ -10,8 +10,8 @@ import (
 )
 
 type GetAnswerService struct {
-	conversationRepo conversation.ConversationRepository
-	profileRepo      profile.ProfileRepositoryInterface
+	conversationRepo conversation.IConversationRepository
+	profileRepo      profile.IProfileRepository
 	apiClient        models.IApiClient
 	config           config.Config
 }
@@ -25,8 +25,8 @@ type InputDTO struct {
 }
 
 func NewGetAnswerService(
-	cr conversation.ConversationRepository,
-	pr profile.ProfileRepositoryInterface,
+	cr conversation.IConversationRepository,
+	pr profile.IProfileRepository,
 	apiClient models.IApiClient,
 	config config.Config) *GetAnswerService {
 	return &GetAnswerService{

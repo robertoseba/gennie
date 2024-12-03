@@ -6,10 +6,10 @@ import (
 )
 
 type SelectModelService struct {
-	conversationRepo conversation.ConversationRepository
+	conversationRepo conversation.IConversationRepository
 }
 
-func NewSelectModelService(conversationRepo conversation.ConversationRepository) *SelectModelService {
+func NewSelectModelService(conversationRepo conversation.IConversationRepository) *SelectModelService {
 	return &SelectModelService{
 		conversationRepo: conversationRepo,
 	}

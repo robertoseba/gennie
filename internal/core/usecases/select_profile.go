@@ -6,11 +6,11 @@ import (
 )
 
 type SelectProfileService struct {
-	profileRepo      profile.ProfileRepositoryInterface
-	conversationRepo conversation.ConversationRepository
+	profileRepo      profile.IProfileRepository
+	conversationRepo conversation.IConversationRepository
 }
 
-func NewSelectProfileService(profileRepo profile.ProfileRepositoryInterface, conversationRepo conversation.ConversationRepository) *SelectProfileService {
+func NewSelectProfileService(profileRepo profile.IProfileRepository, conversationRepo conversation.IConversationRepository) *SelectProfileService {
 	return &SelectProfileService{
 		profileRepo:      profileRepo,
 		conversationRepo: conversationRepo,
