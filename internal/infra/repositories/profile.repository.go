@@ -99,3 +99,16 @@ func (pr *ProfileRepository) loadProfileFile(filePath string) (*profile.Profile,
 
 	return profile, nil
 }
+
+// Uses the os.UserConfigDir to setup the default profiles directory
+func DefaultProfileDir() string {
+	const gennieConfigDir = "gennie"
+	const gennieProfilesDir = "profiles"
+
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		return ""
+	}
+
+	return path.Join(configDir, gennieConfigDir, gennieProfilesDir)
+}

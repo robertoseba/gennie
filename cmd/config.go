@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/robertoseba/gennie/internal/core/config"
-	"github.com/robertoseba/gennie/internal/core/profile"
+	"github.com/robertoseba/gennie/internal/infra/repositories"
 	"github.com/robertoseba/gennie/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -56,7 +56,8 @@ func configProfile(p *output.Printer, config *config.Config) {
 	if previousValue != "" {
 		question.WithPrevious(previousValue, false)
 	} else {
-		question.WithPrevious(profile.DefaultProfilePath(), false)
+		// TODO: this dependency on the repositories package should be removed
+		question.WithPrevious(repositories.DefaultProfileDir(), false)
 	}
 	config.SetProfilesDir(question.Ask(p))
 }

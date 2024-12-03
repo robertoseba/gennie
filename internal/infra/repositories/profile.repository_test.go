@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"os"
 	"testing"
 
 	"github.com/robertoseba/gennie/internal/core/profile"
@@ -55,5 +56,15 @@ func TestFindBySlug(t *testing.T) {
 		profile, err := pr.FindBySlug("test3")
 		assert.EqualError(t, err, "error loading toml file: open stub/test3.profile.toml: no such file or directory")
 		assert.Nil(t, profile)
+	})
+}
+
+func TestDefaultProfileDir(t *testing.T) {
+	t.Run("Default profile dir", func(t *testing.T) {
+		p := DefaultProfileDir()
+		osConfigDir, err := os.UserConfigDir()
+		assert.NoError(t, err)
+
+		assert.Equal(t, osConfigDir+"/gennie/profiles", p)
 	})
 }
