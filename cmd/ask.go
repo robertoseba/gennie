@@ -22,11 +22,19 @@ func NewAskCmd(askCmd *usecases.GetAnswerService, p *output.Printer) *cobra.Comm
 		Long:  `The question that will be sent to the llm. If your question contains special characters, please use quotes.`,
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			//TODO: implement the appendFile LOGIC
 			startProcessingTime := time.Now()
 			spinner := output.NewSpinner("Thinking...")
 			spinner.Start()
-			conversation, err := askCmd.Execute(strings.Join(args, " "), profileFlag, modelFlag, isFollowUpFlag)
+
+			dto := &usecases.InputDTO{
+				Question:    strings.Join(args, " "),
+				ProfileSlug: profileFlag,
+				Model:       modelFlag,
+				IsFollowUp:  isFollowUpFlag,
+				AppendFile:  appendFileFlag,
+			}
+
+			conversation, err := askCmd.Execute(dto)
 			spinner.Stop()
 			endProcessingTime := time.Now()
 

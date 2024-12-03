@@ -1,6 +1,8 @@
 package usecases
 
 import (
+	"os"
+
 	"github.com/robertoseba/gennie/internal/core/config"
 	"github.com/robertoseba/gennie/internal/core/conversation"
 	"github.com/robertoseba/gennie/internal/core/models"
@@ -12,6 +14,14 @@ type GetAnswerService struct {
 	profileRepo      profile.ProfileRepositoryInterface
 	apiClient        models.IApiClient
 	config           config.Config
+}
+
+type InputDTO struct {
+	Question    string
+	ProfileSlug string
+	Model       string
+	IsFollowUp  bool
+	AppendFile  string
 }
 
 func NewGetAnswerService(
@@ -27,7 +37,7 @@ func NewGetAnswerService(
 	}
 }
 
-func (s *GetAnswerService) Execute(question string, profileSlugInput string, modelInput string, isFollowUp bool) (*conversation.Conversation, error) {
+func (s *GetAnswerService) Execute(input *InputDTO) (*conversation.Conversation, error) {
 	var conv *conversation.Conversation
 	var err error
 
@@ -36,20 +46,29 @@ func (s *GetAnswerService) Execute(question string, profileSlugInput string, mod
 		return nil, err
 	}
 
-	if profileSlugInput == "" {
-		profileSlugInput = conv.ProfileSlug
+	if input.ProfileSlug == "" {
+		input.ProfileSlug = conv.ProfileSlug
 	}
 
-	if modelInput == "" {
-		modelInput = conv.ModelSlug
+	if input.Model == "" {
+		input.Model = conv.ModelSlug
 	}
 
-	if !isFollowUp {
-		conv = conversation.NewConversation(profileSlugInput, modelInput)
+	if !input.IsFollowUp {
+		conv = conversation.NewConversation(input.ProfileSlug, input.Model)
 	}
 
-	conv.NewQuestion(question)
-	err = s.completeConversation(conv, profileSlugInput, modelInput)
+	if input.AppendFile != "" {
+		content, err := readFile(input.AppendFile)
+		if err != nil {
+			return nil, err
+		}
+
+		input.Question = input.Question + "\n" + content
+	}
+
+	conv.NewQuestion(input.Question)
+	err = s.completeConversation(conv, input.ProfileSlug, input.Model)
 	if err != nil {
 		return nil, err
 	}
@@ -88,4 +107,9 @@ func (s *GetAnswerService) completeConversation(conversation *conversation.Conve
 	}
 
 	return nil
+}
+
+func readFile(filePath string) (string, error) {
+	content, err := os.ReadFile(filePath)
+	return string(content), err
 }
