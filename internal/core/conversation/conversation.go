@@ -8,7 +8,7 @@ import (
 var ErrNewQuestionBeforeAnswer = errors.New("previous question hasn't been answered yet")
 
 type Conversation struct {
-	QAs         []qa
+	QAs         []qa `json:"QAs,omitempty"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	ProfileSlug string

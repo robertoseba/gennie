@@ -1,7 +1,8 @@
 package repositories
 
 import (
-	"encoding/gob"
+	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 
@@ -15,7 +16,7 @@ type ConfigRepository struct {
 
 func NewConfigRepository(configDir string) *ConfigRepository {
 	return &ConfigRepository{
-		filename: "gennie_config.gob",
+		filename: "config.json",
 		dirPath:  configDir,
 	}
 }
@@ -26,21 +27,25 @@ func (cr *ConfigRepository) Load() (*config.Config, error) {
 	file := cr.ConfigFile()
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		config := config.NewConfig()
+
+		if config.ConversationCacheDir == "" {
+			//Default cache dir is the same as config path
+			fmt.Println("Setting cache dir to", cr.dirPath)
+			config.ConversationCacheDir = cr.dirPath
+		}
 		return config, nil
 	}
 
-	f, err := os.Open(file)
+	content, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
 
 	var config config.Config
-	decoder := gob.NewDecoder(f)
-	if err := decoder.Decode(&config); err != nil {
+	err = json.Unmarshal(content, &config)
+	if err != nil {
 		return nil, err
 	}
-
 	return &config, nil
 }
 
@@ -51,14 +56,13 @@ func (cr *ConfigRepository) ConfigFile() string {
 
 // Saves the config to a gob file
 func (cr *ConfigRepository) Save(config *config.Config) error {
-	file, err := os.Create(cr.ConfigFile())
+	config.MarkAsNotNew()
+	content, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return err
 	}
-	encoder := gob.NewEncoder(file)
-
-	config.MarkAsNotNew()
-	if err := encoder.Encode(*config); err != nil {
+	err = os.WriteFile(cr.ConfigFile(), content, 0644)
+	if err != nil {
 		return err
 	}
 	return nil

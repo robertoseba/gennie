@@ -81,5 +81,3 @@ func (r *ConversationRepository) loadFrom(filepath string) (*conversation.Conver
 
 	return conversation, nil
 }
-
-//TODO: CreateCacheDir func to create the cache dir if it does not exist using os.UserCacheDir

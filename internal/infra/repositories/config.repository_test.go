@@ -67,6 +67,14 @@ func TestNewConfigRepository(t *testing.T) {
 		assert.True(t, loadedConfig.IsNew())
 		assert.Equal(t, *config.NewConfig(), *loadedConfig)
 	})
+
+	t.Run("when loading default should set cache dir the same as config dir", func(t *testing.T) {
+		repo := NewConfigRepository(".")
+		loadedConfig, err := repo.Load()
+		assert.Nil(t, err)
+
+		assert.Equal(t, ".", loadedConfig.ConversationCacheDir)
+	})
 }
 
 func TestCreateConfigDir(t *testing.T) {
