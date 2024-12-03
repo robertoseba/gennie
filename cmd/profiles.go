@@ -29,6 +29,7 @@ func NewProfilesCmd(selectProfileCmd *usecases.SelectProfileService, p *output.P
 
 			selectedProfileSlug := output.MenuProfile(menuMap, "default")
 
+			// When esc is pressed in the menu
 			if selectedProfileSlug == "" {
 				return
 			}
@@ -40,7 +41,12 @@ func NewProfilesCmd(selectProfileCmd *usecases.SelectProfileService, p *output.P
 		},
 	}
 
-	cmdListProfiles := &cobra.Command{
+	cmdProfiles.AddCommand(newCmdListProfiles(selectProfileCmd, p))
+	return cmdProfiles
+}
+
+func newCmdListProfiles(selectProfileCmd *usecases.SelectProfileService, p *output.Printer) *cobra.Command {
+	return &cobra.Command{
 		Use:   "slugs",
 		Short: "List available profiles slugs for use with --profile flag when asking questions",
 		Long:  "List available profiles slugs for use with --profile(-p=) flag when asking questions. Profile slugs are derived from the filename. Ie: \"my_profile.profile.toml\" will have the slug \"my_profile\".",
@@ -65,7 +71,4 @@ func NewProfilesCmd(selectProfileCmd *usecases.SelectProfileService, p *output.P
 			p.PrintLine(output.Yellow)
 		},
 	}
-
-	cmdProfiles.AddCommand(cmdListProfiles)
-	return cmdProfiles
 }
