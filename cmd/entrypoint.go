@@ -27,8 +27,8 @@ func NewRootCmd(printer *output.Printer,
 	rootCmd.AddCommand(NewProfilesCmd(selectProfileCmd, printer))
 	rootCmd.AddCommand(NewAskCmd(askCmd, printer))
 	rootCmd.AddCommand(NewExportCmd(exportConversationCmd, printer))
-	rootCmd.AddCommand(NewConfigCmd(config, configRepo, printer))
+	rootCmd.AddCommand(NewConfigCmd(configRepo, printer))
 	// rootCmd.AddCommand(NewClearCmd(c.Storage, c.Printer))
-	// rootCmd.AddCommand(NewStatusCmd(c.Storage, c.Printer))
+	rootCmd.AddCommand(NewStatusCmd(configRepo, printer))
 	return rootCmd
 }

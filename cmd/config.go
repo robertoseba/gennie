@@ -3,28 +3,27 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/robertoseba/gennie/internal/common"
+	"github.com/robertoseba/gennie/internal/core/config"
+	"github.com/robertoseba/gennie/internal/core/profile"
 	"github.com/robertoseba/gennie/internal/output"
-	"github.com/robertoseba/gennie/internal/profile"
 	"github.com/spf13/cobra"
 )
 
-func NewConfigCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
+func NewConfigCmd(configRepo config.IConfigRepository, p *output.Printer) *cobra.Command {
 
 	clearCmd := &cobra.Command{
 		Use:   "config",
 		Short: "Configures Gennie",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config := storage.GetConfig()
+			config, err := configRepo.Load()
+			if err != nil {
+				return err
+			}
 
-			configApiKeys(p, &config)
-			configProfile(p, &config)
-			configOllama(p, &config)
+			configApiKeys(p, config)
+			configProfile(p, config)
 
-			storage.SetConfig(config)
-
-			refreshProfiles(storage)
-
+			configRepo.Save(config)
 			return nil
 		},
 	}
@@ -32,11 +31,11 @@ func NewConfigCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 	return clearCmd
 }
 
-func configApiKeys(p *output.Printer, config *common.Config) {
-	config.OpenAiApiKey = askKey(p, "OpenAI", config.OpenAiApiKey)
-	config.AnthropicApiKey = askKey(p, "Anthropic", config.AnthropicApiKey)
-	config.MaritacaApiKey = askKey(p, "Maritaca", config.MaritacaApiKey)
-	config.GroqApiKey = askKey(p, "Groq", config.GroqApiKey)
+func configApiKeys(p *output.Printer, config *config.Config) {
+	config.APIKeys.OpenAiApiKey = askKey(p, "OpenAI", config.APIKeys.OpenAiApiKey)
+	config.APIKeys.AnthropicApiKey = askKey(p, "Anthropic", config.APIKeys.AnthropicApiKey)
+	config.APIKeys.MaritacaApiKey = askKey(p, "Maritaca", config.APIKeys.MaritacaApiKey)
+	config.APIKeys.GroqApiKey = askKey(p, "Groq", config.APIKeys.GroqApiKey)
 }
 
 func askKey(p *output.Printer, key string, previousValue string) string {
@@ -48,28 +47,29 @@ func askKey(p *output.Printer, key string, previousValue string) string {
 	return question.Ask(p)
 }
 
-func configProfile(p *output.Printer, config *common.Config) {
-	previousValue := config.ProfilesPath
+func configProfile(p *output.Printer, config *config.Config) {
 	question := output.NewQuestion("Enter your profiles folder path")
+
+	previousValue := config.ProfilesDirPath
 
 	if previousValue != "" {
 		question.WithPrevious(previousValue, false)
 	} else {
 		question.WithPrevious(profile.DefaultProfilePath(), false)
 	}
-	config.ProfilesPath = question.Ask(p)
+	config.SetProfilesDir(question.Ask(p))
 }
 
-func configOllama(p *output.Printer, config *common.Config) {
-	q := output.NewQuestion("What is your Ollama host address?")
-	if config.OllamaHost != "" {
-		q.WithPrevious(config.OllamaHost, false)
-	}
-	config.OllamaHost = q.Ask(p)
+// func configOllama(p *output.Printer, config *common.Config) {
+// 	q := output.NewQuestion("What is your Ollama host address?")
+// 	if config.OllamaHost != "" {
+// 		q.WithPrevious(config.OllamaHost, false)
+// 	}
+// 	config.OllamaHost = q.Ask(p)
 
-	q = output.NewQuestion("What Ollama model would you like to use?")
-	if config.OllamaModel != "" {
-		q.WithPrevious(config.OllamaModel, false)
-	}
-	config.OllamaModel = q.Ask(p)
-}
+// 	q = output.NewQuestion("What Ollama model would you like to use?")
+// 	if config.OllamaModel != "" {
+// 		q.WithPrevious(config.OllamaModel, false)
+// 	}
+// 	config.OllamaModel = q.Ask(p)
+// }

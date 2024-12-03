@@ -4,18 +4,15 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"slices"
 	"strings"
 	"time"
 
-	"github.com/robertoseba/gennie/internal/apiclient"
-	"github.com/robertoseba/gennie/internal/common"
-	"github.com/robertoseba/gennie/internal/models"
+	"github.com/robertoseba/gennie/internal/core/usecases"
 	"github.com/robertoseba/gennie/internal/output"
 	"github.com/spf13/cobra"
 )
 
-func NewAskCmd(storage common.IStorage, p *output.Printer, h apiclient.IApiClient) *cobra.Command {
+func NewAskCmd(askCmd *usecases.GetAnswerService, p *output.Printer) *cobra.Command {
 	var isFollowUpFlag bool
 	var appendFileFlag string
 	var modelFlag string
@@ -27,29 +24,48 @@ func NewAskCmd(storage common.IStorage, p *output.Printer, h apiclient.IApiClien
 		Long:  `The question that will be sent to the llm. If your question contains special characters, please use quotes.`,
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if modelFlag != "" && !slices.Contains(models.ListModels(), models.ModelEnum(modelFlag)) {
-				return fmt.Errorf("Model %s not supported. Please use one of the following:\n%s\n", modelFlag, strings.Join(models.ListModelsSlug(), ", "))
+			// if modelFlag != "" && !slices.Contains(models.ListModels(), models.ModelEnum(modelFlag)) {
+			// 	return fmt.Errorf("Model %s not supported. Please use one of the following:\n%s\n", modelFlag, strings.Join(models.ListModelsSlug(), ", "))
+			// }
+
+			// input := &inputOptions{
+			// 	Question:   strings.Join(args, " "),
+			// 	IsFollowUp: isFollowUpFlag,
+			// 	AppendFile: appendFileFlag,
+			// }
+
+			// if profileFlag != "" {
+			// 	profile, err := storage.LoadProfileData(profileFlag)
+			// 	if err != nil {
+			// 		ExitWithError(err)
+			// 	}
+			// 	storage.SetCurrProfile(*profile)
+			// }
+
+			// if modelFlag != "" {
+			// 	storage.SetCurrModelSlug(modelFlag)
+			// }
+
+			// askModel(storage, p, input, h)
+
+			//TODO: get conversation here and pass to usecase? or have the usecase return a conversation
+			startProcessingTime := time.Now()
+			spinner := output.NewSpinner("Thinking...")
+			spinner.Start()
+			conversation, err := askCmd.Execute(strings.Join(args, " "), profileFlag, modelFlag, isFollowUpFlag)
+			spinner.Stop()
+			endProcessingTime := time.Now()
+
+			if err != nil {
+				ExitWithError(err)
 			}
 
-			input := &inputOptions{
-				Question:   strings.Join(args, " "),
-				IsFollowUp: isFollowUpFlag,
-				AppendFile: appendFileFlag,
-			}
+			p.PrintWithCodeStyling(conversation.LastAnswer(), output.Yellow)
+			p.PrintLine(output.Yellow)
 
-			if profileFlag != "" {
-				profile, err := storage.LoadProfileData(profileFlag)
-				if err != nil {
-					ExitWithError(err)
-				}
-				storage.SetCurrProfile(*profile)
-			}
-
-			if modelFlag != "" {
-				storage.SetCurrModelSlug(modelFlag)
-			}
-
-			askModel(storage, p, input, h)
+			p.Print(fmt.Sprintf("Model: %s, Profile: %s", conversation.ModelSlug, conversation.ProfileSlug), output.Cyan)
+			p.Print(fmt.Sprintf("Answered in: %0.2f seconds", endProcessingTime.Sub(startProcessingTime).Seconds()), output.Cyan)
+			p.Print("", "")
 
 			return nil
 		},
@@ -69,48 +85,48 @@ type inputOptions struct {
 	IsFollowUp bool
 }
 
-func askModel(storage common.IStorage, p *output.Printer, input *inputOptions, client apiclient.IApiClient) {
-	model := models.NewModel(models.ModelEnum(storage.GetCurrModelSlug()), client, storage.GetConfig())
+// func askModel(storage common.IStorage, p *output.Printer, input *inputOptions, client apiclient.IApiClient) {
+// 	model := models.NewModel(models.ModelEnum(storage.GetCurrModelSlug()), client, storage.GetConfig())
 
-	chatHistory := storage.GetChatHistory()
+// 	chatHistory := storage.GetChatHistory()
 
-	if !input.IsFollowUp && chatHistory.Len() > 0 {
-		chatHistory.Clear()
-	}
+// 	if !input.IsFollowUp && chatHistory.Len() > 0 {
+// 		chatHistory.Clear()
+// 	}
 
-	if input.AppendFile != "" {
-		fileContent, err := readFileContents(input.AppendFile)
-		if err != nil {
-			ExitWithError(err)
-		}
-		input.Question = fmt.Sprintf("%s\n%s", input.Question, fileContent)
+// 	if input.AppendFile != "" {
+// 		fileContent, err := readFileContents(input.AppendFile)
+// 		if err != nil {
+// 			ExitWithError(err)
+// 		}
+// 		input.Question = fmt.Sprintf("%s\n%s", input.Question, fileContent)
 
-	}
+// 	}
 
-	chatHistory.NewQuestion(input.Question)
+// 	chatHistory.NewQuestion(input.Question)
 
-	startProcessingTime := time.Now()
-	spinner := output.NewSpinner("Thinking...")
-	spinner.Start()
+// 	startProcessingTime := time.Now()
+// 	spinner := output.NewSpinner("Thinking...")
+// 	spinner.Start()
 
-	err := model.Complete(&chatHistory, storage.GetCurrProfile().Data)
-	spinner.Stop()
-	endProcessingTime := time.Now()
+// 	err := model.Complete(&chatHistory, storage.GetCurrProfile().Data)
+// 	spinner.Stop()
+// 	endProcessingTime := time.Now()
 
-	if err != nil {
-		ExitWithError(err)
-	}
+// 	if err != nil {
+// 		ExitWithError(err)
+// 	}
 
-	storage.SetChatHistory(chatHistory)
+// 	storage.SetChatHistory(chatHistory)
 
-	p.PrintLine(output.Yellow)
-	p.PrintWithCodeStyling(chatHistory.LastAnswer(), output.Yellow)
-	p.PrintLine(output.Yellow)
+// 	p.PrintLine(output.Yellow)
+// 	p.PrintWithCodeStyling(chatHistory.LastAnswer(), output.Yellow)
+// 	p.PrintLine(output.Yellow)
 
-	p.Print(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(storage.GetCurrModelSlug()), storage.GetCurrProfile().Name), output.Cyan)
-	p.Print(fmt.Sprintf("Answered in: %0.2f seconds", endProcessingTime.Sub(startProcessingTime).Seconds()), output.Cyan)
-	p.Print("", "")
-}
+// 	p.Print(fmt.Sprintf("Model: %s, Profile: %s", models.ModelEnum(storage.GetCurrModelSlug()), storage.GetCurrProfile().Name), output.Cyan)
+// 	p.Print(fmt.Sprintf("Answered in: %0.2f seconds", endProcessingTime.Sub(startProcessingTime).Seconds()), output.Cyan)
+// 	p.Print("", "")
+// }
 
 func readFileContents(filePath string) (string, error) {
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {

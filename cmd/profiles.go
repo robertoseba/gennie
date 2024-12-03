@@ -12,7 +12,7 @@ import (
 func NewProfilesCmd(selectProfileCmd *usecases.SelectProfileService, p *output.Printer) *cobra.Command {
 	cmdProfiles := &cobra.Command{
 		Use:   "profile",
-		Short: "Profile management",
+		Short: "Configures the profile to use and list slugs",
 		Run: func(cmd *cobra.Command, args []string) {
 			availableProfiles, err := selectProfileCmd.ListAll()
 			if err != nil {
@@ -42,7 +42,8 @@ func NewProfilesCmd(selectProfileCmd *usecases.SelectProfileService, p *output.P
 
 	cmdListProfiles := &cobra.Command{
 		Use:   "slugs",
-		Short: "List available profiles slug for use with --profile flag when asking questions",
+		Short: "List available profiles slugs for use with --profile flag when asking questions",
+		Long:  "List available profiles slugs for use with --profile(-p=) flag when asking questions. Profile slugs are derived from the filename. Ie: \"my_profile.profile.toml\" will have the slug \"my_profile\".",
 		Run: func(cmd *cobra.Command, args []string) {
 			p.PrintLine(output.Yellow)
 

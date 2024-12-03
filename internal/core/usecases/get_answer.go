@@ -27,24 +27,45 @@ func NewGetAnswerService(
 	}
 }
 
-func (s *GetAnswerService) Execute(question string, profileSlugInput string, modelInput string) (string, error) {
-	conv, err := s.conversationRepo.LoadActive()
-	if err != nil {
-		return "", err
+func (s *GetAnswerService) Execute(question string, profileSlugInput string, modelInput string, isFollowUp bool) (*conversation.Conversation, error) {
+	conv := conversation.NewConversation(profileSlugInput, modelInput)
+	var err error
+
+	if isFollowUp {
+		conv, err = s.conversationRepo.LoadActive()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	//TODO: write tests for this
+	if profileSlugInput == "" {
+		if conv.ProfileSlug == "" {
+			conv.ProfileSlug = profile.DefaultProfileSlug
+		}
+		profileSlugInput = conv.ProfileSlug
+	}
+
+	//TODO: write tests for this
+	if modelInput == "" {
+		if conv.ModelSlug == "" {
+			conv.ModelSlug = string(models.DefaultModel)
+		}
+		modelInput = conv.ModelSlug
 	}
 
 	conv.NewQuestion(question)
 	err = s.completeConversation(conv, profileSlugInput, modelInput)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	err = s.conversationRepo.SaveAsActive(conv)
 	if err != nil {
-		return conv.LastAnswer(), err
+		return conv, err
 	}
 
-	return conv.LastAnswer(), nil
+	return conv, nil
 }
 
 func (s *GetAnswerService) completeConversation(conversation *conversation.Conversation, profileSlug, modelSlug string) error {

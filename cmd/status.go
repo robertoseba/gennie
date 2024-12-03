@@ -3,48 +3,38 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/robertoseba/gennie/internal/common"
-	"github.com/robertoseba/gennie/internal/models"
+	"github.com/robertoseba/gennie/internal/core/config"
 	output "github.com/robertoseba/gennie/internal/output"
 	"github.com/spf13/cobra"
 )
 
-func NewStatusCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
+func NewStatusCmd(configRepo config.IConfigRepository, p *output.Printer) *cobra.Command {
 	cmdStatus := &cobra.Command{
 		Use:   "status",
 		Short: "Shows the current status of gennie",
 		Long:  `Use it to check the current status of ginnie. You can check the model, profile and more!`,
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			profile := storage.GetCurrProfile()
-
-			profilePath := storage.GetCachedProfiles()[profile.Slug].Filepath
-
-			p.PrintLine(output.Yellow)
-			p.Print(fmt.Sprintf("Model: %s ", models.ModelEnum(storage.GetCurrModelSlug())), output.Cyan)
-			p.PrintLine(output.Yellow)
-			p.Print(fmt.Sprintf("Loaded profile: %s (%s)", profile.Name, profile.Slug), output.Gray)
-			if profilePath != "" {
-				p.Print(fmt.Sprintf("File: %s", profilePath), output.Gray)
+			config, err := configRepo.Load()
+			if err != nil {
+				ExitWithError(err)
 			}
-
-			config := storage.GetConfig()
 
 			p.PrintLine(output.Yellow)
 			p.Print("API Keys", output.Cyan)
-			apiKeyStatus("Open AI API Key", config.OpenAiApiKey, p)
-			apiKeyStatus("Anthropic API Key", config.AnthropicApiKey, p)
-			apiKeyStatus("Maritaca API Key", config.MaritacaApiKey, p)
-			apiKeyStatus("Groq API Key", config.GroqApiKey, p)
+			apiKeyStatus("Open AI API Key", config.APIKeys.OpenAiApiKey, p)
+			apiKeyStatus("Anthropic API Key", config.APIKeys.AnthropicApiKey, p)
+			apiKeyStatus("Maritaca API Key", config.APIKeys.MaritacaApiKey, p)
+			apiKeyStatus("Groq API Key", config.APIKeys.GroqApiKey, p)
 
 			p.PrintLine(output.Yellow)
 			p.Print("Ollama", output.Cyan)
-			p.Print(fmt.Sprintf("Host: %s", config.OllamaHost), output.Gray)
-			p.Print(fmt.Sprintf("Model: %s", config.OllamaModel), output.Gray)
+			p.Print(fmt.Sprintf("Host: %s", config.Ollama.Host), output.Gray)
+			p.Print(fmt.Sprintf("Model: %s", config.Ollama.Model), output.Gray)
 
 			p.PrintLine(output.Yellow)
-			p.Print(fmt.Sprintf("Profiles path: %s", config.ProfilesPath), output.Gray)
-			p.Print(fmt.Sprintf("Cache saved at: %s", storage.GetStorageFilepath()), output.Gray)
+			p.Print(fmt.Sprintf("Profiles path: %s", config.ProfilesDirPath), output.Gray)
+			p.Print(fmt.Sprintf("Cache saved at: %s", config.ConversationCacheDir), output.Gray)
 			p.PrintLine(output.Yellow)
 		},
 	}
