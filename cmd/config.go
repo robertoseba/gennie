@@ -22,6 +22,7 @@ func NewConfigCmd(configRepo config.IConfigRepository, p *output.Printer) *cobra
 
 			configApiKeys(p, config)
 			configProfile(p, config)
+			configOllama(p, config)
 
 			configRepo.Save(config)
 			return nil
@@ -60,16 +61,16 @@ func configProfile(p *output.Printer, config *config.Config) {
 	config.SetProfilesDir(question.Ask(p))
 }
 
-// func configOllama(p *output.Printer, config *common.Config) {
-// 	q := output.NewQuestion("What is your Ollama host address?")
-// 	if config.OllamaHost != "" {
-// 		q.WithPrevious(config.OllamaHost, false)
-// 	}
-// 	config.OllamaHost = q.Ask(p)
+func configOllama(p *output.Printer, config *config.Config) {
+	q := output.NewQuestion("What is your Ollama host address?")
+	if config.Ollama.Host != "" {
+		q.WithPrevious(config.Ollama.Host, false)
+	}
+	config.Ollama.Host = q.Ask(p)
 
-// 	q = output.NewQuestion("What Ollama model would you like to use?")
-// 	if config.OllamaModel != "" {
-// 		q.WithPrevious(config.OllamaModel, false)
-// 	}
-// 	config.OllamaModel = q.Ask(p)
-// }
+	q = output.NewQuestion("What Ollama model would you like to use?")
+	if config.Ollama.Model != "" {
+		q.WithPrevious(config.Ollama.Model, false)
+	}
+	config.Ollama.Model = q.Ask(p)
+}
