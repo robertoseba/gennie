@@ -13,7 +13,7 @@ func TestNewConfigRepository(t *testing.T) {
 
 	t.Run("creates new config repo", func(t *testing.T) {
 		repo := NewConfigRepository("./config")
-		assert.Equal(t, "config/gennie_config.gob", repo.ConfigFile())
+		assert.Equal(t, "config/config.json", repo.ConfigFile())
 	})
 
 	t.Run("saves config to file", func(t *testing.T) {
@@ -64,8 +64,11 @@ func TestNewConfigRepository(t *testing.T) {
 		loadedConfig, err := repo.Load()
 		assert.Nil(t, err)
 
+		expectedConfig := config.NewConfig()
+		expectedConfig.SetConversationCacheTo(".")
+
 		assert.True(t, loadedConfig.IsNew())
-		assert.Equal(t, *config.NewConfig(), *loadedConfig)
+		assert.Equal(t, expectedConfig, loadedConfig)
 	})
 
 	t.Run("when loading default should set cache dir the same as config dir", func(t *testing.T) {
