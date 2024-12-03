@@ -1,27 +1,25 @@
 package cmd
 
 import (
-	"os"
-	"path"
-	"strings"
+	"errors"
 
-	"github.com/BurntSushi/toml"
-	"github.com/robertoseba/gennie/internal/common"
+	"github.com/robertoseba/gennie/internal/core/usecases"
+	"github.com/robertoseba/gennie/internal/infra/repositories"
 	"github.com/robertoseba/gennie/internal/output"
-	"github.com/robertoseba/gennie/internal/profile"
 	"github.com/spf13/cobra"
 )
 
-func NewProfilesCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
+func NewProfilesCmd(selectProfileCmd *usecases.SelectProfileService, p *output.Printer) *cobra.Command {
 	cmdProfiles := &cobra.Command{
 		Use:   "profile",
 		Short: "Profile management",
 		Run: func(cmd *cobra.Command, args []string) {
-			availableProfiles := storage.GetCachedProfiles()
-
-			if len(availableProfiles) == 0 {
+			availableProfiles, err := selectProfileCmd.ListAll()
+			if err != nil {
+				if !errors.Is(err, repositories.ErrNoProfilesDir) {
+					ExitWithError(err)
+				}
 				p.Print("No profiles found. Please add profiles to the profiles folder.", output.Red)
-				return
 			}
 
 			menuMap := make(map[string]string, len(availableProfiles))
@@ -29,18 +27,16 @@ func NewProfilesCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 				menuMap[slug] = profile.Name
 			}
 
-			selectedProfileSlug := output.MenuProfile(menuMap, storage.GetCurrProfile().Slug)
+			selectedProfileSlug := output.MenuProfile(menuMap, "default")
 
 			if selectedProfileSlug == "" {
 				return
 			}
 
-			profile, err := storage.LoadProfileData(selectedProfileSlug)
+			err = selectProfileCmd.SetAsActive(availableProfiles[selectedProfileSlug])
 			if err != nil {
 				ExitWithError(err)
 			}
-
-			storage.SetCurrProfile(*profile)
 		},
 	}
 
@@ -50,7 +46,10 @@ func NewProfilesCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			p.PrintLine(output.Yellow)
 
-			availableProfiles := storage.GetCachedProfiles()
+			availableProfiles, err := selectProfileCmd.ListAll()
+			if err != nil {
+				ExitWithError(err)
+			}
 
 			if len(availableProfiles) == 0 {
 				p.Print("No profiles found. Please add profiles to the profiles folder.", output.Red)
@@ -66,63 +65,6 @@ func NewProfilesCmd(storage common.IStorage, p *output.Printer) *cobra.Command {
 		},
 	}
 
-	cmdRefreshProfiles := &cobra.Command{
-		Use:   "refresh",
-		Short: "Rescan the profiles folder and update the cache with available profiles",
-		Run: func(cmd *cobra.Command, args []string) {
-			refreshProfiles(storage)
-			p.Print("Profiles refreshed...", output.Cyan)
-		},
-	}
-
-	cmdProfiles.AddCommand(cmdRefreshProfiles)
 	cmdProfiles.AddCommand(cmdListProfiles)
-
 	return cmdProfiles
-}
-
-func refreshProfiles(storage common.IStorage) {
-	config := storage.GetConfig()
-
-	cachedProfiles, err := scanProfilesFolder(config.ProfilesPath)
-	if err != nil {
-		ExitWithError(err)
-	}
-	storage.SetCachedProfiles(cachedProfiles)
-}
-
-func scanProfilesFolder(dirpath string) (map[string]profile.ProfileInfo, error) {
-	files, err := os.ReadDir(dirpath)
-	if err != nil {
-		return nil, err
-	}
-
-	profileInfo := make(map[string]profile.ProfileInfo, len(files))
-
-	for _, file := range files {
-		if !file.IsDir() {
-			filename := file.Name()
-			if strings.HasSuffix(filename, ".profile.toml") {
-				loadedProfile := &profile.Profile{}
-				_, err := toml.DecodeFile(path.Join(dirpath, file.Name()), loadedProfile)
-				if err != nil {
-					return nil, err
-				}
-
-				if loadedProfile.Slug == "" {
-					continue
-				}
-
-				currInfo := profile.ProfileInfo{
-					Slug:     loadedProfile.Slug,
-					Name:     loadedProfile.Name,
-					Filepath: path.Join(dirpath, file.Name()),
-				}
-
-				profileInfo[currInfo.Slug] = currInfo
-			}
-		}
-	}
-
-	return profileInfo, nil
 }

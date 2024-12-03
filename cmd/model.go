@@ -7,7 +7,7 @@ import (
 	cobra "github.com/spf13/cobra"
 )
 
-func NewModelCmd(selectModelCmd usecases.SelectModelService, p *output.Printer) *cobra.Command {
+func NewModelCmd(selectModelCmd *usecases.SelectModelService, p *output.Printer) *cobra.Command {
 	return &cobra.Command{
 		Use:   "model",
 		Short: "Configures the model to use.",
@@ -15,10 +15,11 @@ func NewModelCmd(selectModelCmd usecases.SelectModelService, p *output.Printer) 
 		Run: func(cmd *cobra.Command, args []string) {
 			modelList := selectModelCmd.ListAll()
 			modelSelected := output.MenuModel(modelList, models.DefaultModel)
-			err := selectModelCmd.SetAsActive(modelSelected)
 
-			//TODO: refactor this to use cmd output e not printer anymore
-			ExitWithError(err)
+			err := selectModelCmd.SetAsActive(modelSelected)
+			if err != nil {
+				ExitWithError(err)
+			}
 		},
 	}
 }
