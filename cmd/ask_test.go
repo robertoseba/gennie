@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -232,32 +231,32 @@ func TestUsesProfileFromCacheIfNotSpecified(t *testing.T) {
 	// }
 }
 
-func mockOpenAiResponse(answer string) string {
-	base := `{
-		"choices": [
-			{
-			"finish_reason": "stop",
-			"index": 0,
-			"message": {
-				"content": "%s",
-				"role": "assistant"
-			},
-			"logprobs": null
-			}
-		],
-		"created": 1677664795,
-		"id": "chatcmpl",
-		"model": "gpt-4o-mini",
-		"object": "conversation.completion",
-		"usage": {
-			"completion_tokens": 17,
-			"prompt_tokens": 57,
-			"total_tokens": 74,
-			"completion_tokens_details": {
-			"reasoning_tokens": 0
-			}
-		}
-		}`
+// func mockOpenAiResponse(answer string) string {
+// 	base := `{
+// 		"choices": [
+// 			{
+// 			"finish_reason": "stop",
+// 			"index": 0,
+// 			"message": {
+// 				"content": "%s",
+// 				"role": "assistant"
+// 			},
+// 			"logprobs": null
+// 			}
+// 		],
+// 		"created": 1677664795,
+// 		"id": "chatcmpl",
+// 		"model": "gpt-4o-mini",
+// 		"object": "conversation.completion",
+// 		"usage": {
+// 			"completion_tokens": 17,
+// 			"prompt_tokens": 57,
+// 			"total_tokens": 74,
+// 			"completion_tokens_details": {
+// 			"reasoning_tokens": 0
+// 			}
+// 		}
+// 		}`
 
-	return fmt.Sprintf(base, answer)
-}
+// 	return fmt.Sprintf(base, answer)
+// }

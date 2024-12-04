@@ -7,14 +7,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewClient(t *testing.T) {
 	client := NewApiClient(time.Second * 120)
-	assert.NotNil(t, client)
-	assert.Equal(t, &http.Client{Timeout: time.Second * 120}, client.httpClient)
+	require.NotNil(t, client)
+	require.Equal(t, &http.Client{Timeout: time.Second * 120}, client.httpClient)
 }
 
 func TestPost(t *testing.T) {
@@ -37,8 +37,8 @@ func TestPost(t *testing.T) {
 
 		resp, err := client.Post("http://localhost:8080", body, headers)
 
-		assert.Nil(t, err)
-		assert.Equal(t, []byte(`{"text": "hi"}`), resp)
+		require.NoError(t, err)
+		require.JSONEq(t, `{"text": "hi"}`, string(resp))
 	})
 
 	t.Run("fails with unauthorized error", func(t *testing.T) {
@@ -58,9 +58,9 @@ func TestPost(t *testing.T) {
 
 		resp, err := client.Post("http://localhost:8080", body, headers)
 
-		assert.NotNil(t, err)
-		assert.Equal(t, "unauthorized request. Please run 'gennie config' to set your API key.", err.Error())
-		assert.Nil(t, resp)
+		require.Error(t, err)
+		require.Equal(t, "unauthorized request. Please run 'gennie config' to set your API key.", err.Error())
+		require.Nil(t, resp)
 	})
 
 	t.Run("fails with 404 error", func(t *testing.T) {
@@ -81,9 +81,9 @@ func TestPost(t *testing.T) {
 
 		resp, err := client.Post("http://localhost:8080", body, headers)
 
-		assert.NotNil(t, err)
-		assert.Equal(t, "unknown error in request. Status code: 404 Not Found\nBody: {\"error\": \"Not Found\"}", err.Error())
-		assert.Nil(t, resp)
+		require.Error(t, err)
+		require.Equal(t, "unknown error in request. Status code: 404 Not Found\nBody: {\"error\": \"Not Found\"}", err.Error())
+		require.Nil(t, resp)
 	})
 
 	t.Run("fails with timeout", func(t *testing.T) {
@@ -100,9 +100,9 @@ func TestPost(t *testing.T) {
 
 		resp, err := client.Post("http://localhost:8080", body, headers)
 
-		assert.NotNil(t, err)
-		assert.Equal(t, "request timeout", err.Error())
-		assert.Nil(t, resp)
+		require.Error(t, err)
+		require.Equal(t, "request timeout", err.Error())
+		require.Nil(t, resp)
 	})
 }
 

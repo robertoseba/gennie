@@ -128,6 +128,7 @@ func getInput() byte {
 		panic(err)
 	}
 
+	//nolint:errcheck
 	defer term.Restore(int(os.Stdin.Fd()), oldState)
 
 	var read int

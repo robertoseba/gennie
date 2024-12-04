@@ -24,3 +24,8 @@ jobs:
 
       - name: Run tests
         run: go test ./...
+
+      - name: Linting
+        run: |
+          go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.62.2
+          golangci-lint run ./...

@@ -3,7 +3,7 @@ package conversation
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestQA(t *testing.T) {
@@ -17,16 +17,16 @@ func TestQA(t *testing.T) {
 	t.Run("answer is empty", func(t *testing.T) {
 		qa := NewQA("question")
 
-		assert.False(t, qa.HasAnswer())
-		assert.Equal(t, "", qa.GetAnswer())
+		require.False(t, qa.HasAnswer())
+		require.Equal(t, "", qa.GetAnswer())
 	})
 
 	t.Run("has already filled", func(t *testing.T) {
 		qa := NewQA("question")
 		qa.addAnswer("answer")
 
-		assert.True(t, qa.HasAnswer())
-		assert.Equal(t, "answer", qa.GetAnswer())
+		require.True(t, qa.HasAnswer())
+		require.Equal(t, "answer", qa.GetAnswer())
 	})
 
 	t.Run("Can change answer already set", func(t *testing.T) {
@@ -34,14 +34,14 @@ func TestQA(t *testing.T) {
 		qa.addAnswer("answer")
 		err := qa.addAnswer("answer2")
 
-		assert.ErrorIs(t, err, ErrAnswerAlreadySet)
+		require.ErrorIs(t, err, ErrAnswerAlreadySet)
 	})
 
 	t.Run("Roles are assigned correctly", func(t *testing.T) {
 		qa := NewQA("question")
 		qa.addAnswer("answer")
 
-		assert.Equal(t, userRole, qa.Question.Role)
-		assert.Equal(t, assistantRole, qa.Answer.Role)
+		require.Equal(t, userRole, qa.Question.Role)
+		require.Equal(t, assistantRole, qa.Answer.Role)
 	})
 }

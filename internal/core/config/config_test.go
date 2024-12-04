@@ -3,47 +3,47 @@ package config
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewConfig(t *testing.T) {
 	c := NewConfig()
 
-	assert.Equal(t, "", c.APIKeys.OpenAiApiKey)
-	assert.Equal(t, "", c.APIKeys.AnthropicApiKey)
-	assert.Equal(t, "", c.APIKeys.MaritacaApiKey)
-	assert.Equal(t, "", c.APIKeys.GroqApiKey)
-	assert.Equal(t, "", c.Ollama.Host)
-	assert.Equal(t, "", c.Ollama.Model)
-	assert.Equal(t, true, c.IsTerminalPretty)
-	assert.Equal(t, "", c.ConversationCacheDir)
-	assert.Equal(t, "", c.ProfilesDirPath)
-	assert.Equal(t, float64(60), c.HttpTimeout.Seconds())
+	require.Equal(t, "", c.APIKeys.OpenAiApiKey)
+	require.Equal(t, "", c.APIKeys.AnthropicApiKey)
+	require.Equal(t, "", c.APIKeys.MaritacaApiKey)
+	require.Equal(t, "", c.APIKeys.GroqApiKey)
+	require.Equal(t, "", c.Ollama.Host)
+	require.Equal(t, "", c.Ollama.Model)
+	require.True(t, c.IsTerminalPretty)
+	require.Equal(t, "", c.ConversationCacheDir)
+	require.Equal(t, "", c.ProfilesDirPath)
+	require.InEpsilon(t, float64(60), c.HttpTimeout.Seconds(), 0.1)
 
 	t.Run("Set conversation cache dir", func(t *testing.T) {
 		c := NewConfig()
 		c.SetConversationCacheTo("cache")
-		assert.Equal(t, "cache", c.ConversationCacheDir)
+		require.Equal(t, "cache", c.ConversationCacheDir)
 	})
 
 	t.Run("SetProfilesDir", func(t *testing.T) {
 		c := NewConfig()
 		c.SetProfilesDir("profiles")
-		assert.Equal(t, "profiles", c.ProfilesDirPath)
+		require.Equal(t, "profiles", c.ProfilesDirPath)
 	})
 
 	t.Run("SetOllama", func(t *testing.T) {
 		c := NewConfig()
 		c.SetOllama("host", "model")
-		assert.Equal(t, "host", c.Ollama.Host)
-		assert.Equal(t, "model", c.Ollama.Model)
+		require.Equal(t, "host", c.Ollama.Host)
+		require.Equal(t, "model", c.Ollama.Model)
 	})
 
 	t.Run("Is new", func(t *testing.T) {
 		c := NewConfig()
-		assert.Equal(t, true, c.IsNew())
+		require.True(t, c.IsNew())
 
 		c.MarkAsNotNew()
-		assert.Equal(t, false, c.IsNew())
+		require.False(t, c.IsNew())
 	})
 }

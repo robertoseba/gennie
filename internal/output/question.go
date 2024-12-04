@@ -52,6 +52,7 @@ func (q *Question) Ask(p *Printer) string {
 	fmt.Fprintf(p.Stdout, "%s>%s ", Yellow, Reset)
 
 	var input string
+	//nolint: errcheck
 	fmt.Scanln(&input)
 
 	if input == "" && q.previousValue != "" {

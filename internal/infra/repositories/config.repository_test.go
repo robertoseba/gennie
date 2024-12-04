@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	"github.com/robertoseba/gennie/internal/core/config"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewConfigRepository(t *testing.T) {
 	t.Run("creates new config repo", func(t *testing.T) {
 		repo := NewConfigRepository("./config")
-		assert.Equal(t, "config/config.json", repo.configFile())
+		require.Equal(t, "config/config.json", repo.configFile())
 	})
 
 	t.Run("saves config to file", func(t *testing.T) {
@@ -24,14 +24,14 @@ func TestNewConfigRepository(t *testing.T) {
 		config.APIKeys.OpenAiApiKey = "openai"
 
 		repo := NewConfigRepository(".")
-		assert.True(t, config.IsNew())
+		require.True(t, config.IsNew())
 
 		err := repo.Save(config)
-		assert.Nil(t, err)
-		assert.Equal(t, false, config.IsNew())
+		require.NoError(t, err)
+		require.False(t, config.IsNew())
 
-		assert.FileExists(t, repo.configFile())
-		assert.Nil(t, err)
+		require.FileExists(t, repo.configFile())
+		require.NoError(t, err)
 
 		os.Remove(repo.configFile())
 	})
@@ -47,13 +47,13 @@ func TestNewConfigRepository(t *testing.T) {
 
 		repo := NewConfigRepository(".")
 		err := repo.Save(config)
-		assert.Nil(t, err)
+		require.NoError(t, err)
 
 		loadedConfig, err := repo.Load()
-		assert.Nil(t, err)
-		assert.False(t, loadedConfig.IsNew())
+		require.NoError(t, err)
+		require.False(t, loadedConfig.IsNew())
 
-		assert.Equal(t, *config, *loadedConfig)
+		require.Equal(t, *config, *loadedConfig)
 
 		os.Remove(repo.configFile())
 	})
@@ -61,21 +61,21 @@ func TestNewConfigRepository(t *testing.T) {
 	t.Run("loads default config if file does not exist and sets as new", func(t *testing.T) {
 		repo := NewConfigRepository(".")
 		loadedConfig, err := repo.Load()
-		assert.Nil(t, err)
+		require.NoError(t, err)
 
 		expectedConfig := config.NewConfig()
 		expectedConfig.SetConversationCacheTo(".")
 
-		assert.True(t, loadedConfig.IsNew())
-		assert.Equal(t, expectedConfig, loadedConfig)
+		require.True(t, loadedConfig.IsNew())
+		require.Equal(t, expectedConfig, loadedConfig)
 	})
 
 	t.Run("when loading default should set cache dir the same as config dir", func(t *testing.T) {
 		repo := NewConfigRepository(".")
 		loadedConfig, err := repo.Load()
-		assert.Nil(t, err)
+		require.NoError(t, err)
 
-		assert.Equal(t, ".", loadedConfig.ConversationCacheDir)
+		require.Equal(t, ".", loadedConfig.ConversationCacheDir)
 	})
 }
 
@@ -85,8 +85,8 @@ func TestCreateConfigDir(t *testing.T) {
 
 		dir, err := CreateConfigDir()
 
-		assert.Nil(t, err)
-		assert.Equal(t, "gennie", dir)
+		require.NoError(t, err)
+		require.Equal(t, "gennie", dir)
 		os.Remove(dir)
 	})
 
@@ -96,8 +96,8 @@ func TestCreateConfigDir(t *testing.T) {
 		os.Mkdir("gennie", 0755)
 		dir, err := CreateConfigDir()
 
-		assert.Nil(t, err)
-		assert.Equal(t, "gennie", dir)
+		require.NoError(t, err)
+		require.Equal(t, "gennie", dir)
 		os.Remove(dir)
 	})
 

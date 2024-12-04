@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetHeaders(t *testing.T) {
@@ -14,12 +14,12 @@ func TestGetHeaders(t *testing.T) {
 		"Content-Type":  "application/json",
 	}
 
-	assert.Equal(t, expectedHeaders, m.GetHeaders())
+	require.Equal(t, expectedHeaders, m.GetHeaders())
 }
 
 func TestGetUrl(t *testing.T) {
 	m := NewProvider("test", "API_KEY")
-	assert.Equal(t, "https://conversation.maritaca.ai/api/chat/completions", m.GetUrl())
+	require.Equal(t, "https://conversation.maritaca.ai/api/chat/completions", m.GetUrl())
 }
 
 func TestPreparePayload(t *testing.T) {
@@ -30,8 +30,8 @@ func TestPreparePayload(t *testing.T) {
 	conversation.AnswerLastQuestion("Answer")
 	payload, err := m.PreparePayload(conversation, "System Prompt")
 
-	assert.Nil(t, err)
-	assert.JSONEq(t, `{"model":"sabia-3","messages":[{"role":"system","content":"System Prompt"},{"role":"user","content":"Question"},{"role":"assistant","content":"Answer"}]}`, payload)
+	require.NoError(t, err)
+	require.JSONEq(t, `{"model":"sabia-3","messages":[{"role":"system","content":"System Prompt"},{"role":"user","content":"Question"},{"role":"assistant","content":"Answer"}]}`, payload)
 }
 
 func TestParseResponse(t *testing.T) {
@@ -40,6 +40,6 @@ func TestParseResponse(t *testing.T) {
 	apiResponse := []byte(`{"choices":[{"message":{"role":"assistant","content":"Answer"}}]}`)
 	modelAnswer, err := m.ParseResponse(apiResponse)
 
-	assert.Nil(t, err)
-	assert.Equal(t, "Answer", modelAnswer)
+	require.NoError(t, err)
+	require.Equal(t, "Answer", modelAnswer)
 }

@@ -6,8 +6,8 @@ import (
 
 	"github.com/robertoseba/gennie/internal/core/conversation"
 	"github.com/robertoseba/gennie/internal/core/models/openai"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCompleteChat(t *testing.T) {
@@ -22,8 +22,8 @@ func TestCompleteChat(t *testing.T) {
 
 		err := model.Complete(conv, "system-prompt")
 
-		assert.NoError(t, err)
-		assert.Equal(t, "response to question", conv.LastAnswer())
+		require.NoError(t, err)
+		require.Equal(t, "response to question", conv.LastAnswer())
 	})
 
 	t.Run("Returns error when conversation is empty", func(t *testing.T) {
@@ -31,8 +31,8 @@ func TestCompleteChat(t *testing.T) {
 		model := newBaseModel(ModelEnum(OpenAI), nil, openai.NewProvider(string(OpenAI), "api-key"))
 		err := model.Complete(conv, "system-prompt")
 
-		assert.Error(t, err)
-		assert.Equal(t, ErrEmptyConversation, err)
+		require.Error(t, err)
+		require.Equal(t, ErrEmptyConversation, err)
 	})
 
 	t.Run("Returns error when last question is already answered", func(t *testing.T) {
@@ -43,8 +43,8 @@ func TestCompleteChat(t *testing.T) {
 		model := newBaseModel(ModelEnum(OpenAI), nil, openai.NewProvider(string(OpenAI), "api-key"))
 		err := model.Complete(conv, "system-prompt")
 
-		assert.Error(t, err)
-		assert.Equal(t, ErrLastQuestionAlreadyAnswered, err)
+		require.Error(t, err)
+		require.Equal(t, ErrLastQuestionAlreadyAnswered, err)
 	})
 
 	t.Run("Returns error when API call fails", func(t *testing.T) {
@@ -57,8 +57,8 @@ func TestCompleteChat(t *testing.T) {
 
 		err := model.Complete(conv, "system-prompt")
 
-		assert.Error(t, err)
-		assert.Equal(t, "error in API", err.Error())
+		require.Error(t, err)
+		require.Equal(t, "error in API", err.Error())
 	})
 
 	t.Run("Returns error when response parsing fails", func(t *testing.T) {
@@ -72,8 +72,8 @@ func TestCompleteChat(t *testing.T) {
 
 		err := model.Complete(conv, "system-prompt")
 
-		assert.Error(t, err)
-		assert.Equal(t, "error in API", err.Error())
+		require.Error(t, err)
+		require.Equal(t, "error in API", err.Error())
 	})
 }
 
