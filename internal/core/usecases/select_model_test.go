@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestListAll(t *testing.T) {
+func TestModelListAll(t *testing.T) {
 	service := NewSelectModelService(nil)
 	m := service.ListAll()
 

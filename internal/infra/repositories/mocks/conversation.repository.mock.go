@@ -9,6 +9,10 @@ type MockConversationRepository struct {
 	mock.Mock
 }
 
+func NewMockConversationRepository() *MockConversationRepository {
+	return &MockConversationRepository{}
+}
+
 func (m *MockConversationRepository) LoadActive() (*conversation.Conversation, error) {
 	args := m.Called()
 	return args.Get(0).(*conversation.Conversation), args.Error(1)
