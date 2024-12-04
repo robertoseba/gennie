@@ -32,3 +32,25 @@ func TestListModels(t *testing.T) {
 	require.Contains(t, models, Groq)
 	require.Contains(t, models, Ollama)
 }
+
+func TestSlugAndString(t *testing.T) {
+	testTable := []struct {
+		model          ModelEnum
+		expectedSlug   string
+		expectedString string
+	}{
+		{OpenAI, "gpt-4o", "GPT-4o (OPENAI)"},
+		{OpenAIMini, "gpt-4o-mini", "GPT-4o-mini (OPENAI)"},
+		{ClaudeSonnet, "sonnet", "Claude Sonnet 3.5 (ANTHROPIC)"},
+		{Maritaca, "maritaca", "Maritaca (BR)"},
+		{Groq, "groq", "Groq (LLAMA-3.2-90B)"},
+		{Ollama, "ollama", "Ollama"},
+	}
+
+	for _, tt := range testTable {
+		t.Run(tt.expectedString, func(t *testing.T) {
+			require.Equal(t, tt.expectedSlug, tt.model.Slug())
+			require.Equal(t, tt.expectedString, tt.model.String())
+		})
+	}
+}

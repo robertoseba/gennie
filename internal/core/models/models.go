@@ -26,6 +26,10 @@ func (m ModelEnum) String() string {
 	return availableModels[m]
 }
 
+func (m ModelEnum) Slug() string {
+	return string(m)
+}
+
 func ParseFrom(modelSlug string) (ModelEnum, bool) {
 	_, ok := availableModels[ModelEnum(modelSlug)]
 	if !ok {

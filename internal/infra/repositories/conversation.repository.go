@@ -33,7 +33,7 @@ func (r *ConversationRepository) LoadActive() (*conversation.Conversation, error
 
 	if err != nil {
 		if errors.Is(err, ErrConversationNotFound) {
-			return conversation.NewConversation(profile.DefaultProfileSlug, string(models.DefaultModel)), nil
+			return conversation.NewConversation(profile.DefaultProfileSlug, models.DefaultModel.Slug()), nil
 		}
 		return nil, err
 	}

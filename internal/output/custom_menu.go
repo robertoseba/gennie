@@ -12,7 +12,7 @@ func MenuModel(m map[models.ModelEnum]string, selected models.ModelEnum) models.
 		if model == selected {
 			idxSelected = idx
 		}
-		menu.AddItem(desc, string(model))
+		menu.AddItem(desc, model.Slug())
 		idx++
 	}
 

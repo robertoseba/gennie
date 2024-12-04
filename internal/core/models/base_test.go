@@ -18,7 +18,7 @@ func TestCompleteChat(t *testing.T) {
 
 		conv := conversation.NewConversation("profile-slug", "model-slug")
 		conv.NewQuestion("question")
-		model := newBaseModel(ModelEnum(OpenAI), &apiMockClient, openai.NewProvider(string(OpenAI), "api-key 123"))
+		model := newBaseModel(ModelEnum(OpenAI), &apiMockClient, openai.NewProvider(OpenAI.Slug(), "api-key 123"))
 
 		err := model.Complete(conv, "system-prompt")
 
@@ -28,7 +28,7 @@ func TestCompleteChat(t *testing.T) {
 
 	t.Run("Returns error when conversation is empty", func(t *testing.T) {
 		conv := conversation.NewConversation("profile-slug", "model-slug")
-		model := newBaseModel(ModelEnum(OpenAI), nil, openai.NewProvider(string(OpenAI), "api-key"))
+		model := newBaseModel(ModelEnum(OpenAI), nil, openai.NewProvider(OpenAI.Slug(), "api-key"))
 		err := model.Complete(conv, "system-prompt")
 
 		require.Error(t, err)
@@ -40,7 +40,7 @@ func TestCompleteChat(t *testing.T) {
 		conv.NewQuestion("question")
 		conv.AnswerLastQuestion("already answered")
 
-		model := newBaseModel(ModelEnum(OpenAI), nil, openai.NewProvider(string(OpenAI), "api-key"))
+		model := newBaseModel(ModelEnum(OpenAI), nil, openai.NewProvider(OpenAI.Slug(), "api-key"))
 		err := model.Complete(conv, "system-prompt")
 
 		require.Error(t, err)
@@ -53,7 +53,7 @@ func TestCompleteChat(t *testing.T) {
 
 		conv := conversation.NewConversation("profile-slug", "model-slug")
 		conv.NewQuestion("question")
-		model := newBaseModel(ModelEnum(OpenAI), &apiMockClient, openai.NewProvider(string(OpenAI), "api-key"))
+		model := newBaseModel(ModelEnum(OpenAI), &apiMockClient, openai.NewProvider(OpenAI.Slug(), "api-key"))
 
 		err := model.Complete(conv, "system-prompt")
 
@@ -68,7 +68,7 @@ func TestCompleteChat(t *testing.T) {
 
 		conv := conversation.NewConversation("profile-slug", "model-slug")
 		conv.NewQuestion("question")
-		model := newBaseModel(ModelEnum(OpenAI), &apiMockClient, openai.NewProvider(string(OpenAI), "api-key"))
+		model := newBaseModel(ModelEnum(OpenAI), &apiMockClient, openai.NewProvider(OpenAI.Slug(), "api-key"))
 
 		err := model.Complete(conv, "system-prompt")
 
