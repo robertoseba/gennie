@@ -19,3 +19,4 @@ linters:
     - errname
     - testifylint
     - tenv
+    - tagalign
