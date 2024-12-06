@@ -2,12 +2,58 @@ package usecases
 
 import (
 	"testing"
+
+	"github.com/robertoseba/gennie/internal/core/config"
+	"github.com/robertoseba/gennie/internal/core/conversation"
+	"github.com/robertoseba/gennie/internal/core/models"
+	openaiMock "github.com/robertoseba/gennie/internal/core/models/openai/mocks"
+	"github.com/robertoseba/gennie/internal/core/profile"
+	apimock "github.com/robertoseba/gennie/internal/infra/apiclient/mocks"
+	"github.com/robertoseba/gennie/internal/infra/repositories/mocks"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetAnswerService(t *testing.T) {
 	//TODO: create mock IAPIclient
 	t.Run("completes the conversation with answers from the API", func(t *testing.T) {
-		// repo.AssertExpectations(t)
+		mockConvRepo := mocks.NewMockConversationRepository()
+		conv := conversation.NewConversation("default", models.DefaultModel.Slug())
+		mockConvRepo.On("LoadActive").Return(conv, nil)
+
+		expectedConv := conversation.NewConversation("default", models.DefaultModel.Slug())
+		expectedConv.NewQuestion("What is gennie?")
+		expectedConv.AnswerLastQuestion("it's an Ai assistant")
+		mockConvRepo.On("SaveAsActive", expectedConv.LastQuestion(), expectedConv.LastAnswer()).Return(nil)
+
+		mockProfileRepo := mocks.NewMockProfileRepository()
+		mockProfileRepo.On("FindBySlug", profile.DefaultProfileSlug).Return(profile.DefaultProfile(), nil)
+
+		config := config.NewConfig()
+
+		mockApiClient := apimock.NewClientApiMock()
+		mockOpenAIResponse := openaiMock.NewMockOpenAIResponse("it's an Ai assistant")
+		mockApiClient.On("Post", mock.Anything, mock.Anything, mock.Anything).Return(mockOpenAIResponse, nil)
+
+		service := NewGetAnswerService(mockConvRepo, mockProfileRepo, mockApiClient, *config)
+		returnedConv, err := service.Execute(&InputDTO{
+			Question:    "What is gennie?",
+			ProfileSlug: "",
+			Model:       "",
+			IsFollowUp:  false,
+			AppendFile:  "",
+		})
+
+		mockConvRepo.AssertExpectations(t)
+		mockApiClient.AssertExpectations(t)
+		mockProfileRepo.AssertExpectations(t)
+
+		require.NoError(t, err)
+		require.Equal(t, models.DefaultModel.Slug(), returnedConv.ModelSlug)
+		require.Equal(t, profile.DefaultProfileSlug, returnedConv.ProfileSlug)
+		require.Equal(t, 1, returnedConv.Len())
+		require.Equal(t, "What is gennie?", returnedConv.LastQuestion())
+		require.Equal(t, "it's an Ai assistant", returnedConv.LastAnswer())
 	})
 
 	t.Run("appends the content of a file to the conversation", func(t *testing.T) {
