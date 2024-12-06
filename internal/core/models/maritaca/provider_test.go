@@ -19,7 +19,7 @@ func TestGetHeaders(t *testing.T) {
 
 func TestGetUrl(t *testing.T) {
 	m := NewProvider("test", "API_KEY")
-	require.Equal(t, "https://conversation.maritaca.ai/api/chat/completions", m.GetUrl())
+	require.Equal(t, "https://chat.maritaca.ai/api/chat/completions", m.GetUrl())
 }
 
 func TestPreparePayload(t *testing.T) {

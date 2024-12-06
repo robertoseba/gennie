@@ -52,7 +52,7 @@ func (m *MaritacaModel) GetHeaders() map[string]string {
 }
 
 func (m *MaritacaModel) GetUrl() string {
-	return "https://conversation.maritaca.ai/api/chat/completions"
+	return "https://chat.maritaca.ai/api/chat/completions"
 }
 
 func (m *MaritacaModel) PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error) {
