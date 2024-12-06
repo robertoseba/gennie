@@ -19,7 +19,7 @@ func (m *MockConversationRepository) LoadActive() (*conversation.Conversation, e
 }
 
 func (m *MockConversationRepository) SaveAsActive(conv *conversation.Conversation) error {
-	args := m.Called(conv)
+	args := m.Called(conv.LastQuestion(), conv.LastAnswer())
 	return args.Error(0)
 }
 func (m *MockConversationRepository) ExportToFile(conv *conversation.Conversation, filename string) error {
