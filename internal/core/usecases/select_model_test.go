@@ -21,6 +21,9 @@ func TestSetAsActive(t *testing.T) {
 	repo := &mocks.MockConversationRepository{}
 
 	activeConv := conversation.NewConversation("profile-slug", "model22")
+	activeConv.NewQuestion("question")
+	activeConv.AnswerLastQuestion("answer")
+
 	repo.On("LoadActive").Return(activeConv, nil)
 	repo.On("SaveAsActive", activeConv).Return(nil)
 
