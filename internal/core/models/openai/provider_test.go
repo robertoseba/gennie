@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/robertoseba/gennie/internal/core/conversation"
+	"github.com/robertoseba/gennie/internal/core/models/openai/mocks"
 	"github.com/stretchr/testify/require"
 )
 
@@ -37,7 +38,7 @@ func TestPreparePayload(t *testing.T) {
 func TestParseResponse(t *testing.T) {
 	m := NewProvider("gpt-4o", "API_KEY")
 
-	apiResponse := []byte(`{"choices":[{"message":{"role":"assistant","content":"Answer"}}]}`)
+	apiResponse := mocks.NewMockOpenAIResponse("Answer")
 	modelAnswer, err := m.ParseResponse(apiResponse)
 
 	require.NoError(t, err)
