@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"os"
 
 	"github.com/robertoseba/gennie/cmd"
 )
@@ -10,5 +11,5 @@ import (
 var version string
 
 func main() {
-	cmd.Run(version)
+	cmd.Run(version, os.Stdout, os.Stderr)
 }
