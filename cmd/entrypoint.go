@@ -23,7 +23,7 @@ func Run(version string, stdOut io.Writer, stdErr io.Writer) {
 		NewConfigCmd(container.GetConfigRepository(), printer),
 		NewStatusCmd(container.GetConfigRepository(), printer),
 	}
-	addSubCommands(command, subcmds)
+	command.AddCommand(subcmds...)
 
 	if container.GetConfig().IsNew() {
 		command.SetArgs([]string{"config"})
@@ -49,8 +49,4 @@ func newRootCmd(version string, stdOut io.Writer, stdErr io.Writer) *cobra.Comma
 	rootCmd.SetVersionTemplate("Gennie version: {{.Version}}")
 
 	return rootCmd
-}
-
-func addSubCommands(rootCmd *cobra.Command, commands []*cobra.Command) {
-	rootCmd.AddCommand(commands...)
 }
