@@ -49,8 +49,8 @@ func (c *Container) GetConfigRepository() config.IConfigRepository {
 }
 
 // SERVICES
-func (c *Container) GetCompleteService() *usecases.GetAnswerService {
-	return usecases.NewGetAnswerService(
+func (c *Container) GetCompleteService() *usecases.CompleteService {
+	return usecases.NewCompleteService(
 		c.conversationRepository,
 		c.profileRepository,
 		c.apiClient,

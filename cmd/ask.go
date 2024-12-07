@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewAskCmd(askCmd *usecases.GetAnswerService, p *output.Printer) *cobra.Command {
+func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Command {
 	var isFollowUpFlag bool
 	var appendFileFlag string
 	var modelFlag string

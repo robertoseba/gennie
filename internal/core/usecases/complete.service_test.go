@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetAnswerService(t *testing.T) {
+func TestCompleteService(t *testing.T) {
 	t.Run("completes the conversation with answers from the API", func(t *testing.T) {
 		mockDeps := NewMockDeps()
 		mockDeps.WithActiveConversation(conversation.NewConversation(profile.DefaultProfileSlug, models.OpenAIMini.Slug()))
@@ -286,8 +286,8 @@ func (m *MockDeps) WithAPIAnswer(answer string) *MockDeps {
 	return m
 }
 
-func (m *MockDeps) createService() *GetAnswerService {
-	return NewGetAnswerService(m.mockConvRepo, m.mockProfileRepo, m.mockApiClient, config.NewConfig())
+func (m *MockDeps) createService() *CompleteService {
+	return NewCompleteService(m.mockConvRepo, m.mockProfileRepo, m.mockApiClient, config.NewConfig())
 }
 
 func (m *MockDeps) AssertExpectations(t *testing.T) {

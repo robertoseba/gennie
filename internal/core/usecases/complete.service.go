@@ -9,7 +9,7 @@ import (
 	"github.com/robertoseba/gennie/internal/core/profile"
 )
 
-type GetAnswerService struct {
+type CompleteService struct {
 	conversationRepo conversation.IConversationRepository
 	profileRepo      profile.IProfileRepository
 	apiClient        models.IApiClient
@@ -24,12 +24,12 @@ type InputDTO struct {
 	AppendFile  string
 }
 
-func NewGetAnswerService(
+func NewCompleteService(
 	cr conversation.IConversationRepository,
 	pr profile.IProfileRepository,
 	apiClient models.IApiClient,
-	config *config.Config) *GetAnswerService {
-	return &GetAnswerService{
+	config *config.Config) *CompleteService {
+	return &CompleteService{
 		conversationRepo: cr,
 		profileRepo:      pr,
 		apiClient:        apiClient,
@@ -37,7 +37,7 @@ func NewGetAnswerService(
 	}
 }
 
-func (s *GetAnswerService) Execute(input *InputDTO) (*conversation.Conversation, error) {
+func (s *CompleteService) Execute(input *InputDTO) (*conversation.Conversation, error) {
 	var conv *conversation.Conversation
 	var err error
 
@@ -84,7 +84,7 @@ func (s *GetAnswerService) Execute(input *InputDTO) (*conversation.Conversation,
 	return conv, nil
 }
 
-func (s *GetAnswerService) completeConversation(conversation *conversation.Conversation, profileSlug, modelSlug string) error {
+func (s *CompleteService) completeConversation(conversation *conversation.Conversation, profileSlug, modelSlug string) error {
 	profile, err := s.profileRepo.FindBySlug(profileSlug)
 	if err != nil {
 		return err

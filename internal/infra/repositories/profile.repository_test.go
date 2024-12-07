@@ -33,7 +33,7 @@ func TestListAll(t *testing.T) {
 		pr := NewProfileRepository("./invalid")
 		allProfiles, err := pr.ListAll()
 
-		require.EqualError(t, err, "no profiles directory found")
+		require.EqualError(t, err, "no profiles found. Please add profiles to the profiles folder.")
 		require.Len(t, allProfiles, 1)
 		require.Equal(t, profile.DefaultProfile().Name, allProfiles[profile.DefaultProfileSlug].Name)
 	})
