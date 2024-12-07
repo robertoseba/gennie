@@ -14,15 +14,7 @@ func Run(version string, stdOut io.Writer, stdErr io.Writer) {
 	printer := output.NewPrinter(stdOut, stdErr)
 
 	command := newRootCmd(version, stdOut, stdErr)
-	subcmds := []*cobra.Command{
-		NewModelCmd(container.GetSelectModelService(), printer),
-		NewProfilesCmd(container.GetSelectProfileService(), printer),
-		NewAskCmd(container.GetCompleteService(), printer),
-		NewExportCmd(container.GetExportConversationService(), printer),
-		NewConfigCmd(container.GetConfigRepository(), printer),
-		NewStatusCmd(container.GetConfigRepository(), printer),
-	}
-	command.AddCommand(subcmds...)
+	setupSubCommands(command, container, printer)
 
 	if container.GetConfig().IsNew() {
 		command.SetArgs([]string{"config"})
@@ -37,8 +29,11 @@ func Run(version string, stdOut io.Writer, stdErr io.Writer) {
 
 func newRootCmd(version string, stdOut io.Writer, stdErr io.Writer) *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:   "gennie",
-		Short: "Gennie is a cli assistant with multiple models and profile support.",
+		Use:               "gennie",
+		Short:             "Gennie is a cli assistant with multiple models and profile support.",
+		DisableAutoGenTag: true,
+		SilenceUsage:      true,
+		SilenceErrors:     true,
 	}
 
 	rootCmd.SetOut(stdOut)
@@ -47,4 +42,16 @@ func newRootCmd(version string, stdOut io.Writer, stdErr io.Writer) *cobra.Comma
 	rootCmd.SetVersionTemplate("Gennie version: {{.Version}}")
 
 	return rootCmd
+}
+
+func setupSubCommands(c *cobra.Command, container *container.Container, printer *output.Printer) {
+	subcmds := []*cobra.Command{
+		NewModelCmd(container.GetSelectModelService(), printer),
+		NewProfilesCmd(container.GetSelectProfileService(), printer),
+		NewAskCmd(container.GetCompleteService(), printer),
+		NewExportCmd(container.GetExportConversationService(), printer),
+		NewConfigCmd(container.GetConfigRepository(), printer),
+		NewStatusCmd(container.GetConfigRepository(), printer),
+	}
+	c.AddCommand(subcmds...)
 }
