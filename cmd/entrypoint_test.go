@@ -19,6 +19,13 @@ func TestHasRootSubCommands(t *testing.T) {
 		require.Equal(t, "gennie", r.Use)
 	})
 
+	t.Run("decriptions", func(t *testing.T) {
+		r.SetArgs([]string{"--help"})
+		r.Execute()
+		help := stdOut.String()
+		require.Contains(t, help, "Gennie is a cli assistant with multiple models and profile support.")
+	})
+
 	t.Run("template version", func(t *testing.T) {
 		r.SetArgs([]string{"--version"})
 		r.Execute()
