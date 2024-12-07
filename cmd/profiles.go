@@ -1,10 +1,7 @@
 package cmd
 
 import (
-	"errors"
-
 	"github.com/robertoseba/gennie/internal/core/usecases"
-	"github.com/robertoseba/gennie/internal/infra/repositories"
 	"github.com/robertoseba/gennie/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -16,10 +13,10 @@ func NewProfilesCmd(selectProfileCmd *usecases.SelectProfileService, p *output.P
 		Run: func(cmd *cobra.Command, args []string) {
 			availableProfiles, err := selectProfileCmd.ListAll()
 			if err != nil {
-				if !errors.Is(err, repositories.ErrNoProfilesDir) {
+				if len(availableProfiles) == 0 {
 					ExitWithError(err)
 				}
-				p.Print("No profiles found. Please add profiles to the profiles folder.", output.Red)
+				p.Print(err.Error(), output.Red)
 			}
 
 			menuMap := make(map[string]string, len(availableProfiles))

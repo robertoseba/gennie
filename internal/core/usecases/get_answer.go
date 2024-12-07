@@ -13,7 +13,7 @@ type GetAnswerService struct {
 	conversationRepo conversation.IConversationRepository
 	profileRepo      profile.IProfileRepository
 	apiClient        models.IApiClient
-	config           config.Config
+	config           *config.Config
 }
 
 type InputDTO struct {
@@ -28,7 +28,7 @@ func NewGetAnswerService(
 	cr conversation.IConversationRepository,
 	pr profile.IProfileRepository,
 	apiClient models.IApiClient,
-	config config.Config) *GetAnswerService {
+	config *config.Config) *GetAnswerService {
 	return &GetAnswerService{
 		conversationRepo: cr,
 		profileRepo:      pr,
@@ -94,7 +94,7 @@ func (s *GetAnswerService) completeConversation(conversation *conversation.Conve
 		conversation.SetProfileTo(profileSlug)
 	}
 
-	model, err := models.NewModel(modelSlug, s.apiClient, s.config)
+	model, err := models.NewModel(modelSlug, s.apiClient, *s.config)
 	if err != nil {
 		return err
 	}

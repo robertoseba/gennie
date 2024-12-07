@@ -11,7 +11,7 @@ import (
 	"github.com/robertoseba/gennie/internal/core/profile"
 )
 
-var ErrNoProfilesDir = fmt.Errorf("no profiles directory found")
+var ErrNoProfilesDir = fmt.Errorf("no profiles found. Please add profiles to the profiles folder.")
 
 type ProfileRepository struct {
 	profilesDir   string

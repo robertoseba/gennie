@@ -287,7 +287,7 @@ func (m *MockDeps) WithAPIAnswer(answer string) *MockDeps {
 }
 
 func (m *MockDeps) createService() *GetAnswerService {
-	return NewGetAnswerService(m.mockConvRepo, m.mockProfileRepo, m.mockApiClient, *config.NewConfig())
+	return NewGetAnswerService(m.mockConvRepo, m.mockProfileRepo, m.mockApiClient, config.NewConfig())
 }
 
 func (m *MockDeps) AssertExpectations(t *testing.T) {
