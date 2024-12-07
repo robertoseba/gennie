@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"io"
 	"os"
 
@@ -31,8 +30,7 @@ func Run(version string, stdOut io.Writer, stdErr io.Writer) {
 
 	err := command.Execute()
 	if err != nil {
-		stdErr := command.OutOrStderr()
-		fmt.Fprintf(stdErr, "Error executing command: %v\n", err)
+		command.PrintErrf("Error executing command: %v", err)
 		os.Exit(1)
 	}
 }

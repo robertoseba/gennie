@@ -39,7 +39,7 @@ func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Comma
 			endProcessingTime := time.Now()
 
 			if err != nil {
-				ExitWithError(err)
+				return err
 			}
 
 			p.PrintLine(output.Yellow)

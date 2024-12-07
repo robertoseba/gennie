@@ -12,14 +12,15 @@ func NewModelCmd(selectModelCmd *usecases.SelectModelService, p *output.Printer)
 		Use:   "model",
 		Short: "Configures the model to use.",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			modelList := selectModelCmd.ListAll()
 			modelSelected := output.MenuModel(modelList, models.DefaultModel)
 
 			err := selectModelCmd.SetAsActive(modelSelected)
 			if err != nil {
-				ExitWithError(err)
+				return err
 			}
+			return nil
 		},
 	}
 }

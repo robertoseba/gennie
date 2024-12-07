@@ -47,9 +47,9 @@ func (q *Question) WithPrevious(previousValue string, IsMasked bool) *Question {
 }
 
 func (q *Question) Ask(p *Printer) string {
-	fmt.Fprintf(p.Stdout, "%s", q.color)
-	fmt.Fprintf(p.Stdout, "%s\n", q.question.String())
-	fmt.Fprintf(p.Stdout, "%s>%s ", Yellow, Reset)
+	fmt.Fprintf(p.stdout, "%s", q.color)
+	fmt.Fprintf(p.stdout, "%s\n", q.question.String())
+	fmt.Fprintf(p.stdout, "%s>%s ", Yellow, Reset)
 
 	var input string
 	//nolint: errcheck

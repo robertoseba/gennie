@@ -12,12 +12,12 @@ func NewStatusCmd(configRepo config.IConfigRepository, p *output.Printer) *cobra
 	cmdStatus := &cobra.Command{
 		Use:   "status",
 		Short: "Shows the current status of gennie",
-		Long:  `Use it to check the current status of ginnie. You can check the model, profile and more!`,
+		Long:  `Use it to check the current status of gennie. You can check the model, profile and more!`,
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			config, err := configRepo.Load()
 			if err != nil {
-				ExitWithError(err)
+				return err
 			}
 
 			p.PrintLine(output.Yellow)
@@ -36,6 +36,7 @@ func NewStatusCmd(configRepo config.IConfigRepository, p *output.Printer) *cobra
 			p.Print(fmt.Sprintf("Profiles path: %s", config.ProfilesDirPath), output.Gray)
 			p.Print(fmt.Sprintf("Cache saved at: %s", config.ConversationCacheDir), output.Gray)
 			p.PrintLine(output.Yellow)
+			return nil
 		},
 	}
 

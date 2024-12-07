@@ -10,11 +10,11 @@ func NewProfilesCmd(selectProfileCmd *usecases.SelectProfileService, p *output.P
 	cmdProfiles := &cobra.Command{
 		Use:   "profile",
 		Short: "Configures the profile to use and list slugs",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			availableProfiles, err := selectProfileCmd.ListAll()
 			if err != nil {
 				if len(availableProfiles) == 0 {
-					ExitWithError(err)
+					return err
 				}
 				p.Print(err.Error(), output.Red)
 			}
@@ -28,13 +28,14 @@ func NewProfilesCmd(selectProfileCmd *usecases.SelectProfileService, p *output.P
 
 			// When esc is pressed in the menu
 			if selectedProfileSlug == "" {
-				return
+				return nil
 			}
 
 			err = selectProfileCmd.SetAsActive(availableProfiles[selectedProfileSlug])
 			if err != nil {
-				ExitWithError(err)
+				return err
 			}
+			return nil
 		},
 	}
 
@@ -47,17 +48,17 @@ func newCmdListProfiles(selectProfileCmd *usecases.SelectProfileService, p *outp
 		Use:   "slugs",
 		Short: "List available profiles slugs for use with --profile flag when asking questions",
 		Long:  "List available profiles slugs for use with --profile(-p=) flag when asking questions. Profile slugs are derived from the filename. Ie: \"my_profile.profile.toml\" will have the slug \"my_profile\".",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			p.PrintLine(output.Yellow)
 
 			availableProfiles, err := selectProfileCmd.ListAll()
 			if err != nil {
-				ExitWithError(err)
+				return err
 			}
 
 			if len(availableProfiles) == 0 {
 				p.Print("No profiles found. Please add profiles to the profiles folder.", output.Red)
-				return
+				return err
 			}
 
 			p.Print("Available Profiles: ", output.Cyan)
@@ -66,6 +67,7 @@ func newCmdListProfiles(selectProfileCmd *usecases.SelectProfileService, p *outp
 				p.Print(slug, output.Gray)
 			}
 			p.PrintLine(output.Yellow)
+			return nil
 		},
 	}
 }

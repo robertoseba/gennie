@@ -13,12 +13,13 @@ func NewExportCmd(exportConversationCmd *usecases.ExportConversationService, p *
 		Use:   "export [filename]",
 		Short: "Export the chat history to a file",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			p.Print(fmt.Sprintf("Exporting chat history to file %s", args[0]), output.Cyan)
 			err := exportConversationCmd.Execute(args[0])
 			if err != nil {
-				ExitWithError(err)
+				return err
 			}
+			return nil
 		},
 	}
 

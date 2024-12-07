@@ -17,23 +17,23 @@ type Printer struct {
 	height     int
 	marginSize int
 	margin     string
-	Stdout     io.Writer
-	Stderr     io.Writer
+	stdout     io.Writer
+	stderr     io.Writer
 }
 
-func NewPrinter(out io.Writer, err io.Writer) *Printer {
-	width, height := GetTermSize()
+func NewPrinter(stdOut io.Writer, stdErr io.Writer) *Printer {
+	if stdOut == nil {
+		stdOut = os.Stdout
+	}
+	if stdErr == nil {
+		stdErr = os.Stderr
+	}
+
+	width, height := GetTermSize(stdOut)
 	var margin int = 5
 
 	if width < 100 {
 		margin = 1
-	}
-
-	if out == nil {
-		out = os.Stdout
-	}
-	if err == nil {
-		err = os.Stderr
 	}
 
 	return &Printer{
@@ -41,18 +41,21 @@ func NewPrinter(out io.Writer, err io.Writer) *Printer {
 		height:     height,
 		marginSize: margin,
 		margin:     strings.Repeat(" ", margin),
-		Stdout:     out,
-		Stderr:     err,
+		stdout:     stdOut,
+		stderr:     stdErr,
 	}
 }
 
-func GetTermSize() (int, int) {
-	width, height, err := term.GetSize(int(os.Stdout.Fd()))
-	if err != nil {
-		width = 100
-		height = 80
+func GetTermSize(out io.Writer) (int, int) {
+	if f, ok := out.(*os.File); ok {
+		width, height, err := term.GetSize(int(f.Fd()))
+		if err != nil {
+			width = 100
+			height = 80
+		}
+		return width, height
 	}
-	return width, height
+	return 100, 80
 }
 
 func (p *Printer) PrintWithCodeStyling(answer string, codeColor Color) {
@@ -83,19 +86,19 @@ func (p *Printer) PrintLine(color Color) {
 
 	lineChar := "\u2014"
 	line := strings.Repeat(lineChar, p.width)
-	fmt.Fprintf(p.Stdout, "%s%s%s\n", color, line, Reset)
+	fmt.Fprintf(p.stdout, "%s%s%s\n", color, line, Reset)
 }
 
 func (p *Printer) Print(message string, color Color) {
 	lines := p.wrapWithMargins(message, []string{})
 
-	fmt.Fprintf(p.Stdout, "%s", color)
+	fmt.Fprintf(p.stdout, "%s", color)
 
 	for _, text := range lines {
-		fmt.Fprintf(p.Stdout, "%s%s%s\n", p.margin, text, p.margin)
+		fmt.Fprintf(p.stdout, "%s%s%s\n", p.margin, text, p.margin)
 	}
 
-	fmt.Fprintf(p.Stdout, "%s", Reset)
+	fmt.Fprintf(p.stdout, "%s", Reset)
 }
 
 func (p *Printer) wrapWithMargins(text string, initial []string) []string {
