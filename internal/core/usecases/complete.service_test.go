@@ -12,7 +12,6 @@ import (
 	"github.com/robertoseba/gennie/internal/core/profile"
 	apimock "github.com/robertoseba/gennie/internal/infra/apiclient/mocks"
 	"github.com/robertoseba/gennie/internal/infra/repositories/mocks"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -83,9 +82,9 @@ func TestCompleteService(t *testing.T) {
 			AppendFile:  "",
 		})
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		mockDeps.AssertExpectations(t)
-		assert.Equal(t, models.OpenAI.Slug(), returnedConv.ModelSlug)
+		require.Equal(t, models.OpenAI.Slug(), returnedConv.ModelSlug)
 	})
 
 	t.Run("if profile not provided, uses the profile from the active conversation", func(t *testing.T) {
@@ -107,9 +106,9 @@ func TestCompleteService(t *testing.T) {
 			AppendFile:  "",
 		})
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		mockDeps.AssertExpectations(t)
-		assert.Equal(t, "test-profile", returnedConv.ProfileSlug)
+		require.Equal(t, "test-profile", returnedConv.ProfileSlug)
 	})
 	t.Run("when model is inputed replaces the model in active conversation", func(t *testing.T) {
 		mockDeps := NewMockDeps()
@@ -130,9 +129,9 @@ func TestCompleteService(t *testing.T) {
 			AppendFile:  "",
 		})
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		mockDeps.AssertExpectations(t)
-		assert.Equal(t, "test-profile", returnedConv.ProfileSlug)
+		require.Equal(t, "test-profile", returnedConv.ProfileSlug)
 	})
 
 	t.Run("when profile is inputed replaces the profile in active conversation", func(t *testing.T) {
@@ -154,9 +153,9 @@ func TestCompleteService(t *testing.T) {
 			AppendFile:  "",
 		})
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		mockDeps.AssertExpectations(t)
-		assert.Equal(t, "test-profile", returnedConv.ProfileSlug)
+		require.Equal(t, "test-profile", returnedConv.ProfileSlug)
 	})
 
 	t.Run("when input is a not set as follow up question, creates a new conversation", func(t *testing.T) {
@@ -178,11 +177,11 @@ func TestCompleteService(t *testing.T) {
 			AppendFile:  "",
 		})
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		mockDeps.AssertExpectations(t)
-		assert.Equal(t, 1, returnedConv.Len())
-		assert.Equal(t, "What is gennie?", returnedConv.LastQuestion())
-		assert.Equal(t, "it's an Ai assistant", returnedConv.LastAnswer())
+		require.Equal(t, 1, returnedConv.Len())
+		require.Equal(t, "What is gennie?", returnedConv.LastQuestion())
+		require.Equal(t, "it's an Ai assistant", returnedConv.LastAnswer())
 	})
 
 	t.Run("when input is a follow up question, appends the question to the conversation", func(t *testing.T) {
@@ -204,13 +203,13 @@ func TestCompleteService(t *testing.T) {
 			AppendFile:  "",
 		})
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		mockDeps.AssertExpectations(t)
-		assert.Equal(t, 2, returnedConv.Len())
-		assert.Equal(t, "What is gennie?", returnedConv.LastQuestion())
-		assert.Equal(t, "it's an Ai assistant", returnedConv.LastAnswer())
-		assert.Equal(t, "previous question", returnedConv.QAs[0].Question.Content)
-		assert.Equal(t, "previous answer", returnedConv.QAs[0].Answer.Content)
+		require.Equal(t, 2, returnedConv.Len())
+		require.Equal(t, "What is gennie?", returnedConv.LastQuestion())
+		require.Equal(t, "it's an Ai assistant", returnedConv.LastAnswer())
+		require.Equal(t, "previous question", returnedConv.QAs[0].Question.Content)
+		require.Equal(t, "previous answer", returnedConv.QAs[0].Answer.Content)
 	})
 
 	//Error Handling
@@ -229,7 +228,7 @@ func TestCompleteService(t *testing.T) {
 			AppendFile:  "",
 		})
 
-		assert.ErrorContains(t, err, "Invalid")
+		require.ErrorContains(t, err, "Invalid")
 	})
 
 	t.Run("returns an error if cant find model", func(t *testing.T) {
@@ -247,7 +246,7 @@ func TestCompleteService(t *testing.T) {
 			AppendFile:  "",
 		})
 
-		assert.ErrorIs(t, err, models.ErrModelNotFound)
+		require.ErrorIs(t, err, models.ErrModelNotFound)
 	})
 }
 

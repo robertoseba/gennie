@@ -25,6 +25,5 @@ func (s *ConversationService) LoadFrom(filename string) error {
 	if err != nil {
 		return err
 	}
-	s.conversationRepo.SaveAsActive(conv)
-	return nil
+	return s.conversationRepo.SaveAsActive(conv)
 }
