@@ -40,15 +40,15 @@ type AnthropicResponse struct {
 }
 
 // StreamResponse represents the structure of Anthropic API streaming responses
-type DeltaResponse struct {
+type deltaResponse struct {
 	Type string `json:"type"`
 	Text string `json:"text"`
 }
 
-type StreamResponse struct {
+type streamResponse struct {
 	Type  string        `json:"type"`
 	Index int           `json:"index,omitempty"`
-	Delta DeltaResponse `json:"delta,omitempty"`
+	Delta deltaResponse `json:"delta,omitempty"`
 }
 
 func NewProvider(modelSlug string, apiKey string) *AnthropicModel {
@@ -126,7 +126,7 @@ func (m *AnthropicModel) GetStreamParser() func(b []byte) (string, error) {
 		if bytes.Contains(b, []byte("content_block_delta")) && bytes.HasPrefix(b, []byte("data:")) {
 			// removes data prefix
 			b = bytes.TrimPrefix(b, []byte("data:"))
-			var responseData StreamResponse
+			var responseData streamResponse
 			err := json.Unmarshal(b, &responseData)
 
 			if err != nil {
