@@ -49,9 +49,9 @@ func setupSubCommands(c *cobra.Command, container *container.Container, printer 
 		NewModelCmd(container.GetSelectModelService(), printer),
 		NewProfilesCmd(container.GetSelectProfileService(), printer),
 		NewAskCmd(container.GetCompleteService(), printer),
-		NewExportCmd(container.GetExportConversationService(), printer),
 		NewConfigCmd(container.GetConfigRepository(), printer),
 		NewStatusCmd(container.GetConfigRepository(), printer),
+		NewConversationCmd(container.GetExportConversationService(), printer),
 	}
 	c.AddCommand(subcmds...)
 }

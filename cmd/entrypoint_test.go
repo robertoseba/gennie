@@ -32,7 +32,7 @@ func TestHasRootSubCommands(t *testing.T) {
 
 	t.Run("sub commands are", func(t *testing.T) {
 		r, _, _ := setupCommand(t)
-		expectedCommands := []string{"config", "model", "profile", "ask [question for the llm model]", "status", "export [filename]"}
+		expectedCommands := []string{"config", "model", "profile", "ask [question for the llm model]", "status", "conversation [command]"}
 
 		for _, c := range r.Commands() {
 			idx := slices.Index(expectedCommands, c.Use)

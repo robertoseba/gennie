@@ -66,6 +66,6 @@ func (c *Container) GetSelectProfileService() *usecases.SelectProfileService {
 	return usecases.NewSelectProfileService(c.profileRepository, c.conversationRepository)
 }
 
-func (c *Container) GetExportConversationService() *usecases.ExportConversationService {
-	return usecases.NewExportConversationService(c.conversationRepository)
+func (c *Container) GetExportConversationService() *usecases.ConversationService {
+	return usecases.NewConversationService(c.conversationRepository)
 }
