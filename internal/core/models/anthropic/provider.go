@@ -123,7 +123,7 @@ func (m *AnthropicModel) CanStream() bool {
 
 func (m *AnthropicModel) GetStreamParser() func(b []byte) (string, error) {
 	return func(b []byte) (string, error) {
-		if bytes.Contains(b, []byte("content_block_delta")) && bytes.HasPrefix(b, []byte("data:")) {
+		if bytes.HasPrefix(b, []byte("data:")) && bytes.Contains(b, []byte("content_block_delta")) {
 			// removes data prefix
 			b = bytes.TrimPrefix(b, []byte("data:"))
 			var responseData streamResponse
