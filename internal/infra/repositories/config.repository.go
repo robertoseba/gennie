@@ -57,7 +57,8 @@ func (cr *ConfigRepository) ConfigFile() string {
 	return path.Join(cr.dirPath, cr.filename)
 }
 
-// Saves the config to a gob file
+// Saves the config to a json file
+// Caches the config in repository cache
 func (cr *ConfigRepository) Save(config *config.Config) error {
 	config.MarkAsNotNew()
 	content, err := json.MarshalIndent(config, "", "  ")
