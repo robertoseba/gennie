@@ -51,7 +51,7 @@ func (m *OpenAIModel) GetUrl() string {
 	return "https://api.openai.com/v1/chat/completions"
 }
 
-func (m *OpenAIModel) PreparePayload(conversation *conversation.Conversation, systemPrompt string) (string, error) {
+func (m *OpenAIModel) PreparePayload(conversation *conversation.Conversation, systemPrompt string, isStreamable bool) (string, error) {
 	p := prompt{
 		Model: m.model,
 		Messages: []message{
@@ -92,4 +92,26 @@ func (m *OpenAIModel) ParseResponse(rawRes []byte) (string, error) {
 	}
 
 	return response.Choices[0].Message.Content, nil
+}
+
+func (m *OpenAIModel) CanStream() bool {
+	return false
+}
+
+func (m *OpenAIModel) GetStreamParser() func(b []byte) (string, error) {
+	return func(b []byte) (string, error) {
+		// 	if bytes.Contains(b, []byte("content_block_delta")) && bytes.HasPrefix(b, []byte("data:")) {
+		// 		// removes data prefix
+		// 		b = bytes.TrimPrefix(b, []byte("data:"))
+		// 		var responseData StreamResponse
+		// 		err := json.Unmarshal(b, &responseData)
+
+		// 		if err != nil {
+		// 			return "", err
+		// 		}
+		// 		return responseData.Delta.Text, nil
+		// 	}
+		// 	return "", nil
+		return "", nil
+	}
 }

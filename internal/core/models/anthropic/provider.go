@@ -1,6 +1,7 @@
 package anthropic
 
 import (
+	"bytes"
 	"encoding/json"
 
 	"github.com/robertoseba/gennie/internal/core/conversation"
@@ -27,6 +28,7 @@ type prompt struct {
 	Messages  []message `json:"messages"`
 	MaxTokens int       `json:"max_tokens"`
 	System    string    `json:"system"`
+	Stream    bool      `json:"stream"`
 }
 
 type content struct {
@@ -35,6 +37,18 @@ type content struct {
 }
 type AnthropicResponse struct {
 	Content []content `json:"content"`
+}
+
+// StreamResponse represents the structure of Anthropic API streaming responses
+type DeltaResponse struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
+
+type StreamResponse struct {
+	Type  string        `json:"type"`
+	Index int           `json:"index,omitempty"`
+	Delta DeltaResponse `json:"delta,omitempty"`
 }
 
 func NewProvider(modelSlug string, apiKey string) *AnthropicModel {
@@ -57,10 +71,10 @@ func (m *AnthropicModel) GetHeaders() map[string]string {
 	}
 }
 
-func (m *AnthropicModel) PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error) {
+func (m *AnthropicModel) PreparePayload(conv *conversation.Conversation, systemPrompt string, isStreamable bool) (string, error) {
 
-	messages := make([]message, 0, chatHistory.Len())
-	for _, qa := range chatHistory.QAs {
+	messages := make([]message, 0, conv.Len())
+	for _, qa := range conv.QAs {
 		messages = append(messages, message{
 			Role:    roleUser,
 			Content: qa.GetQuestion(),
@@ -78,6 +92,7 @@ func (m *AnthropicModel) PreparePayload(chatHistory *conversation.Conversation, 
 		Messages:  messages,
 		MaxTokens: 1024,
 		System:    systemPrompt,
+		Stream:    isStreamable,
 	}
 	jsonData, err := json.Marshal(p)
 
@@ -100,4 +115,25 @@ func (m *AnthropicModel) ParseResponse(rawRes []byte) (string, error) {
 
 func (m *AnthropicModel) Model() string {
 	return m.model
+}
+
+func (m *AnthropicModel) CanStream() bool {
+	return true
+}
+
+func (m *AnthropicModel) GetStreamParser() func(b []byte) (string, error) {
+	return func(b []byte) (string, error) {
+		if bytes.Contains(b, []byte("content_block_delta")) && bytes.HasPrefix(b, []byte("data:")) {
+			// removes data prefix
+			b = bytes.TrimPrefix(b, []byte("data:"))
+			var responseData StreamResponse
+			err := json.Unmarshal(b, &responseData)
+
+			if err != nil {
+				return "", err
+			}
+			return responseData.Delta.Text, nil
+		}
+		return "", nil
+	}
 }

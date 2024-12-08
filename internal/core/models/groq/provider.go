@@ -55,7 +55,7 @@ func (m *GroqModel) GetUrl() string {
 	return "https://api.groq.com/openai/v1/chat/completions"
 }
 
-func (m *GroqModel) PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error) {
+func (m *GroqModel) PreparePayload(conv *conversation.Conversation, systemPrompt string, isStreamable bool) (string, error) {
 	p := prompt{
 		Model: m.model,
 		Messages: []message{
@@ -66,7 +66,7 @@ func (m *GroqModel) PreparePayload(chatHistory *conversation.Conversation, syste
 		},
 	}
 
-	for _, qa := range chatHistory.QAs {
+	for _, qa := range conv.QAs {
 		p.Messages = append(p.Messages, message{
 			Role:    roleUser,
 			Content: qa.GetQuestion(),
@@ -96,4 +96,26 @@ func (m *GroqModel) ParseResponse(rawRes []byte) (string, error) {
 	}
 
 	return response.Choices[0].Message.Content, nil
+}
+
+func (m *GroqModel) CanStream() bool {
+	return false
+}
+
+func (m *GroqModel) GetStreamParser() func(b []byte) (string, error) {
+	return func(b []byte) (string, error) {
+		// 	if bytes.Contains(b, []byte("content_block_delta")) && bytes.HasPrefix(b, []byte("data:")) {
+		// 		// removes data prefix
+		// 		b = bytes.TrimPrefix(b, []byte("data:"))
+		// 		var responseData StreamResponse
+		// 		err := json.Unmarshal(b, &responseData)
+
+		// 		if err != nil {
+		// 			return "", err
+		// 		}
+		// 		return responseData.Delta.Text, nil
+		// 	}
+		// 	return "", nil
+		return "", nil
+	}
 }

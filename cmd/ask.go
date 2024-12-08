@@ -34,19 +34,36 @@ func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Comma
 				AppendFile:  appendFileFlag,
 			}
 
-			conversation, err := askCmd.Execute(dto)
-			spinner.Stop()
+			respChan, err := askCmd.Execute(dto)
+			if err != nil {
+				spinner.Stop()
+				return err
+			}
+
+			isSpinnerRunning := true
+			for d := range respChan {
+				if isSpinnerRunning {
+					spinner.Stop()
+					isSpinnerRunning = false
+					p.PrintLine(output.Yellow)
+				}
+
+				if d.Err != nil {
+					return d.Err
+				}
+				cmd.Print(d.Data)
+			}
+			fmt.Println()
 			endProcessingTime := time.Now()
 
 			if err != nil {
 				return err
 			}
 
-			p.PrintLine(output.Yellow)
-			p.PrintWithCodeStyling(conversation.LastAnswer(), output.Yellow)
+			// p.PrintWithCodeStyling(conversation.LastAnswer(), output.Yellow)
 			p.PrintLine(output.Yellow)
 
-			p.Print(fmt.Sprintf("Model: %s, Profile: %s", conversation.ModelSlug, conversation.ProfileSlug), output.Cyan)
+			// p.Print(fmt.Sprintf("Model: %s, Profile: %s", conversation.ModelSlug, conversation.ProfileSlug), output.Cyan)
 			p.Print(fmt.Sprintf("Answered in: %0.2f seconds", endProcessingTime.Sub(startProcessingTime).Seconds()), output.Cyan)
 			p.Print("", "")
 

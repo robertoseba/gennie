@@ -1,11 +1,14 @@
 package apiclient
 
 import (
+	"bufio"
 	"errors"
 	"io"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/robertoseba/gennie/internal/core/models"
 )
 
 type IhttpClient interface {
@@ -50,6 +53,47 @@ func (c *ApiClient) Post(url string, body string, headers map[string]string) ([]
 	}
 
 	return resBody, nil
+}
+
+func (c *ApiClient) PostWithStreaming(url string, body string, headers map[string]string, parser models.ProviderStreamParser) <-chan models.StreamResponse {
+	respChan := make(chan models.StreamResponse, 5)
+
+	go func(inputStream chan<- models.StreamResponse) {
+		defer close(inputStream)
+
+		res, err := c.request("POST", url, body, headers)
+		if err != nil {
+			if errors.Is(err, http.ErrHandlerTimeout) {
+				inputStream <- models.StreamResponse{Err: errors.New("request timeout")}
+				return
+			}
+			inputStream <- models.StreamResponse{Err: err}
+		}
+		defer res.Body.Close()
+
+		if res.StatusCode != http.StatusOK {
+			body, err := io.ReadAll(res.Body)
+			if err != nil {
+				inputStream <- models.StreamResponse{Err: err}
+				return
+			}
+			inputStream <- models.StreamResponse{Err: errors.New(string(body))}
+			return
+		}
+
+		scanner := bufio.NewScanner(res.Body)
+		for scanner.Scan() {
+			data := scanner.Bytes()
+			parsedData, err := parser(data)
+			if err != nil {
+				inputStream <- models.StreamResponse{Err: err}
+				return
+			}
+			inputStream <- models.StreamResponse{Data: parsedData, Err: nil}
+		}
+	}(respChan)
+
+	return respChan
 }
 
 func (c *ApiClient) request(method string, url string, body string, headers map[string]string) (*http.Response, error) {

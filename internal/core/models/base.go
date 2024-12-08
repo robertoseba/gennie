@@ -15,6 +15,11 @@ type BaseModel struct {
 	modelProvider iModelProvider
 }
 
+type StreamResponse struct {
+	Data string
+	Err  error
+}
+
 func newBaseModel(model ModelEnum, client IApiClient, modelProvider iModelProvider) *BaseModel {
 	return &BaseModel{
 		model:         model,
@@ -36,7 +41,7 @@ func (m *BaseModel) Complete(conversation *conversation.Conversation, systemProm
 		return ErrEmptyConversation
 	}
 
-	payload, err := m.modelProvider.PreparePayload(conversation, systemPrompt)
+	payload, err := m.modelProvider.PreparePayload(conversation, systemPrompt, false)
 	if err != nil {
 		return err
 	}
@@ -53,4 +58,18 @@ func (m *BaseModel) Complete(conversation *conversation.Conversation, systemProm
 	}
 
 	return conversation.AnswerLastQuestion(parsedResponse)
+}
+
+func (m *BaseModel) CompleteStreamable(conversation *conversation.Conversation, systemPrompt string) (<-chan StreamResponse, error) {
+	payload, err := m.modelProvider.PreparePayload(conversation, systemPrompt, true)
+	if err != nil {
+		return nil, err
+	}
+
+	outputChan := m.apiClient.PostWithStreaming(m.modelProvider.GetUrl(), payload, m.modelProvider.GetHeaders(), m.modelProvider.GetStreamParser())
+	return outputChan, nil
+}
+
+func (m *BaseModel) CanStream() bool {
+	return m.modelProvider.CanStream()
 }

@@ -52,7 +52,7 @@ func (m *OllamaAIModel) GetUrl() string {
 	return fmt.Sprintf("%s/api/chat", m.host)
 }
 
-func (m *OllamaAIModel) PreparePayload(chatHistory *conversation.Conversation, systemPrompt string) (string, error) {
+func (m *OllamaAIModel) PreparePayload(conv *conversation.Conversation, systemPrompt string, isStreamable bool) (string, error) {
 	p := prompt{
 		Model: m.model,
 		Messages: []message{
@@ -64,7 +64,7 @@ func (m *OllamaAIModel) PreparePayload(chatHistory *conversation.Conversation, s
 		Stream: false,
 	}
 
-	for _, qa := range chatHistory.QAs {
+	for _, qa := range conv.QAs {
 		p.Messages = append(p.Messages, message{
 			Role:    roleUser,
 			Content: qa.GetQuestion(),
@@ -94,4 +94,26 @@ func (m *OllamaAIModel) ParseResponse(rawRes []byte) (string, error) {
 	}
 
 	return response.Message.Content, nil
+}
+
+func (m *OllamaAIModel) CanStream() bool {
+	return false
+}
+
+func (m *OllamaAIModel) GetStreamParser() func(b []byte) (string, error) {
+	return func(b []byte) (string, error) {
+		// 	if bytes.Contains(b, []byte("content_block_delta")) && bytes.HasPrefix(b, []byte("data:")) {
+		// 		// removes data prefix
+		// 		b = bytes.TrimPrefix(b, []byte("data:"))
+		// 		var responseData StreamResponse
+		// 		err := json.Unmarshal(b, &responseData)
+
+		// 		if err != nil {
+		// 			return "", err
+		// 		}
+		// 		return responseData.Delta.Text, nil
+		// 	}
+		// 	return "", nil
+		return "", nil
+	}
 }
