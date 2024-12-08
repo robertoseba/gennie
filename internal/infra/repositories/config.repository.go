@@ -16,8 +16,9 @@ type ConfigRepository struct {
 
 func NewConfigRepository(configDir string) *ConfigRepository {
 	return &ConfigRepository{
-		filename: "config.json",
-		dirPath:  configDir,
+		filename:     "config.json",
+		dirPath:      configDir,
+		configCached: nil,
 	}
 }
 
@@ -43,13 +44,13 @@ func (cr *ConfigRepository) Load() (*config.Config, error) {
 		return nil, err
 	}
 
-	var config *config.Config
-	err = json.Unmarshal(content, config)
+	var config config.Config
+	err = json.Unmarshal(content, &config)
 	if err != nil {
 		return nil, err
 	}
-	cr.configCached = config
-	return config, nil
+	cr.configCached = &config
+	return &config, nil
 }
 
 // Returns the full path to the config file
