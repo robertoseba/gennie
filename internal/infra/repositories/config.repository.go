@@ -23,7 +23,7 @@ func NewConfigRepository(configDir string) *ConfigRepository {
 // Loads the config from a gob file into the Config struct
 // If the file does not exist, it returns a new Config with default values
 func (cr *ConfigRepository) Load() (*config.Config, error) {
-	file := cr.configFile()
+	file := cr.ConfigFile()
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		config := config.NewConfig()
 		//Default cache dir is the same as config path
@@ -45,7 +45,7 @@ func (cr *ConfigRepository) Load() (*config.Config, error) {
 }
 
 // Returns the full path to the config file
-func (cr *ConfigRepository) configFile() string {
+func (cr *ConfigRepository) ConfigFile() string {
 	return path.Join(cr.dirPath, cr.filename)
 }
 
@@ -56,7 +56,7 @@ func (cr *ConfigRepository) Save(config *config.Config) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(cr.configFile(), content, 0644)
+	err = os.WriteFile(cr.ConfigFile(), content, 0644)
 	if err != nil {
 		return err
 	}

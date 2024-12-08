@@ -11,7 +11,7 @@ import (
 func TestNewConfigRepository(t *testing.T) {
 	t.Run("creates new config repo", func(t *testing.T) {
 		repo := NewConfigRepository("./config")
-		require.Equal(t, "config/config.json", repo.configFile())
+		require.Equal(t, "config/config.json", repo.ConfigFile())
 	})
 
 	t.Run("saves config to file", func(t *testing.T) {
@@ -30,10 +30,10 @@ func TestNewConfigRepository(t *testing.T) {
 		require.NoError(t, err)
 		require.False(t, config.IsNew())
 
-		require.FileExists(t, repo.configFile())
+		require.FileExists(t, repo.ConfigFile())
 		require.NoError(t, err)
 
-		os.Remove(repo.configFile())
+		os.Remove(repo.ConfigFile())
 	})
 
 	t.Run("loads config from file", func(t *testing.T) {
@@ -55,7 +55,7 @@ func TestNewConfigRepository(t *testing.T) {
 
 		require.Equal(t, *config, *loadedConfig)
 
-		os.Remove(repo.configFile())
+		os.Remove(repo.ConfigFile())
 	})
 
 	t.Run("loads default config if file does not exist and sets as new", func(t *testing.T) {
@@ -100,5 +100,9 @@ func TestCreateConfigDir(t *testing.T) {
 		require.Equal(t, "gennie", dir)
 		os.Remove(dir)
 	})
+}
 
+func TestConfigFile(t *testing.T) {
+	repo := NewConfigRepository("./config")
+	require.Equal(t, "config/config.json", repo.ConfigFile())
 }

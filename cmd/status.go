@@ -35,6 +35,7 @@ func NewStatusCmd(configRepo config.IConfigRepository, p *output.Printer) *cobra
 			p.PrintLine(output.Yellow)
 			p.Print(fmt.Sprintf("Profiles path: %s", config.ProfilesDirPath), output.Gray)
 			p.Print(fmt.Sprintf("Cache saved at: %s", config.ConversationCacheDir), output.Gray)
+			p.Print(fmt.Sprintf("Config saved at: %s", configRepo.ConfigFile()), output.Gray)
 			p.PrintLine(output.Yellow)
 			return nil
 		},
