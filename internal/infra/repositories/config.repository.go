@@ -9,8 +9,9 @@ import (
 )
 
 type ConfigRepository struct {
-	filename string
-	dirPath  string
+	filename     string
+	dirPath      string
+	configCached *config.Config
 }
 
 func NewConfigRepository(configDir string) *ConfigRepository {
@@ -22,12 +23,18 @@ func NewConfigRepository(configDir string) *ConfigRepository {
 
 // Loads the config from a gob file into the Config struct
 // If the file does not exist, it returns a new Config with default values
+// Once loaded config is cached until the cli quits
 func (cr *ConfigRepository) Load() (*config.Config, error) {
+	if cr.configCached != nil {
+		return cr.configCached, nil
+	}
+
 	file := cr.ConfigFile()
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		config := config.NewConfig()
 		//Default cache dir is the same as config path
 		config.ConversationCacheDir = cr.dirPath
+		cr.configCached = config
 		return config, nil
 	}
 
@@ -36,12 +43,13 @@ func (cr *ConfigRepository) Load() (*config.Config, error) {
 		return nil, err
 	}
 
-	var config config.Config
-	err = json.Unmarshal(content, &config)
+	var config *config.Config
+	err = json.Unmarshal(content, config)
 	if err != nil {
 		return nil, err
 	}
-	return &config, nil
+	cr.configCached = config
+	return config, nil
 }
 
 // Returns the full path to the config file
@@ -60,6 +68,7 @@ func (cr *ConfigRepository) Save(config *config.Config) error {
 	if err != nil {
 		return err
 	}
+	cr.configCached = config
 	return nil
 }
 

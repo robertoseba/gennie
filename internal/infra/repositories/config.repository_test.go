@@ -25,12 +25,15 @@ func TestNewConfigRepository(t *testing.T) {
 
 		repo := NewConfigRepository(".")
 		require.True(t, config.IsNew())
+		require.Nil(t, repo.configCached)
 
 		err := repo.Save(config)
 		require.NoError(t, err)
 		require.False(t, config.IsNew())
 
 		require.FileExists(t, repo.ConfigFile())
+		require.Equal(t, config, repo.configCached) //updates cached config
+
 		require.NoError(t, err)
 
 		os.Remove(repo.ConfigFile())
@@ -54,6 +57,7 @@ func TestNewConfigRepository(t *testing.T) {
 		require.False(t, loadedConfig.IsNew())
 
 		require.Equal(t, *config, *loadedConfig)
+		require.Equal(t, config, repo.configCached)
 
 		os.Remove(repo.ConfigFile())
 	})
@@ -68,6 +72,7 @@ func TestNewConfigRepository(t *testing.T) {
 
 		require.True(t, loadedConfig.IsNew())
 		require.Equal(t, expectedConfig, loadedConfig)
+		require.Equal(t, expectedConfig, repo.configCached)
 	})
 
 	t.Run("when loading default should set cache dir the same as config dir", func(t *testing.T) {
