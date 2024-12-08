@@ -1,7 +1,6 @@
 # Personal assistant for general questions
 
 name = "Assistant"
-slug = "assistant"
 author = "Roberto Seba"
 
 data = '''

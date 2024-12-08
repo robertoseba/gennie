@@ -32,7 +32,11 @@ func (q *Question) WithPrevious(previousValue string, IsMasked bool) *Question {
 	q.question.WriteString(" (Enter to use: ")
 
 	if IsMasked {
-		q.question.WriteString(previousValue[0:4])
+		upTo := 4
+		if len(previousValue) < 4 {
+			upTo = len(previousValue)
+		}
+		q.question.WriteString(previousValue[0:upTo])
 		q.question.WriteString("...")
 	} else {
 		q.question.WriteString(previousValue)
@@ -43,11 +47,12 @@ func (q *Question) WithPrevious(previousValue string, IsMasked bool) *Question {
 }
 
 func (q *Question) Ask(p *Printer) string {
-	fmt.Fprintf(p.Stdout, "%s", q.color)
-	fmt.Fprintf(p.Stdout, "%s\n", q.question.String())
-	fmt.Fprintf(p.Stdout, "%s>%s ", Yellow, Reset)
+	fmt.Fprintf(p.stdout, "%s", q.color)
+	fmt.Fprintf(p.stdout, "%s\n", q.question.String())
+	fmt.Fprintf(p.stdout, "%s>%s ", Yellow, Reset)
 
 	var input string
+	//nolint: errcheck
 	fmt.Scanln(&input)
 
 	if input == "" && q.previousValue != "" {

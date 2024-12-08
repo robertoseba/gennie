@@ -1,5 +1,4 @@
 name = "SQL"
-slug = "sql"
 author = "Roberto Seba"
 
 data = '''

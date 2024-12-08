@@ -25,12 +25,12 @@ A powerful CLI assistant designed to support multiple models and profiles to sui
 - **Film Buff**: Recommendations and insights on movies.
 - **Unit Testing**: Guidance on writing reliable unit tests.
 
-Use `gennie profile` to manage your profiles or the `--profile` flag with the `ask` command.
+Use `gennie profile` to manage your profiles or the `--profile (-p)` flag with the `ask` command.
 
-**Profiles are cached locally for performance:**
+**Profile slugs are derived from the filename. Ie: `go.profile.toml` can be used with the flag `-p=go`**
 
-- Default location: `~/.config/gennie/profiles` (\*must be created by user before using gennie)
-- Refresh your cached profiles with `gennie profile refresh`.
+- Default location: `~/.config/gennie/profiles` (\*must be created by user before using gennie).
+  Every file inside the profile directory ending with `.profile.toml` will be automatically read as a profile
 
 _You can download sample profiles from the [profiles](profiles) directory._
 
@@ -38,13 +38,12 @@ _You can download sample profiles from the [profiles](profiles) directory._
 
 Profiles must be toml files ending with `profile.toml`.
 
-Here's a simple example for a sql profile to help you out with database related questions.
+Here's a simple example, with the required fields, for a sql profile to help you out with database related questions.
 
 File: `sql.profile.toml`
 
 ```toml
 name = "SQL"
-slug = "sql"
 author = "Roberto Seba"
 
 data = '''
@@ -62,6 +61,12 @@ Do not repeat the steps in the answer. Only provide the solution to the problem.
 '''
 ```
 
+### Using a profile directly in a question
+
+```bash
+$ gennie ask "how can I read a EXPLAIN returned from PostgreSQL" -p=sql
+```
+
 ## 🤖 Supported Models / AI Companies
 
 **Explore multiple models at your fingertips!** Check and switch between them using `gennie model`, or with the `--model` flag in the `ask` command.
@@ -74,6 +79,42 @@ Current Models:
 - [Maritaca AI](https://maritaca.ai/)
 - [Groq's Llama](https://www.groq.com/)
 - [Ollama](https://ollama.com/)
+
+### List models slugs for using directly in a question
+
+```bash
+$ gennie model slugs
+```
+
+### Using a model directly in a question
+
+```
+$ gennie ask who won the oscar for best movie in 2023 -m=sonnet
+```
+
+## Conversations
+
+This is how you can manage your conversation history and keep your data for future use.
+The last question is always saved as a active conversation. You can always use follow up to continue on the same conversation. BUT if you don't use the flag, a new conversation is started and you lose the previous one.
+So, in order for you to maintain an archive of your conversations you can use these commands: `conversation save` and `conversation load`
+That way you can have a directory with all you conversations for whenever you want to continue the chat.
+
+## Saving the active conversation for future use
+
+Let's say you made a bunch of questions but you feel like you might want to revisit this conversation.
+Save it using:
+
+```
+$ gennie conversation save <jsonfilename>
+```
+
+### Reloading past conversation into active conversation
+
+You can use this whenever you want to reload old conversations and make it active again
+
+```
+$ gennie conversation load <filename of previously saved conversation>
+```
 
 ## Extra Features
 
@@ -88,16 +129,7 @@ gennie ask "Create a list of the best movies of 2021"
 gennie ask "Are there any movies in that list by Martin Scorcese?" --followup
 ```
 
-> ⚠️ **Note**: Without a follow-up, your chat history is cleared. Use `--followup` to maintain context or export your history with the `export` command.
-
-### Export Chat History
-
-Effortlessly save your chat interactions using the `export` command:
-
-```bash
-gennie ask "Create a list of the best movies of 2021"
-gennie export chat_history.txt
-```
+> ⚠️ **Note**: Without a follow-up, your conversation is cleared. Use `--followup (-f)` to maintain context or export your conversation with the `export` command.
 
 ### Append Files to Questions
 
@@ -136,38 +168,16 @@ Visit the [releases page](https://github.com/robertoseba/gennie/releases) to dow
 
 ## 🚀 Using for the first time
 
-After installing you must configure keys and profiles folder. You can do this by running the following command:
+After installing you must configure api keys for the llm providers (OpenAi, Anthropic...) and a profiles folder where you'll keep your profile's collection. You can do this by running the following command:
 
 ```bash
 gennie config
 ```
 
-## 📖 Usage
+## 📖 Help
 
 ```
-$ gennie -h
-
-Gennie is a cli assistant with multiple models and profile support.
-
-Usage:
-  gennie [command]
-
-AAvailable Commands:
-  ask         You can ask anything here
-  clear       Clears all the conversation and preferences from cache
-  completion  Generate the autocompletion script for the specified shell
-  config      Configures Gennie
-  export      Export the chat history to a file
-  help        Help about any command
-  model       Configures the model to use.
-  profile     Profile management
-  status      Shows the current status of gennie
-
-Flags:
-  -h, --help      help for gennie
-  -v, --version   version for gennie
-
-Use "gennie [command] --help" for more information about a command.
+$ gennie --help
 ```
 
 ## API Keys
@@ -178,6 +188,8 @@ Use the `gennie config` command to set your API keys.
 ## 🐛 Issues and Suggestions
 
 Gennie is an **OPEN** source project in its early stages. We welcome any bugs, issues, or suggestions you may have. Feel free to create an issue or contact me directly, and I'll respond as soon as possible!
+
+Since this is a very early version and a personal project, breaking changes may occur more often than in a more stable project. I'll try to keep the changes as minimal as possible, but I can't guarantee that they won't happen.
 
 ## 📄 License
 

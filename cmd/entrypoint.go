@@ -1,23 +1,57 @@
 package cmd
 
 import (
+	"io"
+	"os"
+
+	"github.com/robertoseba/gennie/internal/infra/container"
+	"github.com/robertoseba/gennie/internal/output"
 	"github.com/spf13/cobra"
 )
 
-func NewRootCmd(c *CmdUtil) *cobra.Command {
-	rootCmd := &cobra.Command{
-		Use:   "gennie",
-		Short: "Gennie is a cli assistant with multiple models and profile support.",
+func Run(version string, stdOut io.Writer, stdErr io.Writer) {
+	container := container.NewContainer()
+	printer := output.NewPrinter(stdOut, stdErr)
+
+	command := newRootCmd(version, stdOut, stdErr)
+	setupSubCommands(command, container, printer)
+
+	if container.GetConfig().IsNew() {
+		command.SetArgs([]string{"config"})
 	}
-	rootCmd.Version = c.Version
+
+	err := command.Execute()
+	if err != nil {
+		command.PrintErrf("Error executing command: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func newRootCmd(version string, stdOut io.Writer, stdErr io.Writer) *cobra.Command {
+	rootCmd := &cobra.Command{
+		Use:               "gennie",
+		Short:             "Gennie is a cli assistant with multiple models and profile support.",
+		DisableAutoGenTag: true,
+		SilenceUsage:      true,
+		SilenceErrors:     true,
+	}
+
+	rootCmd.SetOut(stdOut)
+	rootCmd.SetErr(stdErr)
+	rootCmd.Version = version
 	rootCmd.SetVersionTemplate("Gennie version: {{.Version}}")
 
-	rootCmd.AddCommand(NewModelCmd(c.Storage, c.Printer))
-	rootCmd.AddCommand(NewProfilesCmd(c.Storage, c.Printer))
-	rootCmd.AddCommand(NewStatusCmd(c.Storage, c.Printer))
-	rootCmd.AddCommand(NewAskCmd(c.Storage, c.Printer, c.HttpClient()))
-	rootCmd.AddCommand(NewExportCmd(c.Storage, c.Printer))
-	rootCmd.AddCommand(NewClearCmd(c.Storage, c.Printer))
-	rootCmd.AddCommand(NewConfigCmd(c.Storage, c.Printer))
 	return rootCmd
+}
+
+func setupSubCommands(c *cobra.Command, container *container.Container, printer *output.Printer) {
+	subcmds := []*cobra.Command{
+		NewModelCmd(container.GetSelectModelService(), printer),
+		NewProfilesCmd(container.GetSelectProfileService(), printer),
+		NewAskCmd(container.GetCompleteService(), printer),
+		NewConfigCmd(container.GetConfigRepository(), printer),
+		NewStatusCmd(container.GetConfigRepository(), printer),
+		NewConversationCmd(container.GetExportConversationService(), printer),
+	}
+	c.AddCommand(subcmds...)
 }
