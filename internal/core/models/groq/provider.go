@@ -1,6 +1,7 @@
 package groq
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
@@ -27,6 +28,7 @@ type message struct {
 type prompt struct {
 	Model    string    `json:"model"`
 	Messages []message `json:"messages"`
+	Stream   bool      `json:"stream"`
 }
 
 type choice struct {
@@ -34,6 +36,16 @@ type choice struct {
 }
 type openAiResponse struct {
 	Choices []choice `json:"choices"`
+}
+
+type deltaStream struct {
+	Delta struct {
+		Content string `json:"content,omitempty"`
+	} `json:"delta"`
+}
+
+type streamResponse struct {
+	Choices []deltaStream `json:"choices"`
 }
 
 func NewProvider(modelSlug string, apiKey string) *GroqModel {
@@ -64,6 +76,7 @@ func (m *GroqModel) PreparePayload(conv *conversation.Conversation, systemPrompt
 				Content: systemPrompt,
 			},
 		},
+		Stream: isStreamable,
 	}
 
 	for _, qa := range conv.QAs {
@@ -99,23 +112,29 @@ func (m *GroqModel) ParseResponse(rawRes []byte) (string, error) {
 }
 
 func (m *GroqModel) CanStream() bool {
-	return false
+	return true
 }
 
 func (m *GroqModel) GetStreamParser() func(b []byte) (string, error) {
 	return func(b []byte) (string, error) {
-		// 	if bytes.Contains(b, []byte("content_block_delta")) && bytes.HasPrefix(b, []byte("data:")) {
-		// 		// removes data prefix
-		// 		b = bytes.TrimPrefix(b, []byte("data:"))
-		// 		var responseData StreamResponse
-		// 		err := json.Unmarshal(b, &responseData)
+		if !bytes.HasPrefix(b, []byte("data:")) {
+			return "", nil
+		}
 
-		// 		if err != nil {
-		// 			return "", err
-		// 		}
-		// 		return responseData.Delta.Text, nil
-		// 	}
-		// 	return "", nil
-		return "", nil
+		if bytes.HasSuffix(b, []byte("[DONE]")) {
+			return "", nil
+		}
+
+		if !bytes.Contains(b, []byte("choices")) {
+			return "", nil
+		}
+
+		jsonData := bytes.TrimPrefix(b, []byte("data:"))
+		var data streamResponse
+		err := json.Unmarshal(jsonData, &data)
+		if err != nil {
+			return "", err
+		}
+		return data.Choices[0].Delta.Content, nil
 	}
 }
