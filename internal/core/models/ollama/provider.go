@@ -61,7 +61,7 @@ func (m *OllamaAIModel) PreparePayload(conv *conversation.Conversation, systemPr
 				Content: systemPrompt,
 			},
 		},
-		Stream: false,
+		Stream: isStreamable,
 	}
 
 	for _, qa := range conv.QAs {
@@ -97,11 +97,16 @@ func (m *OllamaAIModel) ParseResponse(rawRes []byte) (string, error) {
 }
 
 func (m *OllamaAIModel) CanStream() bool {
-	return false
+	return true
 }
 
 func (m *OllamaAIModel) GetStreamParser() func(b []byte) (string, error) {
 	return func(b []byte) (string, error) {
-		return "", nil
+		var res response
+		err := json.Unmarshal(b, &res)
+		if err != nil {
+			return "", err
+		}
+		return res.Message.Content, nil
 	}
 }
