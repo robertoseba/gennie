@@ -15,6 +15,7 @@ func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Comma
 	var appendFileFlag string
 	var modelFlag string
 	var profileFlag string
+	var isStreamableFlag bool
 
 	cmdAsk := &cobra.Command{
 		Use:   "ask [question for the llm model]",
@@ -27,11 +28,12 @@ func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Comma
 			spinner.Start()
 
 			dto := &usecases.InputDTO{
-				Question:    strings.Join(args, " "),
-				ProfileSlug: profileFlag,
-				Model:       modelFlag,
-				IsFollowUp:  isFollowUpFlag,
-				AppendFile:  appendFileFlag,
+				Question:     strings.Join(args, " "),
+				ProfileSlug:  profileFlag,
+				Model:        modelFlag,
+				IsFollowUp:   isFollowUpFlag,
+				AppendFile:   appendFileFlag,
+				IsStreamable: isStreamableFlag,
 			}
 
 			respChan, err := askCmd.Execute(dto)
@@ -71,6 +73,7 @@ func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Comma
 	cmdAsk.Flags().StringVarP(&appendFileFlag, "append", "a", "", "appends the content of a file to the question.")
 	cmdAsk.Flags().StringVarP(&modelFlag, "model", "m", "", "specifies the model to use.")
 	cmdAsk.Flags().StringVarP(&profileFlag, "profile", "p", "", "specifies the profile to use.")
+	cmdAsk.Flags().BoolVarP(&isStreamableFlag, "stream", "s", true, "controls if response should be streamed")
 
 	return cmdAsk
 }

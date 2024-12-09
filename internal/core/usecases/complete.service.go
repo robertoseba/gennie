@@ -95,7 +95,7 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan models.StreamResponse
 	go func() {
 		defer close(outputChan)
 
-		if !model.CanStream() {
+		if !input.IsStreamable || !model.CanStream() {
 			err = model.Complete(conv, profile.Data)
 			if err != nil {
 				outputChan <- models.StreamResponse{Err: err}
