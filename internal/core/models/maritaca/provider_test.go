@@ -31,7 +31,7 @@ func TestPreparePayload(t *testing.T) {
 	payload, err := m.PreparePayload(conversation, "System Prompt", false)
 
 	require.NoError(t, err)
-	require.JSONEq(t, `{"model":"sabia-3","messages":[{"role":"system","content":"System Prompt"},{"role":"user","content":"Question"},{"role":"assistant","content":"Answer"}]}`, payload)
+	require.JSONEq(t, `{"model":"sabia-3","messages":[{"role":"system","content":"System Prompt"},{"role":"user","content":"Question"},{"role":"assistant","content":"Answer"}],"stream":false}`, payload)
 }
 
 func TestParseResponse(t *testing.T) {
