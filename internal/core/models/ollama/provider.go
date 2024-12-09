@@ -102,18 +102,6 @@ func (m *OllamaAIModel) CanStream() bool {
 
 func (m *OllamaAIModel) GetStreamParser() func(b []byte) (string, error) {
 	return func(b []byte) (string, error) {
-		// 	if bytes.Contains(b, []byte("content_block_delta")) && bytes.HasPrefix(b, []byte("data:")) {
-		// 		// removes data prefix
-		// 		b = bytes.TrimPrefix(b, []byte("data:"))
-		// 		var responseData StreamResponse
-		// 		err := json.Unmarshal(b, &responseData)
-
-		// 		if err != nil {
-		// 			return "", err
-		// 		}
-		// 		return responseData.Delta.Text, nil
-		// 	}
-		// 	return "", nil
 		return "", nil
 	}
 }

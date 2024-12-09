@@ -90,6 +90,15 @@ func (m *ApiClientMock) Post(url string, payload string, headers map[string]stri
 	return argOne.([]byte), args.Error(1)
 }
 
+func (m *ApiClientMock) PostWithStreaming(url string,
+	body string,
+	headers map[string]string,
+	parser ProviderStreamParser) <-chan StreamResponse {
+
+	args := m.Called(url, body, headers, parser)
+	return args.Get(0).(<-chan StreamResponse)
+}
+
 func stubOpenAIResponse() []byte {
 	return []byte(`{
 		"choices": [
@@ -104,5 +113,5 @@ func stubOpenAIResponse() []byte {
 }
 
 func openAiPayload() string {
-	return `{"model":"gpt-4o","messages":[{"role":"system","content":"system-prompt"},{"role":"user","content":"question"}]}`
+	return `{"model":"gpt-4o","messages":[{"role":"system","content":"system-prompt"},{"role":"user","content":"question"}],"stream":false}`
 }

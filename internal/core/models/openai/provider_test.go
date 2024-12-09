@@ -29,10 +29,10 @@ func TestPreparePayload(t *testing.T) {
 	conversation := conversation.NewConversation("test", "test")
 	conversation.NewQuestion("Question")
 	conversation.AnswerLastQuestion("Answer")
-	payload, err := m.PreparePayload(conversation, "System Prompt")
+	payload, err := m.PreparePayload(conversation, "System Prompt", false)
 
 	require.NoError(t, err)
-	require.JSONEq(t, `{"model":"gpt-4o","messages":[{"role":"system","content":"System Prompt"},{"role":"user","content":"Question"},{"role":"assistant","content":"Answer"}]}`, payload)
+	require.JSONEq(t, `{"model":"gpt-4o","messages":[{"role":"system","content":"System Prompt"},{"role":"user","content":"Question"},{"role":"assistant","content":"Answer"}], "stream":false}`, payload)
 }
 
 func TestParseResponse(t *testing.T) {

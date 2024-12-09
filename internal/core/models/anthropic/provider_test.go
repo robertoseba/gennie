@@ -29,10 +29,10 @@ func TestPreparePayload(t *testing.T) {
 	conversation := conversation.NewConversation("test", "test")
 	conversation.NewQuestion("Question")
 	conversation.AnswerLastQuestion("Answer")
-	payload, err := m.PreparePayload(conversation, "System Prompt")
+	payload, err := m.PreparePayload(conversation, "System Prompt", false)
 
 	require.NoError(t, err)
-	require.JSONEq(t, `{"model":"claude-3-5-sonnet-20241022","messages":[{"role":"user","content":"Question"},{"role":"assistant","content":"Answer"}], "max_tokens":1024, "system":"System Prompt"}`, payload)
+	require.JSONEq(t, `{"model":"claude-3-5-sonnet-20241022","messages":[{"role":"user","content":"Question"},{"role":"assistant","content":"Answer"}], "max_tokens":1024, "system":"System Prompt", "stream":false}`, payload)
 }
 
 func TestParseResponse(t *testing.T) {
