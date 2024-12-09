@@ -56,7 +56,7 @@ func (c *ApiClient) Post(url string, body string, headers map[string]string) ([]
 }
 
 func (c *ApiClient) PostWithStreaming(url string, body string, headers map[string]string, parser models.ProviderStreamParser) <-chan models.StreamResponse {
-	respChan := make(chan models.StreamResponse, 5)
+	respChan := make(chan models.StreamResponse, 50)
 
 	go func(inputStream chan<- models.StreamResponse) {
 		defer close(inputStream)

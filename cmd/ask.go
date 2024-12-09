@@ -56,10 +56,6 @@ func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Comma
 			fmt.Println()
 			endProcessingTime := time.Now()
 
-			if err != nil {
-				return err
-			}
-
 			// p.PrintWithCodeStyling(conversation.LastAnswer(), output.Yellow)
 			p.PrintLine(output.Yellow)
 
