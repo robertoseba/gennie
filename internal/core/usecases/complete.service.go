@@ -102,6 +102,7 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan models.StreamResponse
 				return
 			}
 			outputChan <- models.StreamResponse{Data: conv.LastAnswer(), Err: nil}
+			s.conversationRepo.SaveAsActive(conv)
 			return
 		}
 
