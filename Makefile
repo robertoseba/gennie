@@ -14,7 +14,18 @@ lint:
 test-cover:
 	go test ./... -coverprofile=coverage.out && go tool cover -html=coverage.out
 
+current-tag:
+	@echo "$(LATEST_TAG)"
+
 release:
+	@if ! make test; then \
+		exit 1; \
+	fi
+
+	@if ! make lint; then \
+		exit 1; \
+	fi
+
 	@if [ -z "$(VERSION)" ]; then \
 		echo "VERSION variable is required"; \
 		exit 1; \
