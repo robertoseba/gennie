@@ -2,7 +2,6 @@ package models
 
 import "github.com/robertoseba/gennie/internal/core/conversation"
 
-// TODO: move this to the client side
 type IModel interface {
 	// Complete chat receives a chat history with the last chat being the one that needs to be completed.
 	// It also receives a system prompt that can be used to generate the answer.

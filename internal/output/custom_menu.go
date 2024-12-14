@@ -4,7 +4,7 @@ import (
 	"github.com/robertoseba/gennie/internal/core/models"
 )
 
-// TODO: create in menu a NewMenu that receivees titles and items[names, values] and returns a menu
+// TODO: create in menu a NewMenu that receives titles and items[names, values] and returns a menu
 func MenuModel(m map[models.ModelEnum]string, selected models.ModelEnum) models.ModelEnum {
 	menu := NewMenu("Select a model:")
 
