@@ -102,7 +102,12 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan models.StreamResponse
 				return
 			}
 			outputChan <- models.StreamResponse{Data: conv.LastAnswer(), Err: nil}
-			s.conversationRepo.SaveAsActive(conv)
+			err := s.conversationRepo.SaveAsActive(conv)
+
+			if err != nil {
+				outputChan <- models.StreamResponse{Err: err}
+			}
+
 			return
 		}
 
@@ -118,7 +123,11 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan models.StreamResponse
 			buf.WriteString(d.Data)
 		}
 
-		conv.AnswerLastQuestion(buf.String())
+		if err := conv.AnswerLastQuestion(buf.String()); err != nil {
+			outputChan <- models.StreamResponse{Err: err}
+			return
+		}
+
 		err = s.conversationRepo.SaveAsActive(conv)
 		if err != nil {
 			outputChan <- models.StreamResponse{Err: err}
