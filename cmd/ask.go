@@ -2,12 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/robertoseba/gennie/internal/core/usecases"
 	"github.com/robertoseba/gennie/internal/output"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 )
 
 func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Command {
@@ -16,6 +18,7 @@ func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Comma
 	var modelFlag string
 	var profileFlag string
 	var isStreamableFlag bool
+	var isTerminalFlag bool
 
 	cmdAsk := &cobra.Command{
 		Use:   "ask [question for the llm model]",
@@ -23,9 +26,18 @@ func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Comma
 		Long:  `The question that will be sent to the llm. If your question contains special characters, please use quotes.`,
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if !term.IsTerminal(int(os.Stdout.Fd())) {
+				isTerminalFlag = false
+			}
+			var spinner *output.Spinner
+
 			startProcessingTime := time.Now()
-			spinner := output.NewSpinner("Thinking...")
-			spinner.Start()
+			if isTerminalFlag {
+				spinner = output.NewSpinner("Thinking...")
+				spinner.Start()
+			} else {
+				isStreamableFlag = false
+			}
 
 			dto := &usecases.InputDTO{
 				Question:     strings.Join(args, " "),
@@ -38,13 +50,15 @@ func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Comma
 
 			respChan, err := askCmd.Execute(dto)
 			if err != nil {
-				spinner.Stop()
+				if isTerminalFlag {
+					spinner.Stop()
+				}
 				return err
 			}
 
 			isSpinnerRunning := true
 			for d := range respChan {
-				if isSpinnerRunning {
+				if isTerminalFlag && isSpinnerRunning {
 					spinner.Stop()
 					isSpinnerRunning = false
 					p.PrintLine(output.Yellow)
@@ -55,15 +69,17 @@ func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Comma
 				}
 				cmd.Print(d.Data)
 			}
-			fmt.Println()
-			endProcessingTime := time.Now()
+			cmd.Println()
+
+			if isTerminalFlag {
+				endProcessingTime := time.Now()
+				p.PrintLine(output.Yellow)
+				p.Print(fmt.Sprintf("Answered in: %0.2f seconds", endProcessingTime.Sub(startProcessingTime).Seconds()), output.Cyan)
+				p.Print("", "")
+			}
 
 			// p.PrintWithCodeStyling(conversation.LastAnswer(), output.Yellow)
-			p.PrintLine(output.Yellow)
-
 			// p.Print(fmt.Sprintf("Model: %s, Profile: %s", conversation.ModelSlug, conversation.ProfileSlug), output.Cyan)
-			p.Print(fmt.Sprintf("Answered in: %0.2f seconds", endProcessingTime.Sub(startProcessingTime).Seconds()), output.Cyan)
-			p.Print("", "")
 
 			return nil
 		},
@@ -74,6 +90,7 @@ func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Comma
 	cmdAsk.Flags().StringVarP(&modelFlag, "model", "m", "", "specifies the model to use.")
 	cmdAsk.Flags().StringVarP(&profileFlag, "profile", "p", "", "specifies the profile to use.")
 	cmdAsk.Flags().BoolVarP(&isStreamableFlag, "stream", "s", true, "controls if response should be streamed")
+	cmdAsk.Flags().BoolVarP(&isTerminalFlag, "terminal", "t", true, "controls if output if interactive terminal or if should just output plain data. Can be used for piping")
 
 	return cmdAsk
 }
