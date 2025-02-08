@@ -49,7 +49,7 @@ func TestNewModel(t *testing.T) {
 		m, err := NewModel("groq", nil, *config.NewConfig())
 		require.NoError(t, err)
 		require.NotNil(t, m)
-		require.Equal(t, "Groq (LLAMA-3.3-70B)", m.Model().String())
+		require.Equal(t, "Groq (DeepSeek-R1-Distill-Llama-70B)", m.Model().String())
 		require.IsType(t, &groq.GroqModel{}, m.modelProvider)
 	})
 

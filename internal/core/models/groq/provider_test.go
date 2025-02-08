@@ -31,7 +31,7 @@ func TestPreparePayload(t *testing.T) {
 	payload, err := m.PreparePayload(conversation, "System Prompt", false)
 
 	require.NoError(t, err)
-	require.JSONEq(t, `{"model":"llama-3.3-70b-versatile","messages":[{"role":"system","content":"System Prompt"},{"role":"user","content":"Question"},{"role":"assistant","content":"Answer"}], "stream":false}`, payload)
+	require.JSONEq(t, `{"model":"deepseek-r1-distill-llama-70b","messages":[{"role":"system","content":"System Prompt"},{"role":"user","content":"Question"},{"role":"assistant","content":"Answer"}], "stream":false}`, payload)
 }
 
 func TestParseResponse(t *testing.T) {
