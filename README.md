@@ -64,7 +64,7 @@ Do not repeat the steps in the answer. Only provide the solution to the problem.
 ### Using a profile directly in a question
 
 ```bash
-$ gennie ask "how can I read a EXPLAIN returned from PostgreSQL" -p=sql
+gennie ask "how can I read a EXPLAIN returned from PostgreSQL" -p=sql
 ```
 
 ## 🤖 Supported Models / AI Companies
@@ -77,19 +77,19 @@ Current Models:
 - [OpenAI's GPT-4 Mini](https://openai.com/)
 - [Anthropic's Claude](https://www.anthropic.com/)
 - [Maritaca AI](https://maritaca.ai/)
-- [Groq's Llama](https://www.groq.com/)
+- [Groq's DeepSeek-R1-Distill-Llama-70B](https://www.groq.com/)
 - [Ollama](https://ollama.com/)
 
 ### List models slugs for using directly in a question
 
 ```bash
-$ gennie model slugs
+gennie model slugs
 ```
 
 ### Using a model directly in a question
 
 ```
-$ gennie ask who won the oscar for best movie in 2023 -m=sonnet
+gennie ask who won the oscar for best movie in 2023 -m=sonnet
 ```
 
 ## Conversations
@@ -105,7 +105,7 @@ Let's say you made a bunch of questions but you feel like you might want to revi
 Save it using:
 
 ```
-$ gennie conversation save <jsonfilename>
+gennie conversation save <jsonfilename>
 ```
 
 ### Reloading past conversation into active conversation
@@ -113,7 +113,7 @@ $ gennie conversation save <jsonfilename>
 You can use this whenever you want to reload old conversations and make it active again
 
 ```
-$ gennie conversation load <filename of previously saved conversation>
+gennie conversation load <filename of previously saved conversation>
 ```
 
 ## Extra Features
@@ -177,7 +177,7 @@ gennie config
 ## 📖 Help
 
 ```
-$ gennie --help
+gennie --help
 ```
 
 ## API Keys

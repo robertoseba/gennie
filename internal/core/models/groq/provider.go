@@ -9,7 +9,7 @@ import (
 )
 
 var slugMap = map[string]string{
-	"groq": "llama-3.3-70b-versatile",
+	"groq": "deepseek-r1-distill-llama-70b",
 }
 
 type GroqModel struct {
@@ -17,9 +17,11 @@ type GroqModel struct {
 	apiKey string
 }
 
-const roleUser = "user"
-const roleSystem = "system"
-const roleAssistant = "assistant"
+const (
+	roleUser      = "user"
+	roleSystem    = "system"
+	roleAssistant = "assistant"
+)
 
 type message struct {
 	Role    string `json:"role"`
@@ -56,7 +58,6 @@ func NewProvider(modelSlug string, apiKey string) *GroqModel {
 }
 
 func (m *GroqModel) GetHeaders() map[string]string {
-
 	return map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", m.apiKey),
 		"Content-Type":  "application/json",
@@ -93,7 +94,6 @@ func (m *GroqModel) PreparePayload(conv *conversation.Conversation, systemPrompt
 	}
 
 	jsonData, err := json.Marshal(p)
-
 	if err != nil {
 		return "", err
 	}

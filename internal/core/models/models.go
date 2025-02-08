@@ -18,7 +18,7 @@ var availableModels = map[ModelEnum]string{
 	OpenAI:       "GPT-4o (OPENAI)",
 	ClaudeSonnet: "Claude Sonnet 3.5 (ANTHROPIC)",
 	Maritaca:     "Maritaca (BR)",
-	Groq:         "Groq (LLAMA-3.3-70B)",
+	Groq:         "Groq (DeepSeek-R1-Distill-Llama-70B)",
 	Ollama:       "Ollama",
 }
 
