@@ -26,18 +26,17 @@ func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Comma
 		Long:  `The question that will be sent to the llm. If your question contains special characters, please use quotes.`,
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if !term.IsTerminal(int(os.Stdout.Fd())) {
-				isTerminalFlag = false
-			}
 			var spinner *output.Spinner
 
-			startProcessingTime := time.Now()
-			if isTerminalFlag {
+			if !term.IsTerminal(int(os.Stdout.Fd())) || !isTerminalFlag {
+				isTerminalFlag = false
+				isStreamableFlag = false
+			} else {
 				spinner = output.NewSpinner("Thinking...")
 				spinner.Start()
-			} else {
-				isStreamableFlag = false
 			}
+
+			startProcessingTime := time.Now()
 
 			dto := &usecases.InputDTO{
 				Question:     strings.Join(args, " "),
