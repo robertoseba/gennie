@@ -27,3 +27,15 @@ func (s *ConversationService) LoadFrom(filename string) error {
 	}
 	return s.conversationRepo.SaveAsActive(conv)
 }
+
+func (s *ConversationService) LastConversation() (*conversation.Conversation, error) {
+	conv, err := s.conversationRepo.LoadActive()
+	if err != nil {
+		return nil, err
+	}
+	if conv.LastQuestion() == "" {
+		return nil, nil
+	}
+
+	return conv, nil
+}

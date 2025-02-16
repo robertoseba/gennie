@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/robertoseba/gennie/internal/core/usecases"
@@ -16,6 +17,7 @@ func NewConversationCmd(convService *usecases.ConversationService, p *output.Pri
 
 	cmd.AddCommand(newExportConvCmd(convService, p))
 	cmd.AddCommand(newLoadConversationCmd(convService, p))
+	cmd.AddCommand(newLastConversationCmd(convService, p))
 	return cmd
 }
 
@@ -48,6 +50,32 @@ func newLoadConversationCmd(convService *usecases.ConversationService, p *output
 				return err
 			}
 			p.Print("Conversation loaded successfully", output.Green)
+			return nil
+		},
+	}
+}
+
+func newLastConversationCmd(convService *usecases.ConversationService, p *output.Printer) *cobra.Command {
+	return &cobra.Command{
+		Use:   "last",
+		Short: "Shows the last conversation",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			conv, err := convService.LastConversation()
+			if err != nil {
+				return err
+			}
+			if conv == nil {
+				p.Print("No conversation could be found", output.Red)
+				return nil
+			}
+
+			response, err := json.MarshalIndent(conv, "", "  ")
+			if err != nil {
+				return err
+			}
+
+			p.Print(string(response), output.Green)
 			return nil
 		},
 	}

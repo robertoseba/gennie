@@ -34,4 +34,32 @@ func TestConversationService(t *testing.T) {
 		require.NoError(t, err)
 		mockedRepo.AssertExpectations(t)
 	})
+
+	t.Run("Retrieves last conversation", func(t *testing.T) {
+		mockedRepo := mocks.NewMockConversationRepository()
+		conv := conversation.NewConversation("profile-slug", models.DefaultModel.Slug())
+		conv.NewQuestion("What is your name?")
+		conv.AnswerLastQuestion("My name is Assistant")
+		mockedRepo.On("LoadActive").Return(conv, nil)
+
+		service := NewConversationService(mockedRepo)
+		convResponse, err := service.LastConversation()
+
+		require.NoError(t, err)
+		mockedRepo.AssertExpectations(t)
+		require.Equal(t, conv, convResponse)
+	})
+
+	t.Run("If last conversation is empty returns null", func(t *testing.T) {
+		mockedRepo := mocks.NewMockConversationRepository()
+		conv := conversation.NewConversation("profile-slug", models.DefaultModel.Slug())
+		mockedRepo.On("LoadActive").Return(conv, nil)
+
+		service := NewConversationService(mockedRepo)
+		convResponse, err := service.LastConversation()
+
+		require.NoError(t, err)
+		mockedRepo.AssertExpectations(t)
+		require.Nil(t, convResponse)
+	})
 }
