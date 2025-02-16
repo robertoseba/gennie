@@ -7,6 +7,7 @@ import (
 	"github.com/robertoseba/gennie/internal/infra/container"
 	"github.com/robertoseba/gennie/internal/output"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 )
 
 func Run(version string, stdOut io.Writer, stdErr io.Writer) {
@@ -20,6 +21,13 @@ func Run(version string, stdOut io.Writer, stdErr io.Writer) {
 		command.SetArgs([]string{"config"})
 	}
 
+	// Disables terminal output if not running in a terminal
+	command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		if !term.IsTerminal(int(os.Stdout.Fd())) {
+			cmd.Flags().Set("terminal", "false")
+		}
+	}
+
 	err := command.Execute()
 	if err != nil {
 		command.PrintErrf("Error executing command: %v\n", err)
@@ -28,6 +36,8 @@ func Run(version string, stdOut io.Writer, stdErr io.Writer) {
 }
 
 func newRootCmd(version string, stdOut io.Writer, stdErr io.Writer) *cobra.Command {
+	var isTerminalFlag bool
+
 	rootCmd := &cobra.Command{
 		Use:               "gennie",
 		Short:             "Gennie is a cli assistant with multiple models and profile support.",
@@ -40,6 +50,7 @@ func newRootCmd(version string, stdOut io.Writer, stdErr io.Writer) *cobra.Comma
 	rootCmd.SetErr(stdErr)
 	rootCmd.Version = version
 	rootCmd.SetVersionTemplate("Gennie version: {{.Version}}")
+	rootCmd.PersistentFlags().BoolVarP(&isTerminalFlag, "terminal", "t", true, "controls if output if interactive terminal or if should just output plain data. Can be used for piping")
 
 	return rootCmd
 }
