@@ -1,13 +1,19 @@
 package models
 
 import (
+	"context"
 	"errors"
 
+	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/robertoseba/gennie/internal/core/conversation"
+	"github.com/robertoseba/gennie/internal/core/models/response"
+	"github.com/robertoseba/gennie/internal/core/models/tools"
 )
 
-var ErrEmptyConversation = errors.New("there are no questions to answer")
-var ErrLastQuestionAlreadyAnswered = errors.New("last conversation has already been answered")
+var (
+	ErrEmptyConversation           = errors.New("there are no questions to answer")
+	ErrLastQuestionAlreadyAnswered = errors.New("last conversation has already been answered")
+)
 
 type BaseModel struct {
 	model         ModelEnum
@@ -15,9 +21,19 @@ type BaseModel struct {
 	modelProvider iModelProvider
 }
 
+type ResponseType string
+
+const (
+	LoadingInfo     ResponseType = "loading_info"
+	ModelInfo       ResponseType = "model_info"
+	ProfileInfo     ResponseType = "profile_info"
+	ApprovalRequest ResponseType = "approval_request"
+)
+
 type StreamResponse struct {
 	Data string
 	Err  error
+	Type ResponseType
 }
 
 func newBaseModel(model ModelEnum, client IApiClient, modelProvider iModelProvider) *BaseModel {
@@ -41,33 +57,27 @@ func (m *BaseModel) Complete(conversation *conversation.Conversation, systemProm
 		return ErrEmptyConversation
 	}
 
-	payload, err := m.modelProvider.PreparePayload(conversation, systemPrompt, false)
-	if err != nil {
-		return err
+	response := m.modelProvider.Complete(context.TODO(), conversation, nil)
+
+	responseText := ""
+	for r := range response {
+		responseText += r.Text
 	}
 
-	postRes, err := m.apiClient.Post(m.modelProvider.GetUrl(), payload, m.modelProvider.GetHeaders())
-
-	if err != nil {
-		return err
-	}
-
-	parsedResponse, err := m.modelProvider.ParseResponse(postRes)
-	if err != nil {
-		return err
-	}
-
-	return conversation.AnswerLastQuestion(parsedResponse)
+	conversation.AnswerLastQuestion(responseText)
+	return nil
 }
 
-func (m *BaseModel) CompleteStreamable(conversation *conversation.Conversation, systemPrompt string) (<-chan StreamResponse, error) {
-	payload, err := m.modelProvider.PreparePayload(conversation, systemPrompt, true)
-	if err != nil {
-		return nil, err
-	}
+func (m *BaseModel) CompleteStreamable(ctx context.Context, conversation *conversation.Conversation, systemPrompt string, toolResult []tools.ToolResult) (<-chan response.ModelResponse, error) {
+	return m.modelProvider.Complete(ctx, conversation, toolResult), nil
+}
 
-	outputChan := m.apiClient.PostWithStreaming(m.modelProvider.GetUrl(), payload, m.modelProvider.GetHeaders(), m.modelProvider.GetStreamParser())
-	return outputChan, nil
+func (m *BaseModel) SetSystemPrompt(systemPrompt string) {
+	m.modelProvider.SetSystemPrompt(systemPrompt)
+}
+
+func (m *BaseModel) SetTools(tools []mcp.Tool) {
+	m.modelProvider.SetTools(tools)
 }
 
 func (m *BaseModel) CanStream() bool {

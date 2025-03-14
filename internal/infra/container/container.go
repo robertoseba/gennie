@@ -6,6 +6,7 @@ import (
 	"github.com/robertoseba/gennie/internal/core/models"
 	"github.com/robertoseba/gennie/internal/core/profile"
 	"github.com/robertoseba/gennie/internal/core/usecases"
+	"github.com/robertoseba/gennie/internal/core/usecases/complete"
 	"github.com/robertoseba/gennie/internal/infra/apiclient"
 	"github.com/robertoseba/gennie/internal/infra/repositories"
 )
@@ -49,8 +50,8 @@ func (c *Container) GetConfigRepository() config.IConfigRepository {
 }
 
 // SERVICES
-func (c *Container) GetCompleteService() *usecases.CompleteService {
-	return usecases.NewCompleteService(
+func (c *Container) GetCompleteService() *complete.CompleteService {
+	return complete.NewCompleteService(
 		c.conversationRepository,
 		c.profileRepository,
 		c.apiClient,

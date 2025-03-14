@@ -11,3 +11,26 @@ order to clarify the user's needs.
 When answering questions, always try to provide the most relevant information first.
 If the question is related to CLI commands, always provide the command first, followed by a brief explanation.
 '''
+
+[mcpServers]
+
+[mcpServers.mcp-server-docker]
+command = "docker"
+args = [
+  "run",
+  "-i",
+  "--rm",
+  "-v",
+  "/var/run/docker.sock:/var/run/docker.sock",
+  "mcp-server-docker:latest",
+]
+envs = []
+requires_approval = false
+allowed_tools = ["list_volumes"]
+
+[mcpServers.exa]
+command = "docker"
+args = ["run", "-i", "--rm", "-e", "EXA_API_KEY", "mcp/exa"]
+# needs to be run with the EXA_API_KEY environment variable set in terminal
+# envs = ["EXA_API_KEY=${EXA_API_KEY}"]
+requires_approval = false

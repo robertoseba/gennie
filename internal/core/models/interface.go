@@ -1,16 +1,13 @@
 package models
 
-import "github.com/robertoseba/gennie/internal/core/conversation"
+import (
+	"context"
 
-type IModel interface {
-	// Complete chat receives a chat history with the last chat being the one that needs to be completed.
-	// It also receives a system prompt that can be used to generate the answer.
-	// Once succeded the model will fill out the answer in the last conversation.
-	Complete(chatHistory *conversation.Conversation, systemPrompt string) error
-
-	// Returns the model enum
-	Model() ModelEnum
-}
+	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/robertoseba/gennie/internal/core/conversation"
+	"github.com/robertoseba/gennie/internal/core/models/response"
+	"github.com/robertoseba/gennie/internal/core/models/tools"
+)
 
 type ProviderStreamParser func(b []byte) (string, error)
 
@@ -18,12 +15,10 @@ type ProviderStreamParser func(b []byte) (string, error)
 // formatting it accordinly to the model's requirements
 // and parsing the response back to the system.
 type iModelProvider interface {
-	PreparePayload(chatHistory *conversation.Conversation, systemPrompt string, isStreamable bool) (string, error)
-	ParseResponse(response []byte) (string, error)
-	GetHeaders() map[string]string
-	GetUrl() string
-	GetStreamParser() func(input []byte) (string, error)
 	CanStream() bool
+	Complete(ctx context.Context, conversation *conversation.Conversation, toolResult []tools.ToolResult) <-chan response.ModelResponse
+	SetSystemPrompt(systemPrompt string)
+	SetTools(tools []mcp.Tool)
 }
 
 type IApiClient interface {

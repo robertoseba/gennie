@@ -1,16 +1,18 @@
 package cmd
 
 import (
-	"fmt"
+	"bufio"
+	"os"
 	"strings"
 	"time"
 
-	"github.com/robertoseba/gennie/internal/core/usecases"
+	"github.com/robertoseba/gennie/internal/core/models"
+	"github.com/robertoseba/gennie/internal/core/usecases/complete"
 	"github.com/robertoseba/gennie/internal/output"
 	"github.com/spf13/cobra"
 )
 
-func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Command {
+func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Command {
 	var isFollowUpFlag bool
 	var appendFileFlag string
 	var modelFlag string
@@ -27,7 +29,7 @@ func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Comma
 			isTerminalFlag, _ := cmd.Flags().GetBool("terminal")
 
 			if isTerminalFlag {
-				spinner = output.NewSpinner("Thinking...")
+				spinner = output.NewSpinner("Starting...")
 				spinner.Start()
 			} else {
 				isStreamableFlag = false
@@ -35,13 +37,12 @@ func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Comma
 
 			startProcessingTime := time.Now()
 
-			dto := &usecases.InputDTO{
-				Question:     strings.Join(args, " "),
-				ProfileSlug:  profileFlag,
-				Model:        modelFlag,
-				IsFollowUp:   isFollowUpFlag,
-				AppendFile:   appendFileFlag,
-				IsStreamable: isStreamableFlag,
+			dto := &complete.InputDTO{
+				Question:    strings.Join(args, " "),
+				ProfileSlug: profileFlag,
+				Model:       modelFlag,
+				IsFollowUp:  isFollowUpFlag,
+				AppendFile:  appendFileFlag,
 			}
 
 			respChan, err := askCmd.Execute(dto)
@@ -52,30 +53,64 @@ func NewAskCmd(askCmd *usecases.CompleteService, p *output.Printer) *cobra.Comma
 				return err
 			}
 
-			isSpinnerRunning := true
-			for d := range respChan {
-				if isTerminalFlag && isSpinnerRunning {
-					spinner.Stop()
-					isSpinnerRunning = false
-					p.PrintLine(output.Yellow)
-				}
+			var modelInfo, profileInfo string
 
+			for d := range respChan {
 				if d.Err != nil {
 					return d.Err
 				}
-				cmd.Print(d.Data)
+
+				if !isTerminalFlag {
+					if d.Type == "" { // when piping we only print if it's not related to interface types
+						cmd.Print(d.Data)
+					}
+					continue
+				}
+
+				if spinner.IsRunning() {
+					switch d.Type {
+					case models.LoadingInfo:
+						spinner.SetMessage(d.Data)
+					case models.ModelInfo:
+						modelInfo = d.Data
+					case models.ProfileInfo:
+						profileInfo = d.Data
+					case models.ApprovalRequest:
+						spinner.Stop()
+						cmd.Println("Please approve the tool use to continue:")
+						cmd.Println(d.Data)
+						cmd.Println("If you want to cancel the request, please use Ctrl+C.")
+						bufio.NewReader(os.Stdin).ReadBytes('\n')
+						spinner.Start()
+					default:
+						spinner.Stop()
+						cmd.Print(d.Data)
+					}
+				} else {
+					switch d.Type {
+					case models.ApprovalRequest:
+						cmd.Println()
+						p.Print("\nPlease approve the tool use to continue:", output.Yellow)
+						cmd.Println(d.Data)
+						p.Print("\nIf you want to cancel the request, please use Ctrl+C.", output.Red)
+						bufio.NewReader(os.Stdin).ReadBytes('\n')
+					case models.LoadingInfo:
+						cmd.Println()
+						spinner = output.NewSpinner(d.Data)
+						spinner.Start()
+					default:
+						cmd.Print(d.Data)
+					}
+				}
 			}
-			cmd.Println()
 
 			if isTerminalFlag {
 				endProcessingTime := time.Now()
+				cmd.Println()
 				p.PrintLine(output.Yellow)
-				p.Print(fmt.Sprintf("Answered in: %0.2f seconds", endProcessingTime.Sub(startProcessingTime).Seconds()), output.Cyan)
-				p.Print("", "")
+				cmd.Printf("Answered in: %0.2f seconds\n", endProcessingTime.Sub(startProcessingTime).Seconds())
+				cmd.Printf("Model: %s | Profile: %s\n\n", modelInfo, profileInfo)
 			}
-
-			// p.PrintWithCodeStyling(conversation.LastAnswer(), output.Yellow)
-			// p.Print(fmt.Sprintf("Model: %s, Profile: %s", conversation.ModelSlug, conversation.ProfileSlug), output.Cyan)
 
 			return nil
 		},

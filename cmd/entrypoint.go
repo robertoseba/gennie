@@ -24,7 +24,11 @@ func Run(version string, stdOut io.Writer, stdErr io.Writer) {
 	// Disables terminal output if not running in a terminal
 	command.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		if !term.IsTerminal(int(os.Stdout.Fd())) {
-			cmd.Flags().Set("terminal", "false")
+			err := cmd.Flags().Set("terminal", "false")
+			if err != nil {
+				cmd.PrintErrf("Error setting terminal flag: %v\n", err)
+				os.Exit(1)
+			}
 		}
 	}
 
