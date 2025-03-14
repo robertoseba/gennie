@@ -8,7 +8,7 @@ import (
 )
 
 var slugMap = map[string]string{
-	"sonnet": "claude-3-5-sonnet-20241022",
+	"sonnet": "claude-3-7-sonnet-20250219",
 }
 
 type AnthropicModel struct {
@@ -16,8 +16,10 @@ type AnthropicModel struct {
 	apiKey string
 }
 
-const roleUser = "user"
-const roleAssistant = "assistant"
+const (
+	roleUser      = "user"
+	roleAssistant = "assistant"
+)
 
 type message struct {
 	Role    string `json:"role"`
@@ -52,7 +54,6 @@ type streamResponse struct {
 }
 
 func NewProvider(modelSlug string, apiKey string) *AnthropicModel {
-
 	return &AnthropicModel{
 		model:  slugMap[modelSlug],
 		apiKey: apiKey,
@@ -72,7 +73,6 @@ func (m *AnthropicModel) GetHeaders() map[string]string {
 }
 
 func (m *AnthropicModel) PreparePayload(conv *conversation.Conversation, systemPrompt string, isStreamable bool) (string, error) {
-
 	messages := make([]message, 0, conv.Len())
 	for _, qa := range conv.QAs {
 		messages = append(messages, message{
@@ -95,7 +95,6 @@ func (m *AnthropicModel) PreparePayload(conv *conversation.Conversation, systemP
 		Stream:    isStreamable,
 	}
 	jsonData, err := json.Marshal(p)
-
 	if err != nil {
 		return "", err
 	}
@@ -128,7 +127,6 @@ func (m *AnthropicModel) GetStreamParser() func(b []byte) (string, error) {
 			b = bytes.TrimPrefix(b, []byte("data:"))
 			var responseData streamResponse
 			err := json.Unmarshal(b, &responseData)
-
 			if err != nil {
 				return "", err
 			}
