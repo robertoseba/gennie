@@ -1,4 +1,4 @@
-package models
+package base
 
 type ModelEnum string
 

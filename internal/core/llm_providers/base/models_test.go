@@ -1,4 +1,4 @@
-package models
+package base
 
 import (
 	"testing"

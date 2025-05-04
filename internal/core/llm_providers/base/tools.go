@@ -1,29 +1,8 @@
-package tools
+package base
 
 import (
 	"encoding/json"
-
-	"github.com/robertoseba/gennie/internal/core/models/response"
 )
-
-// Example of a tool marshalled
-// "tools": [
-//
-//	  {
-//	    "name": "get_weather",
-//	    "description": "Get the current weather in a given location",
-//	    "input_schema": {
-//	      "type": "object",
-//	      "properties": {
-//	        "location": {
-//	          "type": "string",
-//	          "description": "The city and state, e.g. San Francisco, CA"
-//	        }
-//	      },
-//	      "required": ["location"]
-//	    }
-//	  }
-//	],
 
 type Tool struct {
 	Name        string          `json:"name"`
@@ -45,7 +24,7 @@ type ToolResult struct {
 	Error     error
 }
 
-func NewToolResponseFrom(modelResponse *response.ModelResponse, toolResult []byte) *ToolResult {
+func NewToolResponseFrom(modelResponse *ModelResponse, toolResult []byte) *ToolResult {
 	return &ToolResult{
 		ID:        modelResponse.FunctionCall.ID,
 		Name:      modelResponse.FunctionCall.Name,
@@ -55,7 +34,7 @@ func NewToolResponseFrom(modelResponse *response.ModelResponse, toolResult []byt
 	}
 }
 
-func NewToolResponseError(modelResponse *response.ModelResponse, err error) *ToolResult {
+func NewToolResponseError(modelResponse *ModelResponse, err error) *ToolResult {
 	return &ToolResult{
 		ID:     modelResponse.FunctionCall.ID,
 		Name:   modelResponse.FunctionCall.Name,

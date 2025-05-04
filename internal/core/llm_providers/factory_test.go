@@ -1,21 +1,19 @@
-package models
+package llmproviders
 
 import (
 	"testing"
 
 	"github.com/robertoseba/gennie/internal/core/config"
-	"github.com/robertoseba/gennie/internal/core/models/anthropic"
-	"github.com/robertoseba/gennie/internal/core/models/groq"
-	"github.com/robertoseba/gennie/internal/core/models/maritaca"
-	"github.com/robertoseba/gennie/internal/core/models/ollama"
-	"github.com/robertoseba/gennie/internal/core/models/openai"
+	"github.com/robertoseba/gennie/internal/core/llm_providers/groq"
+	"github.com/robertoseba/gennie/internal/core/llm_providers/maritaca"
+	"github.com/robertoseba/gennie/internal/core/llm_providers/ollama"
+	"github.com/robertoseba/gennie/internal/core/llm_providers/openai"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewModel(t *testing.T) {
 	t.Run("OpenAI", func(t *testing.T) {
-		m, err := NewModel("gpt-4o", nil, *config.NewConfig())
-		require.NoError(t, err)
+		m := NewModel("gpt-4o", nil, *config.NewConfig())
 		require.NotNil(t, m)
 		require.Equal(t, "GPT-4o (OPENAI)", m.Model().String())
 		require.IsType(t, &openai.OpenAIModel{}, m.modelProvider)

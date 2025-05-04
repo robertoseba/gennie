@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/robertoseba/gennie/internal/core/models"
+	"github.com/robertoseba/gennie/internal/core/llm_providers/base"
 	"github.com/robertoseba/gennie/internal/core/usecases/complete"
 	"github.com/robertoseba/gennie/internal/output"
 	"github.com/spf13/cobra"
@@ -69,13 +69,13 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 
 				if spinner.IsRunning() {
 					switch d.Type {
-					case models.LoadingInfo:
+					case base.LoadingInfo:
 						spinner.SetMessage(d.Data)
-					case models.ModelInfo:
+					case base.ModelInfo:
 						modelInfo = d.Data
-					case models.ProfileInfo:
+					case base.ProfileInfo:
 						profileInfo = d.Data
-					case models.ApprovalRequest:
+					case base.ApprovalRequest:
 						spinner.Stop()
 						cmd.Println("Please approve the tool use to continue:")
 						cmd.Println(d.Data)
@@ -88,13 +88,13 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 					}
 				} else {
 					switch d.Type {
-					case models.ApprovalRequest:
+					case base.ApprovalRequest:
 						cmd.Println()
 						p.Print("\nPlease approve the tool use to continue:", output.Yellow)
 						cmd.Println(d.Data)
 						p.Print("\nIf you want to cancel the request, please use Ctrl+C.", output.Red)
 						bufio.NewReader(os.Stdin).ReadBytes('\n')
-					case models.LoadingInfo:
+					case base.LoadingInfo:
 						cmd.Println()
 						spinner = output.NewSpinner(d.Data)
 						spinner.Start()

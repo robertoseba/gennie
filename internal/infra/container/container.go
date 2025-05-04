@@ -1,13 +1,13 @@
 package container
 
 import (
+	"net/http"
+
 	"github.com/robertoseba/gennie/internal/core/config"
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/models"
 	"github.com/robertoseba/gennie/internal/core/profile"
 	"github.com/robertoseba/gennie/internal/core/usecases"
 	"github.com/robertoseba/gennie/internal/core/usecases/complete"
-	"github.com/robertoseba/gennie/internal/infra/apiclient"
 	"github.com/robertoseba/gennie/internal/infra/repositories"
 )
 
@@ -15,7 +15,7 @@ type Container struct {
 	conversationRepository conversation.IConversationRepository
 	profileRepository      profile.IProfileRepository
 	configRepository       config.IConfigRepository
-	apiClient              models.IApiClient
+	httpClient             *http.Client
 	config                 *config.Config
 }
 
@@ -35,7 +35,7 @@ func NewContainer() *Container {
 		configRepository:       configRepo,
 		profileRepository:      repositories.NewProfileRepository(config.ProfilesDirPath),
 		conversationRepository: repositories.NewConversationRepository(config.ConversationCacheDir),
-		apiClient:              apiclient.NewApiClient(config.HttpTimeout),
+		httpClient:             &http.Client{Timeout: config.HttpTimeout},
 	}
 
 	return container
@@ -54,7 +54,7 @@ func (c *Container) GetCompleteService() *complete.CompleteService {
 	return complete.NewCompleteService(
 		c.conversationRepository,
 		c.profileRepository,
-		c.apiClient,
+		c.httpClient,
 		c.config,
 	)
 }

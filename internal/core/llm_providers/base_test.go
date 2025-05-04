@@ -1,11 +1,11 @@
-package models
+package llmproviders
 
 import (
 	"errors"
 	"testing"
 
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/models/openai"
+	"github.com/robertoseba/gennie/internal/core/llm_providers/openai"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -93,8 +93,8 @@ func (m *ApiClientMock) Post(url string, payload string, headers map[string]stri
 func (m *ApiClientMock) PostWithStreaming(url string,
 	body string,
 	headers map[string]string,
-	parser ProviderStreamParser) <-chan StreamResponse {
-
+	parser ProviderStreamParser,
+) <-chan StreamResponse {
 	args := m.Called(url, body, headers, parser)
 	return args.Get(0).(<-chan StreamResponse)
 }

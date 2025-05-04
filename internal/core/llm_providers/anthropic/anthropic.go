@@ -8,8 +8,7 @@ import (
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/models/response"
-	"github.com/robertoseba/gennie/internal/core/models/tools"
+	"github.com/robertoseba/gennie/internal/core/llm_providers/base"
 )
 
 type provider struct {
@@ -24,7 +23,7 @@ func NewProvider(apiKey string, model string, httpClient *http.Client) *provider
 		httpClient = http.DefaultClient
 	}
 
-	if model == "" || model == "sonnet" {
+	if model == "" || model == base.ClaudeSonnet.Slug() {
 		model = anthropic.ModelClaude3_7SonnetLatest
 	}
 
@@ -43,12 +42,12 @@ func (p *provider) SetSystemPrompt(systemPrompt string) {
 	p.systemPrompt = systemPrompt
 }
 
-func (p *provider) SetTools(tools []tools.Tool) {
+func (p *provider) SetTools(tools []base.Tool) {
 	p.tools = parseTools(tools)
 }
 
-func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []tools.ToolResult) <-chan response.ModelResponse {
-	output := make(chan response.ModelResponse, 10)
+func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []base.ToolResult) <-chan base.ModelResponse {
+	output := make(chan base.ModelResponse, 10)
 
 	go func() {
 		defer close(output)
@@ -62,7 +61,6 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 		}
 
 		// Adds tool Result to message before sending
-		// TODO: refactor into a function
 		if len(toolResults) > 0 {
 			messageBlock := []anthropic.ContentBlockParamUnion{}
 			messageAssistantBlock := []anthropic.ContentBlockParamUnion{}
@@ -102,6 +100,7 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			event := stream.Current()
 			err := message.Accumulate(event)
 			if err != nil {
+				// TODO: figure out how to handle this error
 				continue
 				// panic(err)
 			}
@@ -110,18 +109,18 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			case anthropic.ContentBlockDeltaEvent:
 				switch deltaVariant := eventVariant.Delta.AsAny().(type) {
 				case anthropic.TextDelta:
-					output <- response.ModelResponse{
+					output <- base.ModelResponse{
 						Text:       deltaVariant.Text,
 						Error:      nil,
-						StopReason: response.StopReasonNone,
+						StopReason: base.StopReasonNone,
 					}
 				}
 			}
 			if stream.Err() != nil {
-				output <- response.ModelResponse{
+				output <- base.ModelResponse{
 					Text:       "something went wrong!!",
 					Error:      stream.Err(),
-					StopReason: response.StopReasonError,
+					StopReason: base.StopReasonError,
 				}
 			}
 		}
@@ -130,11 +129,11 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			for _, block := range message.Content {
 				switch variant := block.AsAny().(type) {
 				case anthropic.ToolUseBlock:
-					output <- response.ModelResponse{
+					output <- base.ModelResponse{
 						Text:       "",
 						Error:      nil,
-						StopReason: response.StopReasonTools,
-						FunctionCall: response.FunctionCall{
+						StopReason: base.StopReasonTools,
+						FunctionCall: base.FunctionCall{
 							ID:        variant.ID,
 							Name:      variant.Name,
 							Arguments: variant.Input,
@@ -148,10 +147,6 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 	return output
 }
 
-func (p *provider) CanStream() bool {
-	return true
-}
-
 func createUserMessage(content string) anthropic.MessageParam {
 	return anthropic.NewUserMessage(anthropic.NewTextBlock(content))
 }
@@ -160,12 +155,11 @@ func createAssistantMessage(content string) anthropic.MessageParam {
 	return anthropic.NewAssistantMessage(anthropic.NewTextBlock(content))
 }
 
-func parseTools(tools []tools.Tool) []anthropic.ToolUnionParam {
+func parseTools(tools []base.Tool) []anthropic.ToolUnionParam {
 	if len(tools) == 0 {
 		return nil
 	}
 
-	// TODO: testing due to error in docker mcp
 	toolReturn := make([]anthropic.ToolUnionParam, 0)
 	for _, tool := range tools {
 		toolParam := anthropic.ToolParam{

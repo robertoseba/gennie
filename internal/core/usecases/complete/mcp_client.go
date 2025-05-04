@@ -7,12 +7,12 @@ import (
 
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/robertoseba/gennie/internal/core/models/tools"
+	"github.com/robertoseba/gennie/internal/core/llm_providers/base"
 )
 
 type McpClient struct {
 	client *client.Client
-	tools  []tools.Tool
+	tools  []base.Tool
 }
 
 func StartMcpServer(ctx context.Context, cmd string, env []string, args []string) (*McpClient, error) {
@@ -43,19 +43,19 @@ func (c *McpClient) Close() {
 	c.client.Close()
 }
 
-func (c *McpClient) ListTools(ctx context.Context) ([]tools.Tool, error) {
+func (c *McpClient) ListTools(ctx context.Context) ([]base.Tool, error) {
 	toolsRequest := mcp.ListToolsRequest{}
 	mcpToolsResponse, err := c.client.ListTools(ctx, toolsRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	var toolItems []tools.Tool
+	var toolItems []base.Tool
 	for _, t := range mcpToolsResponse.Tools {
-		toolItem := tools.Tool{
+		toolItem := base.Tool{
 			Name:        t.Name,
 			Description: t.Description,
-			InputSchema: tools.ToolInputSchema{
+			InputSchema: base.ToolInputSchema{
 				Properties: t.InputSchema.Properties,
 				Required:   t.InputSchema.Required,
 			},

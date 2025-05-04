@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/robertoseba/gennie/internal/core/models"
+	"github.com/robertoseba/gennie/internal/core/llm_providers/base"
 	"github.com/robertoseba/gennie/internal/core/usecases"
 	output "github.com/robertoseba/gennie/internal/output"
 	cobra "github.com/spf13/cobra"
@@ -14,7 +14,7 @@ func NewModelCmd(selectModelCmd *usecases.SelectModelService, p *output.Printer)
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			modelList := selectModelCmd.ListAll()
-			modelSelected := output.MenuModel(modelList, models.DefaultModel)
+			modelSelected := output.MenuModel(modelList, base.DefaultModel)
 
 			err := selectModelCmd.SetAsActive(modelSelected)
 			if err != nil {
