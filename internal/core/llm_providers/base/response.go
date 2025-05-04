@@ -21,12 +21,16 @@ const (
 	StopReasonNone  StopReason = "none"
 )
 
-type StreamResponse struct {
+// This is the response the use case sends back to the client(console)
+// Based on the response type, the client can decide how to handle it (loading bar, request users approval, etc)
+type CompleteResponse struct {
 	Data string
 	Err  error
 	Type ResponseType
 }
 
+// This is the response converted from a providers response
+// Every provider should convert their response to this base response
 type ModelResponse struct {
 	Text         string
 	Error        error

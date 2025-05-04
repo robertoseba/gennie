@@ -52,7 +52,7 @@ func NewCompleteService(
 	}
 }
 
-func (s *CompleteService) Execute(input *InputDTO) (<-chan base.StreamResponse, error) {
+func (s *CompleteService) Execute(input *InputDTO) (<-chan base.CompleteResponse, error) {
 	var conv *conversation.Conversation
 	var err error
 
@@ -63,19 +63,19 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan base.StreamResponse, 
 
 	model.SetSystemPrompt(profile.Data)
 
-	modelResponseChan := make(chan base.StreamResponse)
+	modelResponseChan := make(chan base.CompleteResponse)
 	outputChan := s.pipeToSaveConversation(conv, modelResponseChan)
 
 	go func() {
 		defer close(modelResponseChan)
 
-		outputChan <- base.StreamResponse{Data: conv.ModelSlug, Type: base.ModelInfo, Err: nil}
-		outputChan <- base.StreamResponse{Data: profile.Name, Type: base.ProfileInfo, Err: nil}
+		outputChan <- base.CompleteResponse{Data: conv.ModelSlug, Type: base.ModelInfo, Err: nil}
+		outputChan <- base.CompleteResponse{Data: profile.Name, Type: base.ProfileInfo, Err: nil}
 		if len(profile.McpServers) > 0 {
-			outputChan <- base.StreamResponse{Data: fmt.Sprintf("Loading MCP Servers..."), Type: base.LoadingInfo, Err: nil}
+			outputChan <- base.CompleteResponse{Data: fmt.Sprintf("Loading MCP Servers..."), Type: base.LoadingInfo, Err: nil}
 			mcpTools, err := startMcpServers(profile)
 			if err != nil {
-				outputChan <- base.StreamResponse{Err: err}
+				outputChan <- base.CompleteResponse{Err: err}
 			}
 			s.tools = mcpTools
 			var modelTools []base.Tool
@@ -96,7 +96,7 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan base.StreamResponse, 
 		toolResults := make([]base.ToolResult, 0)
 
 		// Keeps calling the model while it needs to return function calls
-		outputChan <- base.StreamResponse{Data: "Asking the model...", Type: base.LoadingInfo, Err: nil}
+		outputChan <- base.CompleteResponse{Data: "Asking the model...", Type: base.LoadingInfo, Err: nil}
 		for {
 			resp := complete(ctx, model, conv, toolResults, modelResponseChan)
 
@@ -106,10 +106,10 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan base.StreamResponse, 
 			}
 
 			if s.tools[resp.FunctionCall.Name].requiresApproval {
-				outputChan <- base.StreamResponse{Data: fmt.Sprintf("Can I run this tool: %s with parameters (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: base.ApprovalRequest, Err: nil}
+				outputChan <- base.CompleteResponse{Data: fmt.Sprintf("Can I run this tool: %s with parameters (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: base.ApprovalRequest, Err: nil}
 			}
 
-			outputChan <- base.StreamResponse{Data: fmt.Sprintf("Using tool: %s -> (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: base.LoadingInfo, Err: nil}
+			outputChan <- base.CompleteResponse{Data: fmt.Sprintf("Using tool: %s -> (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: base.LoadingInfo, Err: nil}
 			result := s.callTool(&resp)
 			toolResults = append(toolResults, *result)
 		}
@@ -118,8 +118,8 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan base.StreamResponse, 
 	return outputChan, nil
 }
 
-func (s *CompleteService) pipeToSaveConversation(conv *conversation.Conversation, inputChan <-chan base.StreamResponse) chan base.StreamResponse {
-	outputChan := make(chan base.StreamResponse)
+func (s *CompleteService) pipeToSaveConversation(conv *conversation.Conversation, inputChan <-chan base.CompleteResponse) chan base.CompleteResponse {
+	outputChan := make(chan base.CompleteResponse)
 
 	go func() {
 		defer close(outputChan)
@@ -133,18 +133,18 @@ func (s *CompleteService) pipeToSaveConversation(conv *conversation.Conversation
 		}
 		err := conv.AnswerLastQuestion(convBuffer.String())
 		if err != nil {
-			outputChan <- base.StreamResponse{Err: err}
+			outputChan <- base.CompleteResponse{Err: err}
 		}
 		err = s.conversationRepo.SaveAsActive(conv)
 		if err != nil {
-			outputChan <- base.StreamResponse{Err: err}
+			outputChan <- base.CompleteResponse{Err: err}
 		}
 	}()
 
 	return outputChan
 }
 
-func complete(ctx context.Context, model llmproviders.LlmProvider, conv *conversation.Conversation, toolResults []base.ToolResult, outputChan chan<- base.StreamResponse) base.ModelResponse {
+func complete(ctx context.Context, model llmproviders.LlmProvider, conv *conversation.Conversation, toolResults []base.ToolResult, outputChan chan<- base.CompleteResponse) base.ModelResponse {
 	respChan := model.Complete(ctx, conv, toolResults)
 
 	var toolCallRequest base.ModelResponse
@@ -155,7 +155,7 @@ func complete(ctx context.Context, model llmproviders.LlmProvider, conv *convers
 			continue
 		}
 
-		outputChan <- base.StreamResponse{Data: modelResponse.Text, Err: modelResponse.Error}
+		outputChan <- base.CompleteResponse{Data: modelResponse.Text, Err: modelResponse.Error}
 	}
 
 	return toolCallRequest
@@ -206,6 +206,7 @@ func startMcpServers(profile *profile.Profile) (map[string]toolDetails, error) {
 			panic(err)
 		}
 
+		// Filter tools based on profile allowed tools
 		for _, tool := range mcpTools {
 			if slices.Contains(server.AllowedTools, tool.Name) || len(server.AllowedTools) == 0 {
 				returnTools[tool.Name] = toolDetails{
