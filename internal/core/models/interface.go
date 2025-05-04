@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 
-	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/robertoseba/gennie/internal/core/conversation"
 	"github.com/robertoseba/gennie/internal/core/models/response"
 	"github.com/robertoseba/gennie/internal/core/models/tools"
@@ -18,7 +17,7 @@ type iModelProvider interface {
 	CanStream() bool
 	Complete(ctx context.Context, conversation *conversation.Conversation, toolResult []tools.ToolResult) <-chan response.ModelResponse
 	SetSystemPrompt(systemPrompt string)
-	SetTools(tools []mcp.Tool)
+	SetTools(tools []tools.Tool)
 }
 
 type IApiClient interface {

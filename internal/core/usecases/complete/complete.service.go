@@ -8,7 +8,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/robertoseba/gennie/internal/core/config"
 	"github.com/robertoseba/gennie/internal/core/conversation"
 	"github.com/robertoseba/gennie/internal/core/models"
@@ -19,7 +18,7 @@ import (
 
 type toolDetails struct {
 	mcpClient        *McpClient
-	tool             mcp.Tool
+	tool             tools.Tool
 	requiresApproval bool
 }
 
@@ -74,14 +73,21 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan models.StreamResponse
 		outputChan <- models.StreamResponse{Data: profile.Name, Type: models.ProfileInfo, Err: nil}
 		if len(profile.McpServers) > 0 {
 			outputChan <- models.StreamResponse{Data: fmt.Sprintf("Loading MCP Servers..."), Type: models.LoadingInfo, Err: nil}
-			tools, err := startMcpServers(profile)
+			mcpTools, err := startMcpServers(profile)
 			if err != nil {
 				outputChan <- models.StreamResponse{Err: err}
 			}
-			s.tools = tools
-			var modelTools []mcp.Tool
+			s.tools = mcpTools
+			var modelTools []tools.Tool
 			for toolName := range s.tools {
-				modelTools = append(modelTools, s.tools[toolName].tool)
+				tool := tools.Tool{
+					Name:        s.tools[toolName].tool.Name,
+					Description: s.tools[toolName].tool.Description,
+					InputSchema: tools.ToolInputSchema{
+						Properties: s.tools[toolName].tool.InputSchema.Properties,
+					},
+				}
+				modelTools = append(modelTools, tool)
 			}
 			model.SetTools(modelTools)
 		}
@@ -198,13 +204,13 @@ func startMcpServers(profile *profile.Profile) (map[string]toolDetails, error) {
 			continue
 		}
 
-		tools, err := mcpServer.ListTools(ctx)
+		mcpTools, err := mcpServer.ListTools(ctx)
 		if err != nil {
 			fmt.Printf("error %v", err)
 			panic(err)
 		}
 
-		for _, tool := range tools.Tools {
+		for _, tool := range mcpTools {
 			if slices.Contains(server.AllowedTools, tool.Name) || len(server.AllowedTools) == 0 {
 				returnTools[tool.Name] = toolDetails{
 					tool:             tool,

@@ -7,7 +7,6 @@ import (
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
-	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/robertoseba/gennie/internal/core/conversation"
 	"github.com/robertoseba/gennie/internal/core/models/response"
 	"github.com/robertoseba/gennie/internal/core/models/tools"
@@ -44,7 +43,7 @@ func (p *provider) SetSystemPrompt(systemPrompt string) {
 	p.systemPrompt = systemPrompt
 }
 
-func (p *provider) SetTools(tools []mcp.Tool) {
+func (p *provider) SetTools(tools []tools.Tool) {
 	p.tools = parseTools(tools)
 }
 
@@ -161,7 +160,7 @@ func createAssistantMessage(content string) anthropic.MessageParam {
 	return anthropic.NewAssistantMessage(anthropic.NewTextBlock(content))
 }
 
-func parseTools(tools []mcp.Tool) []anthropic.ToolUnionParam {
+func parseTools(tools []tools.Tool) []anthropic.ToolUnionParam {
 	if len(tools) == 0 {
 		return nil
 	}

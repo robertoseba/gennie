@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/robertoseba/gennie/internal/core/conversation"
 	"github.com/robertoseba/gennie/internal/core/models/response"
 	"github.com/robertoseba/gennie/internal/core/models/tools"
@@ -76,7 +75,7 @@ func (m *BaseModel) SetSystemPrompt(systemPrompt string) {
 	m.modelProvider.SetSystemPrompt(systemPrompt)
 }
 
-func (m *BaseModel) SetTools(tools []mcp.Tool) {
+func (m *BaseModel) SetTools(tools []tools.Tool) {
 	m.modelProvider.SetTools(tools)
 }
 

@@ -43,13 +43,26 @@ func (c *McpClient) Close() {
 	c.client.Close()
 }
 
-func (c *McpClient) ListTools(ctx context.Context) (*mcp.ListToolsResult, error) {
+func (c *McpClient) ListTools(ctx context.Context) ([]tools.Tool, error) {
 	toolsRequest := mcp.ListToolsRequest{}
-	tools, err := c.client.ListTools(ctx, toolsRequest)
+	mcpToolsResponse, err := c.client.ListTools(ctx, toolsRequest)
 	if err != nil {
 		return nil, err
 	}
-	return tools, nil
+
+	var toolItems []tools.Tool
+	for _, t := range mcpToolsResponse.Tools {
+		toolItem := tools.Tool{
+			Name:        t.Name,
+			Description: t.Description,
+			InputSchema: tools.ToolInputSchema{
+				Properties: t.InputSchema.Properties,
+				Required:   t.InputSchema.Required,
+			},
+		}
+		toolItems = append(toolItems, toolItem)
+	}
+	return toolItems, nil
 }
 
 func (c *McpClient) ExecTool(ctx context.Context, toolName string, args map[string]any) ([]byte, error) {
