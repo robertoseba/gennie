@@ -102,15 +102,3 @@ func parseToolResult(toolResponse *mcp.CallToolResult) ([]byte, error) {
 	}
 	return result, nil
 }
-
-// // Helper function to print tool results
-// func printToolResult(result *mcp.CallToolResult) {
-// 	for _, content := range result.Content {
-// 		if textContent, ok := content.(mcp.TextContent); ok {
-// 			fmt.Println(textContent.Text)
-// 		} else {
-// 			jsonBytes, _ := json.MarshalIndent(content, "", "  ")
-// 			fmt.Println(string(jsonBytes))
-// 		}
-// 	}
-// }
