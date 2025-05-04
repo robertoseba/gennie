@@ -43,7 +43,7 @@ func (p *provider) SetSystemPrompt(systemPrompt string) {
 }
 
 func (p *provider) SetTools(tools []base.Tool) {
-	p.tools = parseTools(tools)
+	p.tools = convertToolsToProvider(tools)
 }
 
 func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []base.ToolResult) <-chan base.ModelResponse {
@@ -51,7 +51,7 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 
 	go func() {
 		defer close(output)
-		messages := make([]anthropic.MessageParam, 0, conversation.Len())
+		messages := make([]anthropic.MessageParam, 0, conversation.Len()+len(toolResults))
 
 		for _, qa := range conversation.QAs {
 			messages = append(messages, createUserMessage(qa.GetQuestion()))
@@ -60,28 +60,8 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			}
 		}
 
-		// Adds tool Result to message before sending
 		if len(toolResults) > 0 {
-			messageBlock := []anthropic.ContentBlockParamUnion{}
-			messageAssistantBlock := []anthropic.ContentBlockParamUnion{}
-			for _, tr := range toolResults {
-				// add back assistant block with tool use
-				useBlock := anthropic.ToolUseBlockParam{
-					ID:    tr.ID,
-					Name:  tr.Name,
-					Input: tr.Arguments,
-				}
-				toolUseBlock := anthropic.ContentBlockParamUnion{OfRequestToolUseBlock: &useBlock}
-				messageAssistantBlock = append(messageAssistantBlock, toolUseBlock)
-
-				if tr.IsError() {
-					messageBlock = append(messageBlock, anthropic.NewToolResultBlock(tr.ID, tr.Error.Error(), true))
-				} else {
-					messageBlock = append(messageBlock, anthropic.NewToolResultBlock(tr.ID, string(tr.Result), false))
-				}
-			}
-			messages = append(messages, anthropic.NewAssistantMessage(messageAssistantBlock...))
-			messages = append(messages, anthropic.NewUserMessage(messageBlock...))
+			messages = addToolResultsToMessages(messages, toolResults)
 		}
 
 		stream := p.client.Messages.NewStreaming(ctx, anthropic.MessageNewParams{
@@ -126,20 +106,9 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 		}
 
 		if message.StopReason == anthropic.MessageStopReasonToolUse {
-			for _, block := range message.Content {
-				switch variant := block.AsAny().(type) {
-				case anthropic.ToolUseBlock:
-					output <- base.ModelResponse{
-						Text:       "",
-						Error:      nil,
-						StopReason: base.StopReasonTools,
-						FunctionCall: base.FunctionCall{
-							ID:        variant.ID,
-							Name:      variant.Name,
-							Arguments: variant.Input,
-						},
-					}
-				}
+			toolResponses := parseToolUseFrom(&message)
+			for idx := range toolResponses {
+				output <- toolResponses[idx]
 			}
 		}
 	}()
@@ -153,24 +122,4 @@ func createUserMessage(content string) anthropic.MessageParam {
 
 func createAssistantMessage(content string) anthropic.MessageParam {
 	return anthropic.NewAssistantMessage(anthropic.NewTextBlock(content))
-}
-
-func parseTools(tools []base.Tool) []anthropic.ToolUnionParam {
-	if len(tools) == 0 {
-		return nil
-	}
-
-	toolReturn := make([]anthropic.ToolUnionParam, 0)
-	for _, tool := range tools {
-		toolParam := anthropic.ToolParam{
-			Name:        tool.Name,
-			Description: anthropic.String(tool.Description),
-			InputSchema: anthropic.ToolInputSchemaParam{
-				Properties: tool.InputSchema.Properties,
-			},
-		}
-		toolReturn = append(toolReturn, anthropic.ToolUnionParam{OfTool: &toolParam})
-	}
-
-	return toolReturn
 }
