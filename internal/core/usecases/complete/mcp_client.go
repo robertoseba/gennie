@@ -12,7 +12,6 @@ import (
 
 type McpClient struct {
 	client *client.Client
-	tools  []base.Tool
 }
 
 func StartMcpServer(ctx context.Context, cmd string, env []string, args []string) (*McpClient, error) {
