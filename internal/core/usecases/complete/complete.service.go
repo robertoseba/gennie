@@ -77,6 +77,7 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan base.CompleteResponse
 			if err != nil {
 				outputChan <- base.CompleteResponse{Err: err}
 			}
+
 			s.tools = mcpTools
 			var modelTools []base.Tool
 			for toolName := range s.tools {
