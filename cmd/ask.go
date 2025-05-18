@@ -40,7 +40,7 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 			dto := &complete.InputDTO{
 				Question:    strings.Join(args, " "),
 				ProfileSlug: profileFlag,
-				Model:       modelFlag,
+				ModelSlug:   modelFlag,
 				IsFollowUp:  isFollowUpFlag,
 				AppendFile:  appendFileFlag,
 			}
@@ -55,51 +55,52 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 
 			var modelInfo, profileInfo string
 
-			for d := range respChan {
-				if d.Err != nil {
-					return d.Err
+			for response := range respChan {
+				if response.Err != nil {
+					return response.Err
 				}
 
 				if !isTerminalFlag {
-					if d.Type == "" { // when piping we only print if it's not related to interface types
-						cmd.Print(d.Data)
+					if response.Type == "" { // when piping we only print if it's not related to interface types
+						cmd.Print(response.Data)
 					}
 					continue
 				}
 
 				if spinner.IsRunning() {
-					switch d.Type {
+					switch response.Type {
 					case base.LoadingInfo:
-						spinner.SetMessage(d.Data)
+						spinner.SetMessage(response.Data)
 					case base.ModelInfo:
-						modelInfo = d.Data
+						modelInfo = response.Data
 					case base.ProfileInfo:
-						profileInfo = d.Data
+						profileInfo = response.Data
 					case base.ApprovalRequest:
+						// TODO: what to do if this is not a terminal?
 						spinner.Stop()
 						cmd.Println("Please approve the tool use to continue:")
-						cmd.Println(d.Data)
+						cmd.Println(response.Data)
 						cmd.Println("If you want to cancel the request, please use Ctrl+C.")
 						bufio.NewReader(os.Stdin).ReadBytes('\n')
 						spinner.Start()
-					default:
+					default: // answer received
 						spinner.Stop()
-						cmd.Print(d.Data)
+						cmd.Print(response.Data)
 					}
 				} else {
-					switch d.Type {
+					switch response.Type {
 					case base.ApprovalRequest:
 						cmd.Println()
 						p.Print("\nPlease approve the tool use to continue:", output.Yellow)
-						cmd.Println(d.Data)
+						cmd.Println(response.Data)
 						p.Print("\nIf you want to cancel the request, please use Ctrl+C.", output.Red)
 						bufio.NewReader(os.Stdin).ReadBytes('\n')
 					case base.LoadingInfo:
 						cmd.Println()
-						spinner = output.NewSpinner(d.Data)
+						spinner = output.NewSpinner(response.Data)
 						spinner.Start()
 					default:
-						cmd.Print(d.Data)
+						cmd.Print(response.Data)
 					}
 				}
 			}

@@ -33,7 +33,7 @@ type CompleteService struct {
 type InputDTO struct {
 	Question    string
 	ProfileSlug string
-	Model       string
+	ModelSlug   string
 	IsFollowUp  bool
 	AppendFile  string
 }
@@ -234,7 +234,7 @@ func (s *CompleteService) processInput(input *InputDTO) (*conversation.Conversat
 	}
 	conv.SetProfileTo(profile.Slug)
 
-	model, modelEnum, err := s.loadModel(input.Model, conv)
+	model, modelEnum, err := s.loadModel(input.ModelSlug, conv)
 	if err != nil {
 		return nil, nil, nil, err
 	}

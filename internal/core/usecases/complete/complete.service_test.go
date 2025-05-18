@@ -25,7 +25,7 @@ func TestCompleteService(t *testing.T) {
 		outputChan, err := service.Execute(&InputDTO{
 			Question:    "What is gennie?",
 			ProfileSlug: profile.DefaultProfileSlug,
-			Model:       base.OpenAI.Slug(),
+			ModelSlug:   base.OpenAI.Slug(),
 			IsFollowUp:  false,
 			AppendFile:  "",
 		})
@@ -216,7 +216,7 @@ func TestCompleteService(t *testing.T) {
 		_, err := service.Execute(&InputDTO{
 			Question:    "What is gennie?",
 			ProfileSlug: "invalid-profile",
-			Model:       "",
+			ModelSlug:   "",
 			IsFollowUp:  true,
 			AppendFile:  "",
 		})
@@ -234,7 +234,7 @@ func TestCompleteService(t *testing.T) {
 		_, err := service.Execute(&InputDTO{
 			Question:    "What is gennie?",
 			ProfileSlug: "",
-			Model:       "invalid-model",
+			ModelSlug:   "invalid-model",
 			IsFollowUp:  false,
 			AppendFile:  "",
 		})
