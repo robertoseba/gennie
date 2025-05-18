@@ -41,7 +41,7 @@ func TestSlugAndString(t *testing.T) {
 	}{
 		{OpenAI, "gpt-4o", "GPT-4o (OPENAI)"},
 		{OpenAIMini, "gpt-4o-mini", "GPT-4o-mini (OPENAI)"},
-		{ClaudeSonnet, "sonnet", "Claude Sonnet 3.5 (ANTHROPIC)"},
+		{ClaudeSonnet, "sonnet", "Claude Sonnet 3.7 (ANTHROPIC)"},
 		{Maritaca, "maritaca", "Maritaca (BR)"},
 		{Groq, "groq", "Groq (DeepSeek-R1-Distill-Llama-70B)"},
 		{Ollama, "ollama", "Ollama"},

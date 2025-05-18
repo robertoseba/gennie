@@ -11,12 +11,12 @@ const (
 	Ollama       ModelEnum = "ollama"
 )
 
-const DefaultModel = OpenAIMini
+const DefaultModel = ClaudeSonnet
 
 var availableModels = map[ModelEnum]string{
 	OpenAIMini:   "GPT-4o-mini (OPENAI)",
 	OpenAI:       "GPT-4o (OPENAI)",
-	ClaudeSonnet: "Claude Sonnet 3.5 (ANTHROPIC)",
+	ClaudeSonnet: "Claude Sonnet 3.7 (ANTHROPIC)",
 	Maritaca:     "Maritaca (BR)",
 	Groq:         "Groq (DeepSeek-R1-Distill-Llama-70B)",
 	Ollama:       "Ollama",
