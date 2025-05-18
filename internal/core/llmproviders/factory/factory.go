@@ -8,7 +8,7 @@ import (
 	"github.com/robertoseba/gennie/internal/core/llmproviders/anthropic"
 )
 
-func NewModel(modelEnum ModelEnum, httpClient *http.Client, config config.Config) llmcore.LlmProvider {
+func NewProvider(modelEnum ModelEnum, httpClient *http.Client, config config.Config) llmcore.LlmProvider {
 	switch modelEnum {
 	case ClaudeSonnet:
 		return anthropic.NewProvider(config.APIKeys.AnthropicApiKey, modelEnum.Slug(), httpClient)

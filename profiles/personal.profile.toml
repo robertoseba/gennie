@@ -25,7 +25,7 @@ args = [
   "mcp-server-docker:latest",
 ]
 envs = []
-requires_approval = false
+requires_approval = true
 allowed_tools = ["list_volumes"]
 
 [mcpServers.exa]
@@ -33,4 +33,5 @@ command = "docker"
 args = ["run", "-i", "--rm", "-e", "EXA_API_KEY", "mcp/exa"]
 # needs to be run with the EXA_API_KEY environment variable set in terminal
 # envs = ["EXA_API_KEY=${EXA_API_KEY}"]
-requires_approval = false
+requires_approval = true
+show_tool_output = true

@@ -13,22 +13,19 @@ import (
 
 func TestNewModel(t *testing.T) {
 	t.Run("OpenAI", func(t *testing.T) {
-		m := NewModel("gpt-4o", nil, *config.NewConfig())
+		m := NewProvider("gpt-4o", nil, *config.NewConfig())
 		require.NotNil(t, m)
-		require.Equal(t, "GPT-4o (OPENAI)", m.Model().String())
-		require.IsType(t, &openai.OpenAIModel{}, m.modelProvider)
+		require.IsType(t, &openai.OpenAIModel{}, m)
 	})
 
 	t.Run("OpenAIMini", func(t *testing.T) {
-		m, err := NewModel("gpt-4o-mini", nil, *config.NewConfig())
-		require.NoError(t, err)
+		m := NewProvider("gpt-4o-mini", nil, *config.NewConfig())
 		require.NotNil(t, m)
-		require.Equal(t, "GPT-4o-mini (OPENAI)", m.Model().String())
-		require.IsType(t, &openai.OpenAIModel{}, m.modelProvider)
+		require.IsType(t, &openai.OpenAIModel{}, m)
 	})
 
 	t.Run("ClaudeSonnet", func(t *testing.T) {
-		m, err := NewModel("sonnet", nil, *config.NewConfig())
+		m, err := NewProvider("sonnet", nil, *config.NewConfig())
 		require.NoError(t, err)
 		require.NotNil(t, m)
 		require.Equal(t, "Claude Sonnet 3.5 (ANTHROPIC)", m.Model().String())
@@ -36,7 +33,7 @@ func TestNewModel(t *testing.T) {
 	})
 
 	t.Run("Maritaca", func(t *testing.T) {
-		m, err := NewModel("maritaca", nil, *config.NewConfig())
+		m, err := NewProvider("maritaca", nil, *config.NewConfig())
 		require.NoError(t, err)
 		require.NotNil(t, m)
 		require.Equal(t, "Maritaca (BR)", m.Model().String())
@@ -44,7 +41,7 @@ func TestNewModel(t *testing.T) {
 	})
 
 	t.Run("Groq", func(t *testing.T) {
-		m, err := NewModel("groq", nil, *config.NewConfig())
+		m, err := NewProvider("groq", nil, *config.NewConfig())
 		require.NoError(t, err)
 		require.NotNil(t, m)
 		require.Equal(t, "Groq (DeepSeek-R1-Distill-Llama-70B)", m.Model().String())
@@ -52,7 +49,7 @@ func TestNewModel(t *testing.T) {
 	})
 
 	t.Run("Ollama", func(t *testing.T) {
-		m, err := NewModel("ollama", nil, *config.NewConfig())
+		m, err := NewProvider("ollama", nil, *config.NewConfig())
 		require.NoError(t, err)
 		require.NotNil(t, m)
 		require.Equal(t, "Ollama", m.Model().String())
@@ -60,7 +57,7 @@ func TestNewModel(t *testing.T) {
 	})
 
 	t.Run("Invalid", func(t *testing.T) {
-		m, err := NewModel("invalid", nil, *config.NewConfig())
+		m, err := NewProvider("invalid", nil, *config.NewConfig())
 		require.Nil(t, m)
 		require.Error(t, err)
 		require.Equal(t, "model not found", err.Error())

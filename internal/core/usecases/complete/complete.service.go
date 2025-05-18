@@ -20,6 +20,7 @@ type toolDetails struct {
 	mcpClient        *McpClient
 	tool             llmcore.Tool
 	requiresApproval bool
+	showToolOutput   bool
 }
 
 type CompleteService struct {
@@ -56,12 +57,12 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan llmcore.CompleteRespo
 	var conv *conversation.Conversation
 	var err error
 
-	conv, profile, model, err := s.processInput(input)
+	conv, profile, llmProvider, err := s.processInput(input)
 	if err != nil {
 		return nil, err
 	}
 
-	model.SetSystemPrompt(profile.Data)
+	llmProvider.SetSystemPrompt(profile.Data)
 
 	modelResponseChan := make(chan llmcore.CompleteResponse)
 	outputChan := s.pipeToSaveConversation(conv, modelResponseChan)
@@ -71,8 +72,9 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan llmcore.CompleteRespo
 
 		outputChan <- llmcore.CompleteResponse{Data: conv.ModelSlug, Type: llmcore.ModelInfo, Err: nil}
 		outputChan <- llmcore.CompleteResponse{Data: profile.Name, Type: llmcore.ProfileInfo, Err: nil}
+
 		if len(profile.McpServers) > 0 {
-			outputChan <- llmcore.CompleteResponse{Data: fmt.Sprintf("Loading MCP Servers..."), Type: llmcore.LoadingInfo, Err: nil}
+			outputChan <- llmcore.CompleteResponse{Data: "Loading MCP Servers...", Type: llmcore.LoadingInfo, Err: nil}
 			mcpTools, err := startMcpServers(profile)
 			if err != nil {
 				outputChan <- llmcore.CompleteResponse{Err: err}
@@ -90,7 +92,7 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan llmcore.CompleteRespo
 				}
 				modelTools = append(modelTools, tool)
 			}
-			model.SetTools(modelTools)
+			llmProvider.SetTools(modelTools)
 		}
 
 		ctx := context.Background()
@@ -99,7 +101,7 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan llmcore.CompleteRespo
 		// Keeps calling the model while it needs to return function calls
 		outputChan <- llmcore.CompleteResponse{Data: "Asking the model...", Type: llmcore.LoadingInfo, Err: nil}
 		for {
-			resp := complete(ctx, model, conv, toolResults, modelResponseChan)
+			resp := complete(ctx, llmProvider, conv, toolResults, modelResponseChan)
 
 			// If does not need to send function call back to model than breaks out of the loop
 			if resp.StopReason != llmcore.StopReasonTools {
@@ -112,7 +114,10 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan llmcore.CompleteRespo
 
 			outputChan <- llmcore.CompleteResponse{Data: fmt.Sprintf("Using tool: %s -> (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: llmcore.LoadingInfo, Err: nil}
 			result := s.callTool(&resp)
-			outputChan <- llmcore.CompleteResponse{Data: fmt.Sprintf("Tool %s returned: %s", resp.FunctionCall.Name, result.Result), Type: llmcore.ToolResultInfo, Err: nil}
+
+			if s.tools[resp.FunctionCall.Name].showToolOutput {
+				outputChan <- llmcore.CompleteResponse{Data: fmt.Sprintf("Tool %s returned: %s", resp.FunctionCall.Name, result.Result), Type: llmcore.ToolResultInfo, Err: nil}
+			}
 
 			toolResults = append(toolResults, *result)
 		}
@@ -147,18 +152,18 @@ func (s *CompleteService) pipeToSaveConversation(conv *conversation.Conversation
 	return outputChan
 }
 
-func complete(ctx context.Context, model llmcore.LlmProvider, conv *conversation.Conversation, toolResults []llmcore.ToolResult, outputChan chan<- llmcore.CompleteResponse) llmcore.LlmResponse {
-	respChan := model.Complete(ctx, conv, toolResults)
+func complete(ctx context.Context, llmProvider llmcore.LlmProvider, conv *conversation.Conversation, toolResults []llmcore.ToolResult, outputChan chan<- llmcore.CompleteResponse) llmcore.LlmResponse {
+	respChan := llmProvider.Complete(ctx, conv, toolResults)
 
 	var toolCallRequest llmcore.LlmResponse
 
-	for modelResponse := range respChan {
-		if modelResponse.StopReason == llmcore.StopReasonTools {
-			toolCallRequest = modelResponse
+	for llmResponse := range respChan {
+		if llmResponse.StopReason == llmcore.StopReasonTools {
+			toolCallRequest = llmResponse
 			continue
 		}
 
-		outputChan <- llmcore.CompleteResponse{Data: modelResponse.Text, Err: modelResponse.Error}
+		outputChan <- llmcore.CompleteResponse{Data: llmResponse.Text, Err: llmResponse.Error}
 	}
 
 	return toolCallRequest
@@ -169,26 +174,26 @@ func readFile(filePath string) (string, error) {
 	return string(content), err
 }
 
-func (s *CompleteService) callTool(modelResponse *llmcore.LlmResponse) *llmcore.ToolResult {
-	if _, ok := s.tools[modelResponse.FunctionCall.Name]; !ok {
-		return llmcore.NewToolResponseError(modelResponse, fmt.Errorf("tool %s not found", modelResponse.FunctionCall.Name))
+func (s *CompleteService) callTool(llmResponse *llmcore.LlmResponse) *llmcore.ToolResult {
+	if _, ok := s.tools[llmResponse.FunctionCall.Name]; !ok {
+		return llmcore.NewToolResponseError(llmResponse, fmt.Errorf("tool %s not found", llmResponse.FunctionCall.Name))
 	}
 
 	var args map[string]any
-	if len(modelResponse.FunctionCall.Arguments) > 0 {
+	if len(llmResponse.FunctionCall.Arguments) > 0 {
 		args = make(map[string]any)
-		err := json.Unmarshal([]byte(modelResponse.FunctionCall.Arguments), &args)
+		err := json.Unmarshal([]byte(llmResponse.FunctionCall.Arguments), &args)
 		if err != nil {
 			return llmcore.NewToolResponseError(nil, err)
 		}
 	}
 
-	toolResponse, err := s.tools[modelResponse.FunctionCall.Name].mcpClient.ExecTool(context.TODO(), modelResponse.FunctionCall.Name, args)
+	toolResponse, err := s.tools[llmResponse.FunctionCall.Name].mcpClient.ExecTool(context.TODO(), llmResponse.FunctionCall.Name, args)
 	if err != nil {
 		return llmcore.NewToolResponseError(nil, err)
 	}
 
-	return llmcore.NewToolResponseFrom(modelResponse, toolResponse)
+	return llmcore.NewToolResponseFrom(llmResponse, toolResponse)
 }
 
 func startMcpServers(profile *profile.Profile) (map[string]toolDetails, error) {
@@ -216,6 +221,7 @@ func startMcpServers(profile *profile.Profile) (map[string]toolDetails, error) {
 					tool:             tool,
 					mcpClient:        mcpServer,
 					requiresApproval: server.RequiresApproval,
+					showToolOutput:   server.ShowToolOutput,
 				}
 			}
 		}
@@ -236,7 +242,7 @@ func (s *CompleteService) processInput(input *InputDTO) (*conversation.Conversat
 	}
 	conv.SetProfileTo(profile.Slug)
 
-	model, modelEnum, err := s.loadModel(input.ModelSlug, conv)
+	model, modelEnum, err := s.loadLlmProvider(input.ModelSlug, conv)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -262,7 +268,7 @@ func (s *CompleteService) loadProfile(profileSlug string, conv *conversation.Con
 	return s.profileRepo.FindBySlug(profileSlug)
 }
 
-func (s *CompleteService) loadModel(modelSlug string, conv *conversation.Conversation) (llmcore.LlmProvider, factory.ModelEnum, error) {
+func (s *CompleteService) loadLlmProvider(modelSlug string, conv *conversation.Conversation) (llmcore.LlmProvider, factory.ModelEnum, error) {
 	if modelSlug == "" {
 		modelSlug = conv.ModelSlug
 	}
@@ -272,7 +278,7 @@ func (s *CompleteService) loadModel(modelSlug string, conv *conversation.Convers
 		return nil, factory.DefaultModel, llmcore.ErrModelNotFound
 	}
 
-	return factory.NewModel(modelEnum, s.httpClient, *s.config), modelEnum, nil
+	return factory.NewProvider(modelEnum, s.httpClient, *s.config), modelEnum, nil
 }
 
 func (s *CompleteService) setQuestion(conv *conversation.Conversation, question string, filename string) error {
