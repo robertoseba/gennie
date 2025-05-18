@@ -1,11 +1,15 @@
 package factory
 
-import "github.com/robertoseba/gennie/internal/core/llmproviders/anthropic"
+import (
+	"github.com/robertoseba/gennie/internal/core/llmproviders/anthropic"
+	"github.com/robertoseba/gennie/internal/core/llmproviders/gemini"
+)
 
 type ModelEnum string
 
 const (
 	ClaudeSonnet ModelEnum = anthropic.ExportedModelSlug
+	Gemini       ModelEnum = gemini.ExportedModelSlug
 	OpenAIMini   ModelEnum = "gpt-4o-mini"
 	OpenAI       ModelEnum = "gpt-4o"
 	Maritaca     ModelEnum = "maritaca"
@@ -17,6 +21,7 @@ const DefaultModel = ClaudeSonnet
 
 var availableModels = map[ModelEnum]string{
 	ClaudeSonnet: anthropic.ExportedModelDescription,
+	Gemini:       gemini.ExportedModelDescription,
 	OpenAIMini:   "GPT-4o-mini (OPENAI)",
 	OpenAI:       "GPT-4o (OPENAI)",
 	Maritaca:     "Maritaca (BR)",
