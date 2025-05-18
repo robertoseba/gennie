@@ -95,15 +95,18 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 
 		for result, err := range chat.SendMessageStream(ctx, genai.Part{Text: conversation.LastQuestion()}) {
 			if err != nil {
-				log.Fatal(err)
+				output <- llmcore.LlmResponse{
+					Error:      err,
+					Text:       "something went wrong",
+					StopReason: llmcore.StopReasonError,
+				}
 			}
 			debugPrint(result)
+			// output <- llmcore.LlmResponse{
+			// 	Text:       result.Text(),
+			// 	StopReason: llmcore.StopReasonNone,
+			// }
 		}
-
-		// output <- llmcore.LlmResponse{
-		// 	Text:       result.Text(),
-		// 	StopReason: llmcore.StopReasonNone,
-		// }
 	}()
 
 	return output
