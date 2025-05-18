@@ -2,18 +2,18 @@ package anthropic
 
 import (
 	"github.com/anthropics/anthropic-sdk-go"
-	"github.com/robertoseba/gennie/internal/core/llm_providers/base"
+	"github.com/robertoseba/gennie/internal/core/llmcore/entities"
 )
 
-func parseToolUseFrom(message *anthropic.Message) []base.ModelResponse {
-	var toolResponses []base.ModelResponse
+func parseToolUseFrom(message *anthropic.Message) []entities.LlmResponse {
+	var toolResponses []entities.LlmResponse
 
 	for _, block := range message.Content {
 		switch variant := block.AsAny().(type) {
 		case anthropic.ToolUseBlock:
-			response := base.ModelResponse{
-				StopReason: base.StopReasonTools,
-				FunctionCall: base.FunctionCall{
+			response := entities.LlmResponse{
+				StopReason: entities.StopReasonTools,
+				FunctionCall: entities.FunctionCall{
 					ID:        variant.ID,
 					Name:      variant.Name,
 					Arguments: variant.Input,
@@ -25,7 +25,7 @@ func parseToolUseFrom(message *anthropic.Message) []base.ModelResponse {
 	return toolResponses
 }
 
-func convertToolsToProvider(tools []base.Tool) []anthropic.ToolUnionParam {
+func convertToolsToProvider(tools []entities.Tool) []anthropic.ToolUnionParam {
 	if len(tools) == 0 {
 		return nil
 	}
@@ -47,7 +47,7 @@ func convertToolsToProvider(tools []base.Tool) []anthropic.ToolUnionParam {
 
 func addToolResultsToMessages(
 	messages []anthropic.MessageParam,
-	toolResults []base.ToolResult,
+	toolResults []entities.ToolResult,
 ) []anthropic.MessageParam {
 	messageBlock := []anthropic.ContentBlockParamUnion{}
 	messageAssistantBlock := []anthropic.ContentBlockParamUnion{}

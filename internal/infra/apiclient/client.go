@@ -98,7 +98,6 @@ func (c *ApiClient) PostWithStreaming(url string, body string, headers map[strin
 
 func (c *ApiClient) request(method string, url string, body string, headers map[string]string) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, strings.NewReader(body))
-
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +109,6 @@ func (c *ApiClient) request(method string, url string, body string, headers map[
 	}
 
 	res, err := c.httpClient.Do(req)
-
 	if err != nil {
 		return nil, err
 	}

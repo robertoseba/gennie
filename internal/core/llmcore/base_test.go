@@ -1,11 +1,11 @@
-package llmproviders
+package llmcore
 
 import (
 	"errors"
 	"testing"
 
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/llm_providers/openai"
+	"github.com/robertoseba/gennie/internal/core/llmproviders/openai"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

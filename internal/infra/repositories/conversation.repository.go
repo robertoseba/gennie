@@ -8,7 +8,7 @@ import (
 	"path"
 
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/llm_providers/base"
+	"github.com/robertoseba/gennie/internal/core/llmproviders/factory"
 	"github.com/robertoseba/gennie/internal/core/profile"
 )
 
@@ -34,7 +34,7 @@ func (r *ConversationRepository) LoadActive() (*conversation.Conversation, error
 	c, err := r.loadFrom(path.Join(r.cacheDir, ActiveConversationFileName))
 	if err != nil {
 		if errors.Is(err, ErrConversationNotFound) {
-			return conversation.NewConversation(profile.DefaultProfileSlug, base.DefaultModel.Slug()), nil
+			return conversation.NewConversation(profile.DefaultProfileSlug, factory.DefaultModel.Slug()), nil
 		}
 		return nil, err
 	}

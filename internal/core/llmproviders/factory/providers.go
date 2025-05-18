@@ -1,11 +1,13 @@
-package base
+package factory
+
+import "github.com/robertoseba/gennie/internal/core/llmproviders/anthropic"
 
 type ModelEnum string
 
 const (
+	ClaudeSonnet ModelEnum = anthropic.ExportedModelSlug
 	OpenAIMini   ModelEnum = "gpt-4o-mini"
 	OpenAI       ModelEnum = "gpt-4o"
-	ClaudeSonnet ModelEnum = "sonnet"
 	Maritaca     ModelEnum = "maritaca"
 	Groq         ModelEnum = "groq"
 	Ollama       ModelEnum = "ollama"
@@ -14,9 +16,9 @@ const (
 const DefaultModel = ClaudeSonnet
 
 var availableModels = map[ModelEnum]string{
+	ClaudeSonnet: anthropic.ExportedModelDescription,
 	OpenAIMini:   "GPT-4o-mini (OPENAI)",
 	OpenAI:       "GPT-4o (OPENAI)",
-	ClaudeSonnet: "Claude Sonnet 3.7 (ANTHROPIC)",
 	Maritaca:     "Maritaca (BR)",
 	Groq:         "Groq (DeepSeek-R1-Distill-Llama-70B)",
 	Ollama:       "Ollama",

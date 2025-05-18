@@ -1,20 +1,20 @@
-package llmproviders
+package factory
 
 import (
 	"net/http"
 
 	"github.com/robertoseba/gennie/internal/core/config"
-	"github.com/robertoseba/gennie/internal/core/llm_providers/anthropic"
-	"github.com/robertoseba/gennie/internal/core/llm_providers/base"
+	"github.com/robertoseba/gennie/internal/core/llmcore"
+	"github.com/robertoseba/gennie/internal/core/llmproviders/anthropic"
 )
 
-func NewModel(modelEnum base.ModelEnum, httpClient *http.Client, config config.Config) LlmProvider {
+func NewModel(modelEnum ModelEnum, httpClient *http.Client, config config.Config) llmcore.LlmProvider {
 	switch modelEnum {
 	// case OpenAI:
 	// 	return openai.NewProvider(m.Slug(), config.APIKeys.OpenAiApiKey)
 	// case OpenAIMini:
 	// 	return openai.NewProvider(m.Slug(), config.APIKeys.OpenAiApiKey)
-	case base.ClaudeSonnet:
+	case ClaudeSonnet:
 		return anthropic.NewProvider(config.APIKeys.AnthropicApiKey, modelEnum.Slug(), httpClient)
 	// case Maritaca:
 	// 	return maritaca.NewProvider(m.Slug(), config.APIKeys.MaritacaApiKey)

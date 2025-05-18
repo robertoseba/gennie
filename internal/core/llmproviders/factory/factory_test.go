@@ -1,13 +1,13 @@
-package llmproviders
+package factory
 
 import (
 	"testing"
 
 	"github.com/robertoseba/gennie/internal/core/config"
-	"github.com/robertoseba/gennie/internal/core/llm_providers/groq"
-	"github.com/robertoseba/gennie/internal/core/llm_providers/maritaca"
-	"github.com/robertoseba/gennie/internal/core/llm_providers/ollama"
-	"github.com/robertoseba/gennie/internal/core/llm_providers/openai"
+	"github.com/robertoseba/gennie/internal/core/llmproviders/groq"
+	"github.com/robertoseba/gennie/internal/core/llmproviders/maritaca"
+	"github.com/robertoseba/gennie/internal/core/llmproviders/ollama"
+	"github.com/robertoseba/gennie/internal/core/llmproviders/openai"
 	"github.com/stretchr/testify/require"
 )
 

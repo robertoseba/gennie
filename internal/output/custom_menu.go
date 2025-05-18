@@ -1,11 +1,9 @@
 package output
 
-import (
-	"github.com/robertoseba/gennie/internal/core/llm_providers/base"
-)
+import "github.com/robertoseba/gennie/internal/core/llmproviders/factory"
 
 // TODO: create in menu a NewMenu that receives titles and items[names, values] and returns a menu
-func MenuModel(m map[base.ModelEnum]string, selected base.ModelEnum) base.ModelEnum {
+func MenuModel(m map[factory.ModelEnum]string, selected factory.ModelEnum) factory.ModelEnum {
 	menu := NewMenu("Select a model:")
 
 	idxSelected := 0
@@ -18,7 +16,7 @@ func MenuModel(m map[base.ModelEnum]string, selected base.ModelEnum) base.ModelE
 		idx++
 	}
 
-	return base.ModelEnum(menu.Display(idxSelected))
+	return factory.ModelEnum(menu.Display(idxSelected))
 }
 
 func MenuProfile(profiles map[string]string, selected string) string {

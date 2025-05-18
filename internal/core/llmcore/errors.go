@@ -1,4 +1,4 @@
-package base
+package llmcore
 
 import "errors"
 

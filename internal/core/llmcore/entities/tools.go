@@ -1,4 +1,4 @@
-package base
+package entities
 
 import (
 	"encoding/json"
@@ -24,7 +24,7 @@ type ToolResult struct {
 	Error     error
 }
 
-func NewToolResponseFrom(modelResponse *ModelResponse, toolResult []byte) *ToolResult {
+func NewToolResponseFrom(modelResponse *LlmResponse, toolResult []byte) *ToolResult {
 	return &ToolResult{
 		ID:        modelResponse.FunctionCall.ID,
 		Name:      modelResponse.FunctionCall.Name,
@@ -34,7 +34,7 @@ func NewToolResponseFrom(modelResponse *ModelResponse, toolResult []byte) *ToolR
 	}
 }
 
-func NewToolResponseError(modelResponse *ModelResponse, err error) *ToolResult {
+func NewToolResponseError(modelResponse *LlmResponse, err error) *ToolResult {
 	return &ToolResult{
 		ID:     modelResponse.FunctionCall.ID,
 		Name:   modelResponse.FunctionCall.Name,

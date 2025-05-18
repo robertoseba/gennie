@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/llm_providers/base"
+	"github.com/robertoseba/gennie/internal/core/llmproviders/base"
 	"github.com/robertoseba/gennie/internal/infra/repositories/mocks"
 	"github.com/stretchr/testify/require"
 )

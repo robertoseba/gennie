@@ -7,7 +7,7 @@ import (
 
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/robertoseba/gennie/internal/core/llm_providers/base"
+	"github.com/robertoseba/gennie/internal/core/llmcore/entities"
 )
 
 type McpClient struct {
@@ -42,19 +42,19 @@ func (c *McpClient) Close() {
 	c.client.Close()
 }
 
-func (c *McpClient) ListTools(ctx context.Context) ([]base.Tool, error) {
+func (c *McpClient) ListTools(ctx context.Context) ([]entities.Tool, error) {
 	toolsRequest := mcp.ListToolsRequest{}
 	mcpToolsResponse, err := c.client.ListTools(ctx, toolsRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	var toolItems []base.Tool
+	var toolItems []entities.Tool
 	for _, t := range mcpToolsResponse.Tools {
-		toolItem := base.Tool{
+		toolItem := entities.Tool{
 			Name:        t.Name,
 			Description: t.Description,
-			InputSchema: base.ToolInputSchema{
+			InputSchema: entities.ToolInputSchema{
 				Properties: t.InputSchema.Properties,
 				Required:   t.InputSchema.Required,
 			},

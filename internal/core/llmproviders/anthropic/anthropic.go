@@ -8,7 +8,12 @@ import (
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/llm_providers/base"
+	"github.com/robertoseba/gennie/internal/core/llmcore/entities"
+)
+
+const (
+	ExportedModelSlug        = "sonnet"
+	ExportedModelDescription = "Claude Sonnet 3.7"
 )
 
 type provider struct {
@@ -23,7 +28,7 @@ func NewProvider(apiKey string, model string, httpClient *http.Client) *provider
 		httpClient = http.DefaultClient
 	}
 
-	if model == "" || model == base.ClaudeSonnet.Slug() {
+	if model == "" || model == ExportedModelSlug {
 		model = anthropic.ModelClaude3_7SonnetLatest
 	}
 
@@ -42,12 +47,12 @@ func (p *provider) SetSystemPrompt(systemPrompt string) {
 	p.systemPrompt = systemPrompt
 }
 
-func (p *provider) SetTools(tools []base.Tool) {
+func (p *provider) SetTools(tools []entities.Tool) {
 	p.tools = convertToolsToProvider(tools)
 }
 
-func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []base.ToolResult) <-chan base.ModelResponse {
-	output := make(chan base.ModelResponse, 10)
+func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []entities.ToolResult) <-chan entities.LlmResponse {
+	output := make(chan entities.LlmResponse, 10)
 
 	go func() {
 		defer close(output)
@@ -89,18 +94,18 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			case anthropic.ContentBlockDeltaEvent:
 				switch deltaVariant := eventVariant.Delta.AsAny().(type) {
 				case anthropic.TextDelta:
-					output <- base.ModelResponse{
+					output <- entities.LlmResponse{
 						Text:       deltaVariant.Text,
 						Error:      nil,
-						StopReason: base.StopReasonNone,
+						StopReason: entities.StopReasonNone,
 					}
 				}
 			}
 			if stream.Err() != nil {
-				output <- base.ModelResponse{
+				output <- entities.LlmResponse{
 					Text:       "something went wrong!!",
 					Error:      stream.Err(),
-					StopReason: base.StopReasonError,
+					StopReason: entities.StopReasonError,
 				}
 			}
 		}

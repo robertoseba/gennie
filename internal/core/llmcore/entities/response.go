@@ -1,4 +1,4 @@
-package base
+package entities
 
 import "encoding/json"
 
@@ -12,6 +12,7 @@ const (
 	ModelInfo       ResponseType = "model_info"
 	ProfileInfo     ResponseType = "profile_info"
 	ApprovalRequest ResponseType = "approval_request"
+	LlmAnswer       ResponseType = "llm_answer"
 )
 
 const (
@@ -31,7 +32,7 @@ type CompleteResponse struct {
 
 // This is the response converted from a providers response
 // Every provider should convert their response to this base response
-type ModelResponse struct {
+type LlmResponse struct {
 	Text         string
 	Error        error
 	StopReason   StopReason

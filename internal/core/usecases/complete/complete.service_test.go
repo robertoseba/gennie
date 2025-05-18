@@ -6,7 +6,8 @@ import (
 
 	"github.com/robertoseba/gennie/internal/core/config"
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/llm_providers/base"
+	"github.com/robertoseba/gennie/internal/core/llmcore"
+	"github.com/robertoseba/gennie/internal/core/llmproviders/factory"
 	"github.com/robertoseba/gennie/internal/core/profile"
 	apimock "github.com/robertoseba/gennie/internal/infra/apiclient/mocks"
 	"github.com/robertoseba/gennie/internal/infra/repositories/mocks"
@@ -17,7 +18,7 @@ import (
 func TestCompleteService(t *testing.T) {
 	t.Run("completes the conversation with answers from the API", func(t *testing.T) {
 		mockDeps := NewMockDeps()
-		mockDeps.WithActiveConversation(conversation.NewConversation(profile.DefaultProfileSlug, base.OpenAIMini.Slug()))
+		mockDeps.WithActiveConversation(conversation.NewConversation(profile.DefaultProfileSlug, factory.OpenAIMini.Slug()))
 		mockDeps.WithProfile(profile.DefaultProfile())
 		mockDeps.WithAPIAnswer("it's an Ai assistant")
 		service := mockDeps.createService()
@@ -25,7 +26,7 @@ func TestCompleteService(t *testing.T) {
 		outputChan, err := service.Execute(&InputDTO{
 			Question:    "What is gennie?",
 			ProfileSlug: profile.DefaultProfileSlug,
-			ModelSlug:   base.OpenAI.Slug(),
+			ModelSlug:   factory.OpenAI.Slug(),
 			IsFollowUp:  false,
 			AppendFile:  "",
 		})
@@ -42,7 +43,7 @@ func TestCompleteService(t *testing.T) {
 	// 	require.NoError(t, os.WriteFile("./testdata_temp.txt", []byte(filecontents), 0644))
 
 	// 	mockDeps := NewMockDeps()
-	// 	mockDeps.WithActiveConversation(conversation.NewConversation(profile.DefaultProfileSlug, base.DefaultModel.Slug()))
+	// 	mockDeps.WithActiveConversation(conversation.NewConversation(profile.DefaultProfileSlug, factory.DefaultModel.Slug()))
 	// 	mockDeps.WithProfile(profile.DefaultProfile())
 	// 	mockDeps.WithAPIAnswer("it's an Ai assistant")
 	// 	service := mockDeps.createService()
@@ -64,7 +65,7 @@ func TestCompleteService(t *testing.T) {
 
 	// t.Run("if model not provided, uses the model from the active conversation", func(t *testing.T) {
 	// 	mockDeps := NewMockDeps()
-	// 	mockDeps.WithActiveConversation(conversation.NewConversation(profile.DefaultProfileSlug, base.OpenAI.Slug()))
+	// 	mockDeps.WithActiveConversation(conversation.NewConversation(profile.DefaultProfileSlug, factory.OpenAI.Slug()))
 	// 	mockDeps.WithProfile(profile.DefaultProfile())
 	// 	mockDeps.WithAPIAnswer("it's an Ai assistant")
 	// 	service := mockDeps.createService()
@@ -79,12 +80,12 @@ func TestCompleteService(t *testing.T) {
 
 	// 	require.NoError(t, err)
 	// 	mockDeps.AssertExpectations(t)
-	// 	require.Equal(t, base.OpenAI.Slug(), returnedConv.ModelSlug)
+	// 	require.Equal(t, factory.OpenAI.Slug(), returnedConv.ModelSlug)
 	// })
 
 	// t.Run("if profile not provided, uses the profile from the active conversation", func(t *testing.T) {
 	// 	mockDeps := NewMockDeps()
-	// 	mockDeps.WithActiveConversation(conversation.NewConversation("test-profile", base.OpenAI.Slug()))
+	// 	mockDeps.WithActiveConversation(conversation.NewConversation("test-profile", factory.OpenAI.Slug()))
 	// 	mockDeps.WithProfile(&profile.Profile{
 	// 		Slug: "test-profile",
 	// 		Name: "test profile",
@@ -107,7 +108,7 @@ func TestCompleteService(t *testing.T) {
 	// })
 	// t.Run("when model is inputed replaces the model in active conversation", func(t *testing.T) {
 	// 	mockDeps := NewMockDeps()
-	// 	mockDeps.WithActiveConversation(conversation.NewConversation(profile.DefaultProfileSlug, base.OpenAI.Slug()))
+	// 	mockDeps.WithActiveConversation(conversation.NewConversation(profile.DefaultProfileSlug, factory.OpenAI.Slug()))
 	// 	mockDeps.WithProfile(&profile.Profile{
 	// 		Slug: "test-profile",
 	// 		Name: "test profile",
@@ -131,7 +132,7 @@ func TestCompleteService(t *testing.T) {
 
 	// t.Run("when profile is inputed replaces the profile in active conversation", func(t *testing.T) {
 	// 	mockDeps := NewMockDeps()
-	// 	mockDeps.WithActiveConversation(conversation.NewConversation(profile.DefaultProfileSlug, base.OpenAI.Slug()))
+	// 	mockDeps.WithActiveConversation(conversation.NewConversation(profile.DefaultProfileSlug, factory.OpenAI.Slug()))
 	// 	mockDeps.WithProfile(&profile.Profile{
 	// 		Slug: "test-profile",
 	// 		Name: "test profile",
@@ -155,7 +156,7 @@ func TestCompleteService(t *testing.T) {
 
 	// t.Run("when input is a not set as follow up question, creates a new conversation", func(t *testing.T) {
 	// 	mockDeps := NewMockDeps()
-	// 	oldConversation := conversation.NewConversation(profile.DefaultProfileSlug, base.OpenAI.Slug())
+	// 	oldConversation := conversation.NewConversation(profile.DefaultProfileSlug, factory.OpenAI.Slug())
 	// 	oldConversation.NewQuestion("previous question")
 	// 	oldConversation.AnswerLastQuestion("previous answer")
 	// 	mockDeps.WithActiveConversation(oldConversation)
@@ -179,7 +180,7 @@ func TestCompleteService(t *testing.T) {
 
 	// t.Run("when input is a follow up question, appends the question to the conversation", func(t *testing.T) {
 	// 	mockDeps := NewMockDeps()
-	// 	oldConversation := conversation.NewConversation(profile.DefaultProfileSlug, base.OpenAI.Slug())
+	// 	oldConversation := conversation.NewConversation(profile.DefaultProfileSlug, factory.OpenAI.Slug())
 	// 	oldConversation.NewQuestion("previous question")
 	// 	oldConversation.AnswerLastQuestion("previous answer")
 	// 	mockDeps.WithActiveConversation(oldConversation)
@@ -208,7 +209,7 @@ func TestCompleteService(t *testing.T) {
 	// //Error Handling
 	t.Run("returns an error if cant find profile", func(t *testing.T) {
 		mockDeps := NewMockDeps()
-		mockDeps.WithActiveConversation(conversation.NewConversation(profile.DefaultProfileSlug, base.OpenAI.Slug()))
+		mockDeps.WithActiveConversation(conversation.NewConversation(profile.DefaultProfileSlug, factory.OpenAI.Slug()))
 		mockDeps.WithAPIAnswer("it's an Ai assistant")
 		mockDeps.mockProfileRepo.On("FindBySlug", "invalid-profile").Return(nil, errors.New("Invalid"))
 		service := mockDeps.createService()
@@ -226,7 +227,7 @@ func TestCompleteService(t *testing.T) {
 
 	t.Run("returns an error if cant find model", func(t *testing.T) {
 		mockDeps := NewMockDeps()
-		mockDeps.WithActiveConversation(conversation.NewConversation(profile.DefaultProfileSlug, base.OpenAI.Slug()))
+		mockDeps.WithActiveConversation(conversation.NewConversation(profile.DefaultProfileSlug, factory.OpenAI.Slug()))
 		mockDeps.WithAPIAnswer("it's an Ai assistant")
 		mockDeps.WithProfile(profile.DefaultProfile())
 		service := mockDeps.createService()
@@ -239,7 +240,7 @@ func TestCompleteService(t *testing.T) {
 			AppendFile:  "",
 		})
 
-		require.ErrorIs(t, err, base.ErrModelNotFound)
+		require.ErrorIs(t, err, llmcore.ErrModelNotFound)
 	})
 }
 

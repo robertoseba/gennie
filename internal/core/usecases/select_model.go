@@ -2,7 +2,7 @@ package usecases
 
 import (
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/llm_providers/base"
+	"github.com/robertoseba/gennie/internal/core/llmproviders/factory"
 )
 
 type SelectModelService struct {
@@ -15,11 +15,11 @@ func NewSelectModelService(conversationRepo conversation.IConversationRepository
 	}
 }
 
-func (s *SelectModelService) ListAll() map[base.ModelEnum]string {
-	return base.ListModels()
+func (s *SelectModelService) ListAll() map[factory.ModelEnum]string {
+	return factory.ListModels()
 }
 
-func (s *SelectModelService) SetAsActive(model base.ModelEnum) error {
+func (s *SelectModelService) SetAsActive(model factory.ModelEnum) error {
 	conv, err := s.conversationRepo.LoadActive()
 	if err != nil {
 		return err
