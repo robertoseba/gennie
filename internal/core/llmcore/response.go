@@ -1,4 +1,4 @@
-package entities
+package llmcore
 
 import "encoding/json"
 

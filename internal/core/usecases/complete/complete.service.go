@@ -12,14 +12,13 @@ import (
 	"github.com/robertoseba/gennie/internal/core/config"
 	"github.com/robertoseba/gennie/internal/core/conversation"
 	"github.com/robertoseba/gennie/internal/core/llmcore"
-	"github.com/robertoseba/gennie/internal/core/llmcore/entities"
 	"github.com/robertoseba/gennie/internal/core/llmproviders/factory"
 	"github.com/robertoseba/gennie/internal/core/profile"
 )
 
 type toolDetails struct {
 	mcpClient        *McpClient
-	tool             entities.Tool
+	tool             llmcore.Tool
 	requiresApproval bool
 }
 
@@ -53,7 +52,7 @@ func NewCompleteService(
 	}
 }
 
-func (s *CompleteService) Execute(input *InputDTO) (<-chan entities.CompleteResponse, error) {
+func (s *CompleteService) Execute(input *InputDTO) (<-chan llmcore.CompleteResponse, error) {
 	var conv *conversation.Conversation
 	var err error
 
@@ -64,28 +63,28 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan entities.CompleteResp
 
 	model.SetSystemPrompt(profile.Data)
 
-	modelResponseChan := make(chan entities.CompleteResponse)
+	modelResponseChan := make(chan llmcore.CompleteResponse)
 	outputChan := s.pipeToSaveConversation(conv, modelResponseChan)
 
 	go func() {
 		defer close(modelResponseChan)
 
-		outputChan <- entities.CompleteResponse{Data: conv.ModelSlug, Type: entities.ModelInfo, Err: nil}
-		outputChan <- entities.CompleteResponse{Data: profile.Name, Type: entities.ProfileInfo, Err: nil}
+		outputChan <- llmcore.CompleteResponse{Data: conv.ModelSlug, Type: llmcore.ModelInfo, Err: nil}
+		outputChan <- llmcore.CompleteResponse{Data: profile.Name, Type: llmcore.ProfileInfo, Err: nil}
 		if len(profile.McpServers) > 0 {
-			outputChan <- entities.CompleteResponse{Data: fmt.Sprintf("Loading MCP Servers..."), Type: entities.LoadingInfo, Err: nil}
+			outputChan <- llmcore.CompleteResponse{Data: fmt.Sprintf("Loading MCP Servers..."), Type: llmcore.LoadingInfo, Err: nil}
 			mcpTools, err := startMcpServers(profile)
 			if err != nil {
-				outputChan <- entities.CompleteResponse{Err: err}
+				outputChan <- llmcore.CompleteResponse{Err: err}
 			}
 
 			s.tools = mcpTools
-			var modelTools []entities.Tool
+			var modelTools []llmcore.Tool
 			for toolName := range s.tools {
-				tool := entities.Tool{
+				tool := llmcore.Tool{
 					Name:        s.tools[toolName].tool.Name,
 					Description: s.tools[toolName].tool.Description,
-					InputSchema: entities.ToolInputSchema{
+					InputSchema: llmcore.ToolInputSchema{
 						Properties: s.tools[toolName].tool.InputSchema.Properties,
 					},
 				}
@@ -95,23 +94,23 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan entities.CompleteResp
 		}
 
 		ctx := context.Background()
-		toolResults := make([]entities.ToolResult, 0)
+		toolResults := make([]llmcore.ToolResult, 0)
 
 		// Keeps calling the model while it needs to return function calls
-		outputChan <- entities.CompleteResponse{Data: "Asking the model...", Type: entities.LoadingInfo, Err: nil}
+		outputChan <- llmcore.CompleteResponse{Data: "Asking the model...", Type: llmcore.LoadingInfo, Err: nil}
 		for {
 			resp := complete(ctx, model, conv, toolResults, modelResponseChan)
 
 			// If does not need to send function call back to model than breaks out of the loop
-			if resp.StopReason != entities.StopReasonTools {
+			if resp.StopReason != llmcore.StopReasonTools {
 				break
 			}
 
 			if s.tools[resp.FunctionCall.Name].requiresApproval {
-				outputChan <- entities.CompleteResponse{Data: fmt.Sprintf("Can I run this tool: %s with parameters (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: entities.ApprovalRequest, Err: nil}
+				outputChan <- llmcore.CompleteResponse{Data: fmt.Sprintf("Can I run this tool: %s with parameters (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: llmcore.ApprovalRequest, Err: nil}
 			}
 
-			outputChan <- entities.CompleteResponse{Data: fmt.Sprintf("Using tool: %s -> (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: entities.LoadingInfo, Err: nil}
+			outputChan <- llmcore.CompleteResponse{Data: fmt.Sprintf("Using tool: %s -> (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: llmcore.LoadingInfo, Err: nil}
 			result := s.callTool(&resp)
 			toolResults = append(toolResults, *result)
 		}
@@ -120,8 +119,8 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan entities.CompleteResp
 	return outputChan, nil
 }
 
-func (s *CompleteService) pipeToSaveConversation(conv *conversation.Conversation, inputChan <-chan entities.CompleteResponse) chan entities.CompleteResponse {
-	outputChan := make(chan entities.CompleteResponse)
+func (s *CompleteService) pipeToSaveConversation(conv *conversation.Conversation, inputChan <-chan llmcore.CompleteResponse) chan llmcore.CompleteResponse {
+	outputChan := make(chan llmcore.CompleteResponse)
 
 	go func() {
 		defer close(outputChan)
@@ -135,29 +134,29 @@ func (s *CompleteService) pipeToSaveConversation(conv *conversation.Conversation
 		}
 		err := conv.AnswerLastQuestion(convBuffer.String())
 		if err != nil {
-			outputChan <- entities.CompleteResponse{Err: err}
+			outputChan <- llmcore.CompleteResponse{Err: err}
 		}
 		err = s.conversationRepo.SaveAsActive(conv)
 		if err != nil {
-			outputChan <- entities.CompleteResponse{Err: err}
+			outputChan <- llmcore.CompleteResponse{Err: err}
 		}
 	}()
 
 	return outputChan
 }
 
-func complete(ctx context.Context, model llmcore.LlmProvider, conv *conversation.Conversation, toolResults []entities.ToolResult, outputChan chan<- entities.CompleteResponse) entities.LlmResponse {
+func complete(ctx context.Context, model llmcore.LlmProvider, conv *conversation.Conversation, toolResults []llmcore.ToolResult, outputChan chan<- llmcore.CompleteResponse) llmcore.LlmResponse {
 	respChan := model.Complete(ctx, conv, toolResults)
 
-	var toolCallRequest entities.LlmResponse
+	var toolCallRequest llmcore.LlmResponse
 
 	for modelResponse := range respChan {
-		if modelResponse.StopReason == entities.StopReasonTools {
+		if modelResponse.StopReason == llmcore.StopReasonTools {
 			toolCallRequest = modelResponse
 			continue
 		}
 
-		outputChan <- entities.CompleteResponse{Data: modelResponse.Text, Err: modelResponse.Error}
+		outputChan <- llmcore.CompleteResponse{Data: modelResponse.Text, Err: modelResponse.Error}
 	}
 
 	return toolCallRequest
@@ -168,9 +167,9 @@ func readFile(filePath string) (string, error) {
 	return string(content), err
 }
 
-func (s *CompleteService) callTool(modelResponse *entities.LlmResponse) *entities.ToolResult {
+func (s *CompleteService) callTool(modelResponse *llmcore.LlmResponse) *llmcore.ToolResult {
 	if _, ok := s.tools[modelResponse.FunctionCall.Name]; !ok {
-		return entities.NewToolResponseError(modelResponse, fmt.Errorf("tool %s not found", modelResponse.FunctionCall.Name))
+		return llmcore.NewToolResponseError(modelResponse, fmt.Errorf("tool %s not found", modelResponse.FunctionCall.Name))
 	}
 
 	var args map[string]any
@@ -178,16 +177,16 @@ func (s *CompleteService) callTool(modelResponse *entities.LlmResponse) *entitie
 		args = make(map[string]any)
 		err := json.Unmarshal([]byte(modelResponse.FunctionCall.Arguments), &args)
 		if err != nil {
-			return entities.NewToolResponseError(nil, err)
+			return llmcore.NewToolResponseError(nil, err)
 		}
 	}
 
 	toolResponse, err := s.tools[modelResponse.FunctionCall.Name].mcpClient.ExecTool(context.TODO(), modelResponse.FunctionCall.Name, args)
 	if err != nil {
-		return entities.NewToolResponseError(nil, err)
+		return llmcore.NewToolResponseError(nil, err)
 	}
 
-	return entities.NewToolResponseFrom(modelResponse, toolResponse)
+	return llmcore.NewToolResponseFrom(modelResponse, toolResponse)
 }
 
 func startMcpServers(profile *profile.Profile) (map[string]toolDetails, error) {

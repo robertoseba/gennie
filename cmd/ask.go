@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/robertoseba/gennie/internal/core/llmcore/entities"
+	"github.com/robertoseba/gennie/internal/core/llmcore"
 	"github.com/robertoseba/gennie/internal/core/usecases/complete"
 	"github.com/robertoseba/gennie/internal/output"
 	"github.com/spf13/cobra"
@@ -69,13 +69,13 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 
 				if spinner.IsRunning() {
 					switch response.Type {
-					case entities.LoadingInfo:
+					case llmcore.LoadingInfo:
 						spinner.SetMessage(response.Data)
-					case entities.ModelInfo:
+					case llmcore.ModelInfo:
 						modelInfo = response.Data
-					case entities.ProfileInfo:
+					case llmcore.ProfileInfo:
 						profileInfo = response.Data
-					case entities.ApprovalRequest:
+					case llmcore.ApprovalRequest:
 						// TODO: what to do if this is not a terminal?
 						spinner.Stop()
 						cmd.Println("Please approve the tool use to continue:")
@@ -89,13 +89,13 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 					}
 				} else {
 					switch response.Type {
-					case entities.ApprovalRequest:
+					case llmcore.ApprovalRequest:
 						cmd.Println()
 						p.Print("\nPlease approve the tool use to continue:", output.Yellow)
 						cmd.Println(response.Data)
 						p.Print("\nIf you want to cancel the request, please use Ctrl+C.", output.Red)
 						bufio.NewReader(os.Stdin).ReadBytes('\n')
-					case entities.LoadingInfo:
+					case llmcore.LoadingInfo:
 						cmd.Println()
 						spinner = output.NewSpinner(response.Data)
 						spinner.Start()
