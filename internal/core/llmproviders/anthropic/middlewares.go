@@ -24,7 +24,7 @@ func NewErrorMiddleware(output io.Writer) option.Middleware {
 		res, err = next(req)
 
 		if res.StatusCode != http.StatusOK || err != nil {
-			fmt.Fprintf(output, "Response: %s %s\n", res.Status, req.URL)
+			fmt.Fprintf(output, "\nResponse: %s %s\n", res.Status, req.URL)
 			var respBody []byte
 			if res != nil {
 				respBody, err = io.ReadAll(res.Body)
