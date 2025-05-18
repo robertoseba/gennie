@@ -10,12 +10,12 @@ import (
 
 func NewModel(modelEnum ModelEnum, httpClient *http.Client, config config.Config) llmcore.LlmProvider {
 	switch modelEnum {
+	case ClaudeSonnet:
+		return anthropic.NewProvider(config.APIKeys.AnthropicApiKey, modelEnum.Slug(), httpClient)
 	// case OpenAI:
 	// 	return openai.NewProvider(m.Slug(), config.APIKeys.OpenAiApiKey)
 	// case OpenAIMini:
 	// 	return openai.NewProvider(m.Slug(), config.APIKeys.OpenAiApiKey)
-	case ClaudeSonnet:
-		return anthropic.NewProvider(config.APIKeys.AnthropicApiKey, modelEnum.Slug(), httpClient)
 	// case Maritaca:
 	// 	return maritaca.NewProvider(m.Slug(), config.APIKeys.MaritacaApiKey)
 	// case Groq:

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/llmproviders/base"
+	"github.com/robertoseba/gennie/internal/core/llmproviders/factory"
 	"github.com/robertoseba/gennie/internal/infra/repositories/mocks"
 	"github.com/stretchr/testify/require"
 )
@@ -13,7 +13,7 @@ func TestConversationService(t *testing.T) {
 	// _, repo := setupActiveConversation(t)
 	t.Run("Saves conversation to file", func(t *testing.T) {
 		mockedRepo := mocks.NewMockConversationRepository()
-		conv := conversation.NewConversation("profile-slug", base.DefaultModel.Slug())
+		conv := conversation.NewConversation("profile-slug", factory.DefaultModel.Slug())
 		mockedRepo.On("LoadActive").Return(conv, nil)
 		mockedRepo.On("ExportToFile", conv, "./conversation.json").Return(nil)
 
@@ -25,7 +25,7 @@ func TestConversationService(t *testing.T) {
 
 	t.Run("Loads conversation from file", func(t *testing.T) {
 		mockedRepo := mocks.NewMockConversationRepository()
-		conv := conversation.NewConversation("profile-slug", base.DefaultModel.Slug())
+		conv := conversation.NewConversation("profile-slug", factory.DefaultModel.Slug())
 		mockedRepo.On("LoadFromFile", "./conversation.json").Return(conv, nil)
 		mockedRepo.On("SaveAsActive", conv).Return(nil)
 
@@ -37,7 +37,7 @@ func TestConversationService(t *testing.T) {
 
 	t.Run("Retrieves last conversation", func(t *testing.T) {
 		mockedRepo := mocks.NewMockConversationRepository()
-		conv := conversation.NewConversation("profile-slug", base.DefaultModel.Slug())
+		conv := conversation.NewConversation("profile-slug", factory.DefaultModel.Slug())
 		conv.NewQuestion("What is your name?")
 		conv.AnswerLastQuestion("My name is Assistant")
 		mockedRepo.On("LoadActive").Return(conv, nil)
@@ -52,7 +52,7 @@ func TestConversationService(t *testing.T) {
 
 	t.Run("If last conversation is empty returns null", func(t *testing.T) {
 		mockedRepo := mocks.NewMockConversationRepository()
-		conv := conversation.NewConversation("profile-slug", base.DefaultModel.Slug())
+		conv := conversation.NewConversation("profile-slug", factory.DefaultModel.Slug())
 		mockedRepo.On("LoadActive").Return(conv, nil)
 
 		service := NewConversationService(mockedRepo)

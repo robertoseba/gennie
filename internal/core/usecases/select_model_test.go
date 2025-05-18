@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/llmproviders/base"
+	"github.com/robertoseba/gennie/internal/core/llmproviders/factory"
 	"github.com/robertoseba/gennie/internal/infra/repositories/mocks"
 	"github.com/stretchr/testify/require"
 )
@@ -14,7 +14,7 @@ func TestModelListAll(t *testing.T) {
 	m := service.ListAll()
 
 	require.Len(t, m, 6)
-	require.Equal(t, "GPT-4o-mini (OPENAI)", m[base.OpenAIMini])
+	require.Equal(t, "GPT-4o-mini (OPENAI)", m[factory.OpenAIMini])
 }
 
 func TestSetAsActive(t *testing.T) {
@@ -28,9 +28,9 @@ func TestSetAsActive(t *testing.T) {
 	repo.On("SaveAsActive", activeConv).Return(nil)
 
 	service := NewSelectModelService(repo)
-	err := service.SetAsActive(base.Groq)
+	err := service.SetAsActive(factory.Groq)
 
 	require.NoError(t, err)
-	require.Equal(t, base.Groq.Slug(), activeConv.ModelSlug)
+	require.Equal(t, factory.Groq.Slug(), activeConv.ModelSlug)
 	repo.AssertExpectations(t)
 }
