@@ -13,6 +13,7 @@ const (
 	ProfileInfo     ResponseType = "profile_info"
 	ApprovalRequest ResponseType = "approval_request"
 	LlmAnswer       ResponseType = "llm_answer"
+	ToolResultInfo  ResponseType = "tool_result_info"
 )
 
 const (

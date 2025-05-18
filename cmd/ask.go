@@ -75,6 +75,14 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 						modelInfo = response.Data
 					case llmcore.ProfileInfo:
 						profileInfo = response.Data
+					case llmcore.ToolResultInfo:
+						// TODO: think of a better way to present this
+						spinner.Stop()
+						cmd.Println()
+						p.Print("Tool result:", output.Yellow)
+						cmd.Println(response.Data)
+						spinner.Start()
+
 					case llmcore.ApprovalRequest:
 						// TODO: what to do if this is not a terminal?
 						spinner.Stop()

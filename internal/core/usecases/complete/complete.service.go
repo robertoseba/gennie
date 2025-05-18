@@ -112,6 +112,8 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan llmcore.CompleteRespo
 
 			outputChan <- llmcore.CompleteResponse{Data: fmt.Sprintf("Using tool: %s -> (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: llmcore.LoadingInfo, Err: nil}
 			result := s.callTool(&resp)
+			outputChan <- llmcore.CompleteResponse{Data: fmt.Sprintf("Tool %s returned: %s", resp.FunctionCall.Name, result.Result), Type: llmcore.ToolResultInfo, Err: nil}
+
 			toolResults = append(toolResults, *result)
 		}
 	}()
