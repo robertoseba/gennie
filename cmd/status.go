@@ -26,6 +26,7 @@ func NewStatusCmd(configRepo config.IConfigRepository, p *output.Printer) *cobra
 			apiKeyStatus("Anthropic API Key", config.APIKeys.AnthropicApiKey, p)
 			apiKeyStatus("Maritaca API Key", config.APIKeys.MaritacaApiKey, p)
 			apiKeyStatus("Groq API Key", config.APIKeys.GroqApiKey, p)
+			apiKeyStatus("Gemini API Key", config.APIKeys.GeminiApiKey, p)
 
 			p.PrintLine(output.Yellow)
 			p.Print("Ollama", output.Cyan)

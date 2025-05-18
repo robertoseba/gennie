@@ -13,6 +13,7 @@ func TestNewConfig(t *testing.T) {
 	require.Equal(t, "", c.APIKeys.AnthropicApiKey)
 	require.Equal(t, "", c.APIKeys.MaritacaApiKey)
 	require.Equal(t, "", c.APIKeys.GroqApiKey)
+	require.Equal(t, "", c.APIKeys.GeminiApiKey)
 	require.Equal(t, "", c.Ollama.Host)
 	require.Equal(t, "", c.Ollama.Model)
 	require.True(t, c.IsTerminalPretty)

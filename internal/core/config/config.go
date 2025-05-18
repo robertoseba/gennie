@@ -17,6 +17,7 @@ type ProviderApiKeys struct {
 	AnthropicApiKey string
 	MaritacaApiKey  string
 	GroqApiKey      string
+	GeminiApiKey    string
 }
 
 type OllamaConfig struct {
@@ -26,16 +27,6 @@ type OllamaConfig struct {
 
 func NewConfig() *Config {
 	return &Config{
-		APIKeys: ProviderApiKeys{
-			OpenAiApiKey:    "",
-			AnthropicApiKey: "",
-			MaritacaApiKey:  "",
-			GroqApiKey:      "",
-		},
-		Ollama: OllamaConfig{
-			Host:  "",
-			Model: "",
-		},
 		IsTerminalPretty:     true,
 		ConversationCacheDir: "",
 		ProfilesDirPath:      "",

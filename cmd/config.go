@@ -10,7 +10,6 @@ import (
 )
 
 func NewConfigCmd(configRepo config.IConfigRepository, p *output.Printer) *cobra.Command {
-
 	clearCmd := &cobra.Command{
 		Use:   "config",
 		Short: "Configures Gennie",
@@ -36,6 +35,7 @@ func configApiKeys(p *output.Printer, config *config.Config) {
 	config.APIKeys.AnthropicApiKey = askKey(p, "Anthropic", config.APIKeys.AnthropicApiKey)
 	config.APIKeys.MaritacaApiKey = askKey(p, "Maritaca", config.APIKeys.MaritacaApiKey)
 	config.APIKeys.GroqApiKey = askKey(p, "Groq", config.APIKeys.GroqApiKey)
+	config.APIKeys.GeminiApiKey = askKey(p, "Gemini", config.APIKeys.GeminiApiKey)
 }
 
 func askKey(p *output.Printer, key string, previousValue string) string {
