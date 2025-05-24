@@ -37,7 +37,7 @@ type LlmResponse struct {
 	Text         string
 	Error        error
 	StopReason   StopReason
-	FunctionCall FunctionCall
+	FunctionCall FunctionCall // TODO: maybe this should be an slice of function calls
 }
 
 type FunctionCall struct {

@@ -91,8 +91,9 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 				continue
 			}
 
+			textResponse := result.Candidates[0].Content.Parts[0].Text
 			response := llmcore.LlmResponse{
-				Text:       result.Text(),
+				Text:       textResponse,
 				StopReason: llmcore.StopReasonNone,
 			}
 
@@ -100,24 +101,19 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 				response.StopReason = llmcore.StopReasonEnd
 			}
 
-			if result.Candidates[0].Content.Parts[0].FunctionCall != nil {
+			functionCalls := result.FunctionCalls()
+			if len(functionCalls) > 0 {
 				response.StopReason = llmcore.StopReasonTools
-
-				args := result.Candidates[0].Content.Parts[0].FunctionCall.Args
-				argsBytes, err := json.Marshal(args)
-				if err != nil {
-					output <- llmcore.LlmResponse{
-						Error:      err,
-						Text:       "something went wrong",
-						StopReason: llmcore.StopReasonError,
+				for _, functionCall := range functionCalls {
+					argsBytes, err := json.Marshal(functionCall.Args)
+					if err != nil {
+						log.Printf("Error marshaling function call arguments: %v", err)
 					}
-					continue
-				}
-
-				response.FunctionCall = llmcore.FunctionCall{
-					ID:        result.Candidates[0].Content.Parts[0].FunctionCall.ID,
-					Name:      result.Candidates[0].Content.Parts[0].FunctionCall.Name,
-					Arguments: argsBytes,
+					response.FunctionCall = llmcore.FunctionCall{
+						ID:        functionCall.ID,
+						Name:      functionCall.Name,
+						Arguments: argsBytes,
+					}
 				}
 			}
 
@@ -130,8 +126,15 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 
 func addToolResultsToMessages(messages []*genai.Content, toolResults []llmcore.ToolResult) []*genai.Content {
 	for _, toolResult := range toolResults {
+		if toolResult.IsError() {
+			toolMessage := genai.NewContentFromFunctionResponse(toolResult.Name, map[string]any{"error": toolResult.Error.Error()}, genai.RoleUser)
+			messages = append(messages, toolMessage)
+			continue
+		}
+
+		geminiFormated := `{"output":` + string(toolResult.Result) + `}`
 		var mappedResult map[string]any
-		if err := json.Unmarshal(toolResult.Result, &mappedResult); err != nil {
+		if err := json.Unmarshal([]byte(geminiFormated), &mappedResult); err != nil {
 			log.Printf("Error marshaling tool result: %v", err)
 			continue
 		}
