@@ -3,7 +3,6 @@ package gemini
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -14,7 +13,7 @@ import (
 
 const (
 	ExportedModelSlug        = "gemini"
-	ExportedModelDescription = "Gemini Flash 2.0"
+	ExportedModelDescription = "Gemini Flash 2.5"
 )
 
 type provider struct {
@@ -26,7 +25,7 @@ type provider struct {
 
 func NewProvider(apiKey string, model string, httpClient *http.Client) *provider {
 	if model == "" || model == ExportedModelSlug {
-		model = "gemini-2.0-flash"
+		model = "gemini-2.5-flash-preview-05-20"
 	}
 
 	client, err := genai.NewClient(context.Background(), &genai.ClientConfig{
@@ -49,7 +48,7 @@ func (p *provider) SetSystemPrompt(systemPrompt string) {
 }
 
 func (p *provider) SetTools(tools []llmcore.Tool) {
-	// p.tools = convertToolsToProvider(tools)
+	p.tools = convertToolsToProvider(tools)
 }
 
 func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []llmcore.ToolResult) <-chan llmcore.LlmResponse {
@@ -74,76 +73,99 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			messages = addToolResultsToMessages(messages, toolResults)
 		}
 
-		chat, err := p.client.Chats.Create(
-			ctx,
-			"gemini-2.0-flash",
-			&genai.GenerateContentConfig{
-				SystemInstruction: &genai.Content{Parts: []*genai.Part{{Text: p.systemPrompt}}},
-				Tools:             []*genai.Tool{
-					// {FunctionDeclarations: p.tools},
-				},
+		config := &genai.GenerateContentConfig{
+			SystemInstruction: &genai.Content{Parts: []*genai.Part{{Text: p.systemPrompt}}},
+			Tools: []*genai.Tool{
+				{FunctionDeclarations: p.tools},
 			},
-			messages,
-		)
-		if err != nil {
-			output <- llmcore.LlmResponse{
-				Error:      err,
-				Text:       "something went wrong",
-				StopReason: llmcore.StopReasonError,
-			}
 		}
+		streamRes := p.client.Models.GenerateContentStream(ctx, p.model, messages, config)
 
-		for result, err := range chat.SendMessageStream(ctx, genai.Part{Text: conversation.LastQuestion()}) {
+		for result, err := range streamRes {
 			if err != nil {
 				output <- llmcore.LlmResponse{
 					Error:      err,
 					Text:       "something went wrong",
 					StopReason: llmcore.StopReasonError,
 				}
+				continue
 			}
-			debugPrint(result)
-			// output <- llmcore.LlmResponse{
-			// 	Text:       result.Text(),
-			// 	StopReason: llmcore.StopReasonNone,
-			// }
+
+			response := llmcore.LlmResponse{
+				Text:       result.Text(),
+				StopReason: llmcore.StopReasonNone,
+			}
+
+			if result.Candidates[0].FinishReason == genai.FinishReasonStop {
+				response.StopReason = llmcore.StopReasonEnd
+			}
+
+			if result.Candidates[0].Content.Parts[0].FunctionCall != nil {
+				response.StopReason = llmcore.StopReasonTools
+
+				args := result.Candidates[0].Content.Parts[0].FunctionCall.Args
+				argsBytes, err := json.Marshal(args)
+				if err != nil {
+					output <- llmcore.LlmResponse{
+						Error:      err,
+						Text:       "something went wrong",
+						StopReason: llmcore.StopReasonError,
+					}
+					continue
+				}
+
+				response.FunctionCall = llmcore.FunctionCall{
+					ID:        result.Candidates[0].Content.Parts[0].FunctionCall.ID,
+					Name:      result.Candidates[0].Content.Parts[0].FunctionCall.Name,
+					Arguments: argsBytes,
+				}
+			}
+
+			output <- response
 		}
 	}()
 
 	return output
 }
 
-func debugPrint[T any](r *T) {
-	// Marshal the result to JSON.
-	response, err := json.MarshalIndent(*r, "", "  ")
-	if err != nil {
-		log.Fatal(err)
+func addToolResultsToMessages(messages []*genai.Content, toolResults []llmcore.ToolResult) []*genai.Content {
+	for _, toolResult := range toolResults {
+		var mappedResult map[string]any
+		if err := json.Unmarshal(toolResult.Result, &mappedResult); err != nil {
+			log.Printf("Error marshaling tool result: %v", err)
+			continue
+		}
+
+		toolMessage := genai.NewContentFromFunctionResponse(toolResult.Name, mappedResult, genai.RoleUser)
+		messages = append(messages, toolMessage)
 	}
-	// Log the output.
-	fmt.Println(string(response))
+	return messages
 }
 
 func convertToolsToProvider(tools []llmcore.Tool) []*genai.FunctionDeclaration {
 	functions := make([]*genai.FunctionDeclaration, 0, len(tools))
 
-	// for i, tool := range tools {
-	//    genai.NewPartFromFunctionCall(tool.Name, args map[string]any)
-	// 	functions[i] = &genai.FunctionDeclaration{
-	// 		Name:        tool.Name,
-	// 		Description: tool.Description,
-	// 		Parameters: &genai.Schema{
-	// 			Type:       tool.InputSchema.Type,
-	// 			Properties: tool.InputSchema.Properties,
-	// 			Required:   tool.InputSchema.Required,
-	// 		},
-	// 	}
-	// }
-	return functions
-}
+	for _, tool := range tools {
+		byteSchema, err := json.Marshal(tool.InputSchema)
+		if err != nil {
+			log.Printf("Error marshaling tool input schema: %v", err)
+			continue
+		}
 
-func addToolResultsToMessages(messages []*genai.Content, toolResults []llmcore.ToolResult) []*genai.Content {
-	// for _, toolResult := range toolResults {
-	// 	toolMessage := genai.Newfun(toolResult.Result, genai.RoleUser)
-	// 	messages = append(messages, toolMessage)
-	// }
-	return messages
+		var schema *genai.Schema
+		err = json.Unmarshal(byteSchema, &schema)
+		if err != nil {
+			log.Printf("Error marshaling tool input schema: %v", err)
+			continue
+		}
+		schema.Type = genai.TypeObject
+
+		functionDec := &genai.FunctionDeclaration{
+			Name:        tool.Name,
+			Description: tool.Description,
+			Parameters:  schema,
+		}
+		functions = append(functions, functionDec)
+	}
+	return functions
 }
