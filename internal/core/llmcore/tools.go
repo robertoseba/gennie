@@ -16,6 +16,26 @@ type ToolInputSchema struct {
 	Required   []string               `json:"required,omitempty"`
 }
 
+func (t ToolInputSchema) MarshalJSON() ([]byte, error) {
+	m := make(map[string]interface{})
+	if t.Type == "" {
+		m["type"] = "object"
+	} else {
+		m["type"] = t.Type
+	}
+
+	// Marshal Properties to '{}' rather than `nil` when its length equals zero
+	if t.Properties != nil {
+		m["properties"] = t.Properties
+	}
+
+	if len(t.Required) > 0 {
+		m["required"] = t.Required
+	}
+
+	return json.Marshal(m)
+}
+
 type ToolResult struct {
 	ID        string // block id - function identifier returned in the ModelResponse->FunctionCall
 	Name      string

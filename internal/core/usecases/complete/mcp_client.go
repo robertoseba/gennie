@@ -55,6 +55,7 @@ func (c *McpClient) ListTools(ctx context.Context) ([]llmcore.Tool, error) {
 			Name:        t.Name,
 			Description: t.Description,
 			InputSchema: llmcore.ToolInputSchema{
+				Type:       t.InputSchema.Type,
 				Properties: t.InputSchema.Properties,
 				Required:   t.InputSchema.Required,
 			},

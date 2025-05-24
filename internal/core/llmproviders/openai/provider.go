@@ -1,136 +1,175 @@
 package openai
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
 
+	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/shared"
 	"github.com/robertoseba/gennie/internal/core/conversation"
+	"github.com/robertoseba/gennie/internal/core/llmcore"
 )
 
-type OpenAIModel struct {
-	model  string
-	apiKey string
+const (
+	ExportedModelSlug        = "gpt-4o"
+	ExportedModelDescription = "OpenAI GPT-4o"
+
+	ExportedModelSlug_Mini        = "gpt-4o-mini"
+	ExportedModelDescription_Mini = "OpenAI GPT-4o Mini"
+)
+
+type provider struct {
+	client       *openai.Client
+	model        string
+	systemPrompt string
+	tools        []openai.ChatCompletionToolParam
 }
 
-const roleUser = "user"
-const roleSystem = "system"
-const roleAssistant = "assistant"
+func NewProvider(apiKey string, model string, httpClient *http.Client) *provider {
+	// TODO: add middleware for debugging
+	client := openai.NewClient(option.WithAPIKey(apiKey), option.WithHTTPClient(httpClient))
 
-type message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-type prompt struct {
-	Model    string    `json:"model"`
-	Messages []message `json:"messages"`
-	Stream   bool      `json:"stream"`
-}
-
-type choice struct {
-	Message message `json:"message"`
-}
-type openAiResponse struct {
-	Choices []choice `json:"choices"`
-}
-
-type deltaStream struct {
-	Delta struct {
-		Content string `json:"content,omitempty"`
-	} `json:"delta"`
-}
-
-type streamResponse struct {
-	Choices []deltaStream `json:"choices"`
-}
-
-func NewProvider(modelName string, apiKey string) *OpenAIModel {
-	return &OpenAIModel{
-		model:  modelName,
-		apiKey: apiKey,
+	return &provider{
+		client: &client,
+		model:  model,
 	}
 }
 
-func (m *OpenAIModel) GetHeaders() map[string]string {
-
-	return map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", m.apiKey),
-		"Content-Type":  "application/json",
-	}
+func (p *provider) SetSystemPrompt(systemPrompt string) {
+	p.systemPrompt = systemPrompt
 }
 
-func (m *OpenAIModel) GetUrl() string {
-	return "https://api.openai.com/v1/chat/completions"
+func (p *provider) SetTools(tools []llmcore.Tool) {
+	p.tools = convertToolsToProvider(tools)
 }
 
-func (m *OpenAIModel) PreparePayload(conversation *conversation.Conversation, systemPrompt string, isStreamable bool) (string, error) {
-	p := prompt{
-		Model: m.model,
-		Messages: []message{
-			{
-				Role:    roleSystem,
-				Content: systemPrompt,
-			},
-		},
-		Stream: isStreamable,
-	}
+func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []llmcore.ToolResult) <-chan llmcore.LlmResponse {
+	output := make(chan llmcore.LlmResponse, 10)
 
-	for _, qa := range conversation.QAs {
-		p.Messages = append(p.Messages, message{
-			Role:    roleUser,
-			Content: qa.GetQuestion(),
+	go func() {
+		defer close(output)
+
+		messages := make([]openai.ChatCompletionMessageParamUnion, 0, conversation.Len()+len(toolResults))
+
+		for _, message := range conversation.QAs {
+			messages = append(messages, openai.UserMessage(message.GetQuestion()))
+			if message.HasAnswer() {
+				messages = append(messages, openai.AssistantMessage(message.GetAnswer()))
+			}
+		}
+
+		if len(toolResults) > 0 {
+			messages = addToolResultsToMessages(messages, toolResults)
+		}
+
+		stream := p.client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
+			Messages: messages,
+			Seed:     openai.Int(0),
+			Model:    p.model,
+			Tools:    p.tools,
 		})
-		if qa.HasAnswer() {
-			p.Messages = append(p.Messages, message{
-				Role:    roleAssistant,
-				Content: qa.GetAnswer(),
-			})
+		defer stream.Close()
+
+		acc := openai.ChatCompletionAccumulator{}
+
+		for stream.Next() {
+			chunk := stream.Current()
+			acc.AddChunk(chunk)
+
+			if tool, ok := acc.JustFinishedToolCall(); ok {
+				msg := acc.ChatCompletion.Choices[0].Message.ToParam()
+				b, _ := json.Marshal(msg)
+				fmt.Println("Tool call finished:", string(b))
+				output <- llmcore.LlmResponse{
+					Text:       chunk.Choices[0].Delta.Content,
+					Error:      nil,
+					StopReason: llmcore.StopReasonTools,
+					FunctionCall: llmcore.FunctionCall{
+						ID:        tool.ID,
+						Name:      tool.Name,
+						Arguments: []byte(tool.Arguments),
+					},
+				}
+			}
+
+			if refusal, ok := acc.JustFinishedRefusal(); ok {
+				println("Refusal stream finished:", refusal)
+			}
+
+			if len(chunk.Choices) > 0 {
+				output <- llmcore.LlmResponse{
+					Text:       chunk.Choices[0].Delta.Content,
+					Error:      nil,
+					StopReason: llmcore.StopReasonNone,
+				}
+			}
 		}
-	}
 
-	jsonData, err := json.Marshal(p)
+		if stream.Err() != nil {
+			output <- llmcore.LlmResponse{
+				Error:      stream.Err(),
+				Text:       "something went wrong",
+				StopReason: llmcore.StopReasonError,
+			}
+		}
+	}()
 
-	if err != nil {
-		return "", err
-	}
-
-	return string(jsonData), nil
+	return output
 }
 
-func (m *OpenAIModel) ParseResponse(rawRes []byte) (string, error) {
-	var response openAiResponse
-	err := json.Unmarshal(rawRes, &response)
-	if err != nil {
-		return "", err
-	}
-
-	return response.Choices[0].Message.Content, nil
-}
-
-func (m *OpenAIModel) CanStream() bool {
-	return true
-}
-
-func (m *OpenAIModel) GetStreamParser() func(b []byte) (string, error) {
-	return func(b []byte) (string, error) {
-		if !bytes.HasPrefix(b, []byte("data:")) {
-			return "", nil
-		}
-
-		if bytes.HasSuffix(b, []byte("[DONE]")) {
-			return "", nil
-		}
-
-		if !bytes.Contains(b, []byte("choices")) {
-			return "", nil
-		}
-
-		jsonData := bytes.TrimPrefix(b, []byte("data:"))
-		var data streamResponse
-		err := json.Unmarshal(jsonData, &data)
+func convertToolsToProvider(tools []llmcore.Tool) []openai.ChatCompletionToolParam {
+	converted := make([]openai.ChatCompletionToolParam, len(tools))
+	for i, tool := range tools {
+		byteSchema, err := json.Marshal(tool.InputSchema)
 		if err != nil {
-			return "", err
+			log.Printf("Error marshaling tool input schema: %v", err)
+			continue
 		}
-		return data.Choices[0].Delta.Content, nil
+
+		var schema shared.FunctionParameters
+		err = json.Unmarshal(byteSchema, &schema)
+		if err != nil {
+			log.Printf("Error unmarshaling tool input schema: %v", err)
+			continue
+		}
+
+		converted[i] = openai.ChatCompletionToolParam{
+			Function: shared.FunctionDefinitionParam{
+				Name:        tool.Name,
+				Description: param.NewOpt(tool.Description),
+				Parameters:  schema,
+			},
+		}
 	}
+	return converted
+}
+
+func addToolResultsToMessages(messages []openai.ChatCompletionMessageParamUnion, toolResults []llmcore.ToolResult) []openai.ChatCompletionMessageParamUnion {
+	assistantCall := openai.ChatCompletionAssistantMessageParam{
+		ToolCalls: make([]openai.ChatCompletionMessageToolCallParam, 0, len(toolResults)),
+	}
+
+	for _, toolResult := range toolResults {
+		toolCall := openai.ChatCompletionMessageToolCallParam{
+			ID: toolResult.ID,
+			Function: openai.ChatCompletionMessageToolCallFunctionParam{
+				Name:      toolResult.Name,
+				Arguments: string(toolResult.Arguments),
+			},
+		}
+		assistantCall.ToolCalls = append(assistantCall.ToolCalls, toolCall)
+		msg := openai.ChatCompletionMessageParamUnion{
+			OfAssistant: &assistantCall,
+		}
+		messages = append(messages, msg)
+
+		message := openai.ToolMessage(string(toolResult.Result), toolResult.ID)
+		messages = append(messages, message)
+	}
+	return messages
 }

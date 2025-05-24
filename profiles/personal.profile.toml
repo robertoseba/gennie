@@ -25,7 +25,8 @@ args = [
   "mcp-server-docker:latest",
 ]
 envs = []
-requires_approval = true
+# requires_approval = true
+# show_tool_output = true
 allowed_tools = ["list_volumes"]
 
 [mcpServers.exa]

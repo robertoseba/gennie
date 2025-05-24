@@ -7,6 +7,7 @@ import (
 	"github.com/robertoseba/gennie/internal/core/llmcore"
 	"github.com/robertoseba/gennie/internal/core/llmproviders/anthropic"
 	"github.com/robertoseba/gennie/internal/core/llmproviders/gemini"
+	"github.com/robertoseba/gennie/internal/core/llmproviders/openai"
 )
 
 func NewProvider(modelEnum ModelEnum, httpClient *http.Client, config config.Config) llmcore.LlmProvider {
@@ -15,10 +16,10 @@ func NewProvider(modelEnum ModelEnum, httpClient *http.Client, config config.Con
 		return anthropic.NewProvider(config.APIKeys.AnthropicApiKey, modelEnum.Slug(), httpClient)
 	case Gemini:
 		return gemini.NewProvider(config.APIKeys.GeminiApiKey, modelEnum.Slug(), httpClient)
-	// case OpenAI:
-	// 	return openai.NewProvider(m.Slug(), config.APIKeys.OpenAiApiKey)
-	// case OpenAIMini:
-	// 	return openai.NewProvider(m.Slug(), config.APIKeys.OpenAiApiKey)
+	case OpenAI:
+		return openai.NewProvider(config.APIKeys.OpenAiApiKey, modelEnum.Slug(), httpClient)
+	case OpenAIMini:
+		return openai.NewProvider(config.APIKeys.OpenAiApiKey, modelEnum.Slug(), httpClient)
 	// case Maritaca:
 	// 	return maritaca.NewProvider(m.Slug(), config.APIKeys.MaritacaApiKey)
 	// case Groq:
