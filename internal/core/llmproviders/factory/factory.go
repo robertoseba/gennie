@@ -31,8 +31,6 @@ func NewProvider(modelEnum ModelEnum, logger *slog.Logger, httpClient *http.Clie
 			openai.WithHttpClient(httpClient),
 			openai.WithLogger(logger),
 		)
-	// case Maritaca:
-	// 	return maritaca.NewProvider(m.Slug(), config.APIKeys.MaritacaApiKey)
 	case Groq:
 		return openai.NewProvider(config.APIKeys.GroqApiKey,
 			openai.WithModel("qwen-qwq-32b"),
