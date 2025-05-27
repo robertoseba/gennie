@@ -30,8 +30,13 @@ func NewProvider(modelEnum ModelEnum, logger *slog.Logger, httpClient *http.Clie
 	// 	return maritaca.NewProvider(m.Slug(), config.APIKeys.MaritacaApiKey)
 	// case Groq:
 	// 	return groq.NewProvider(m.Slug(), config.APIKeys.GroqApiKey)
-	// case Ollama:
-	// 	return ollama.NewProvider(m.Slug(), config.Ollama.Host, config.Ollama.Model)
+	case Ollama:
+		return openai.NewProvider(config.APIKeys.OpenAiApiKey,
+			openai.WithModel(config.Ollama.Model),
+			openai.WithHttpClient(httpClient),
+			openai.WithLogger(logger),
+			openai.WithBaseUrl(config.Ollama.Host),
+		)
 	default:
 		panic("Unsupported model: " + modelEnum.Slug())
 	}

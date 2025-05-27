@@ -11,8 +11,8 @@ const (
 	ClaudeSonnet ModelEnum = anthropic.ExportedSonnetSlug
 	Haiku        ModelEnum = anthropic.ExportedHaikuSlug
 	Gemini       ModelEnum = gemini.ExportedModelSlug
-	OpenAIMini   ModelEnum = "gpt-4o-mini"
-	OpenAI       ModelEnum = "gpt-4o"
+	OpenAIMini   ModelEnum = "gpt-4.1-mini"
+	OpenAI       ModelEnum = "gpt-4.1"
 	Maritaca     ModelEnum = "maritaca"
 	Groq         ModelEnum = "groq"
 	Ollama       ModelEnum = "ollama"
@@ -24,8 +24,8 @@ var availableModels = map[ModelEnum]string{
 	ClaudeSonnet: anthropic.ExportedSonnetDescription,
 	Haiku:        anthropic.ExportedHaikuDescription,
 	Gemini:       gemini.ExportedModelDescription,
-	OpenAIMini:   "GPT-4o-mini (OPENAI)",
-	OpenAI:       "GPT-4o (OPENAI)",
+	OpenAIMini:   "GPT-4.1-mini (OPENAI)",
+	OpenAI:       "GPT-4.1 (OPENAI)",
 	Maritaca:     "Maritaca (BR)",
 	Groq:         "Groq (DeepSeek-R1-Distill-Llama-70B)",
 	Ollama:       "Ollama",

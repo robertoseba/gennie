@@ -3,7 +3,6 @@ package openai
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"log/slog"
 
@@ -16,11 +15,11 @@ import (
 )
 
 const (
-	ExportedModelSlug        = "gpt-4o"
-	ExportedModelDescription = "OpenAI GPT-4o"
+	ExportedModelSlug        = "gpt-4.1"
+	ExportedModelDescription = "OpenAI GPT-4.1"
 
-	ExportedModelSlug_Mini        = "gpt-4o-mini"
-	ExportedModelDescription_Mini = "OpenAI GPT-4o Mini"
+	ExportedModelSlug_Mini        = "gpt-4.1-mini"
+	ExportedModelDescription_Mini = "OpenAI GPT-4.1 Mini"
 
 	DefaultModelSlug        = ExportedModelSlug_Mini
 	DefaultModelDescription = ExportedModelDescription_Mini
@@ -96,21 +95,22 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			chunk := stream.Current()
 			acc.AddChunk(chunk)
 
-			if tool, ok := acc.JustFinishedToolCall(); ok {
-				msg := acc.ChatCompletion.Choices[0].Message.ToParam()
-				b, _ := json.Marshal(msg)
-				fmt.Println("Tool call finished:", string(b))
-				output <- llmcore.LlmResponse{
-					Text:       chunk.Choices[0].Delta.Content,
-					Error:      nil,
-					StopReason: llmcore.StopReasonTools,
-					FunctionCall: llmcore.FunctionCall{
-						ID:        tool.ID,
-						Name:      tool.Name,
-						Arguments: []byte(tool.Arguments),
-					},
-				}
-			}
+			// This mode does not work with ollama compatibility
+			// if tool, ok := acc.JustFinishedToolCall(); ok {
+			// 	// msg := acc.ChatCompletion.Choices[0].Message.ToParam()
+			// 	// b, _ := json.Marshal(msg)
+			// 	// fmt.Println("Tool call finished:", string(b))
+			// 	output <- llmcore.LlmResponse{
+			// 		Text:       chunk.Choices[0].Delta.Content,
+			// 		Error:      nil,
+			// 		StopReason: llmcore.StopReasonTools,
+			// 		FunctionCall: llmcore.FunctionCall{
+			// 			ID:        tool.ID,
+			// 			Name:      tool.Name,
+			// 			Arguments: []byte(tool.Arguments),
+			// 		},
+			// 	}
+			// }
 
 			if refusal, ok := acc.JustFinishedRefusal(); ok {
 				println("Refusal stream finished:", refusal)
@@ -130,6 +130,23 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 				Error:      stream.Err(),
 				Text:       "something went wrong",
 				StopReason: llmcore.StopReasonError,
+			}
+		}
+
+		// Processing tool calls if they exist
+		if acc.Choices[0].FinishReason == "tool_calls" {
+			// TODO: currently only supports a single tool call
+			f := acc.Choices[0].Message.ToolCalls[0].Function
+			id := acc.Choices[0].Message.ToolCalls[0].ID
+			output <- llmcore.LlmResponse{
+				Text:       acc.Choices[0].Message.Content,
+				Error:      nil,
+				StopReason: llmcore.StopReasonTools,
+				FunctionCall: llmcore.FunctionCall{
+					ID:        id,
+					Name:      f.Name,
+					Arguments: []byte(f.Arguments),
+				},
 			}
 		}
 	}()
