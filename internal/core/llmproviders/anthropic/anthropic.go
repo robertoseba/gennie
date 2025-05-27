@@ -2,8 +2,8 @@ package anthropic
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
-	"os"
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
@@ -12,8 +12,14 @@ import (
 )
 
 const (
-	ExportedModelSlug        = "sonnet"
-	ExportedModelDescription = "Claude Sonnet 3.7"
+	ExportedSonnetSlug        = "sonnet"
+	ExportedSonnetDescription = "Claude Sonnet 4"
+
+	ExportedHaikuSlug        = "haiku"
+	ExportedHaikuDescription = "Haiku 3.5"
+
+	DefaultModelSlug        = ExportedHaikuSlug
+	DefaultModelDescription = ExportedHaikuDescription
 )
 
 type provider struct {
@@ -23,17 +29,20 @@ type provider struct {
 	systemPrompt string
 }
 
-func NewProvider(apiKey string, model string, httpClient *http.Client) *provider {
+func NewProvider(apiKey string, model string, logger *slog.Logger, httpClient *http.Client) *provider {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
 
-	if model == "" || model == ExportedModelSlug {
-		model = anthropic.ModelClaude3_7SonnetLatest
+	if model == "" || model == ExportedSonnetSlug {
+		model = "claude-sonnet-4-0"
+	}
+	if model == ExportedHaikuSlug {
+		model = "claude-3-5-haiku-latest"
 	}
 
 	client := anthropic.NewClient(
-		option.WithMiddleware(NewErrorMiddleware(os.Stdout)),
+		option.WithMiddleware(debugMiddleware(logger)),
 		option.WithAPIKey(apiKey),
 		option.WithHTTPClient(httpClient),
 	)
@@ -70,7 +79,7 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 		}
 
 		stream := p.client.Messages.NewStreaming(ctx, anthropic.MessageNewParams{
-			Model:     p.model,
+			Model:     anthropic.Model(p.model),
 			MaxTokens: 1024,
 			Messages:  messages,
 			System: []anthropic.TextBlockParam{
@@ -110,7 +119,7 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			}
 		}
 
-		if message.StopReason == anthropic.MessageStopReasonToolUse {
+		if message.StopReason == anthropic.StopReason(anthropic.MessageStopReasonToolUse) {
 			toolResponses := parseToolUseFrom(&message)
 			for idx := range toolResponses {
 				output <- toolResponses[idx]

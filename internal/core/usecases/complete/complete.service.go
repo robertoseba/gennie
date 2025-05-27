@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/robertoseba/gennie/internal/core/config"
 	"github.com/robertoseba/gennie/internal/core/conversation"
@@ -28,6 +30,7 @@ type CompleteService struct {
 	profileRepo      profile.IProfileRepository
 	httpClient       *http.Client
 	config           *config.Config
+	logger           *slog.Logger
 	tools            map[string]toolDetails // each toolName maps to a mcpClient so we can make a request
 }
 
@@ -45,11 +48,21 @@ func NewCompleteService(
 	httpClient *http.Client,
 	config *config.Config,
 ) *CompleteService {
+	filename := fmt.Sprintf("gennie-%s.log", time.Now().Format("20060102-150405"))
+	logFile, err := os.OpenFile(filename, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		panic("Failed to open log file: " + err.Error())
+	}
+	logger := slog.New(slog.NewJSONHandler(logFile, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}))
+	// TODO: shutdown file.Close() and mcpClient.Close() properly
 	return &CompleteService{
 		conversationRepo: cr,
 		profileRepo:      pr,
 		httpClient:       httpClient,
 		config:           config,
+		logger:           logger,
 	}
 }
 
@@ -278,7 +291,7 @@ func (s *CompleteService) loadLlmProvider(modelSlug string, conv *conversation.C
 		return nil, factory.DefaultModel, llmcore.ErrModelNotFound
 	}
 
-	return factory.NewProvider(modelEnum, s.httpClient, *s.config), modelEnum, nil
+	return factory.NewProvider(modelEnum, s.logger, s.httpClient, *s.config), modelEnum, nil
 }
 
 func (s *CompleteService) setQuestion(conv *conversation.Conversation, question string, filename string) error {

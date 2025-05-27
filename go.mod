@@ -4,7 +4,7 @@ go 1.24.2
 
 require (
 	github.com/BurntSushi/toml v1.4.0
-	github.com/anthropics/anthropic-sdk-go v0.2.0-beta.3
+	github.com/anthropics/anthropic-sdk-go v1.2.0
 	github.com/mark3labs/mcp-go v0.25.0
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0

@@ -59,7 +59,8 @@ func addToolResultsToMessages(
 			Name:  tr.Name,
 			Input: tr.Arguments,
 		}
-		toolUseBlock := anthropic.ContentBlockParamUnion{OfRequestToolUseBlock: &useBlock}
+		toolUseBlock := anthropic.ContentBlockParamUnion{OfToolUse: &useBlock}
+
 		messageAssistantBlock = append(messageAssistantBlock, toolUseBlock)
 
 		if tr.IsError() {

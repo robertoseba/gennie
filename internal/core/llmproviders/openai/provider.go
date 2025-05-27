@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
+	"log/slog"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
@@ -21,6 +21,9 @@ const (
 
 	ExportedModelSlug_Mini        = "gpt-4o-mini"
 	ExportedModelDescription_Mini = "OpenAI GPT-4o Mini"
+
+	DefaultModelSlug        = ExportedModelSlug_Mini
+	DefaultModelDescription = ExportedModelDescription_Mini
 )
 
 type provider struct {
@@ -28,16 +31,28 @@ type provider struct {
 	model        string
 	systemPrompt string
 	tools        []openai.ChatCompletionToolParam
+	options      []option.RequestOption
+	logger       *slog.Logger
 }
 
-func NewProvider(apiKey string, model string, httpClient *http.Client) *provider {
-	// TODO: add middleware for debugging
-	client := openai.NewClient(option.WithAPIKey(apiKey), option.WithHTTPClient(httpClient))
+type opts func(p *provider)
 
-	return &provider{
-		client: &client,
-		model:  model,
+func NewProvider(apiKey string, opts ...opts) *provider {
+	p := &provider{
+		model:   DefaultModelSlug,
+		tools:   make([]openai.ChatCompletionToolParam, 0),
+		options: make([]option.RequestOption, 0, len(opts)+1),
 	}
+	p.options = append(p.options, option.WithAPIKey(apiKey))
+
+	for _, opt := range opts {
+		opt(p)
+	}
+
+	client := openai.NewClient(p.options...)
+	p.client = &client
+
+	return p
 }
 
 func (p *provider) SetSystemPrompt(systemPrompt string) {

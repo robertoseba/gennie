@@ -8,7 +8,8 @@ import (
 type ModelEnum string
 
 const (
-	ClaudeSonnet ModelEnum = anthropic.ExportedModelSlug
+	ClaudeSonnet ModelEnum = anthropic.ExportedSonnetSlug
+	Haiku        ModelEnum = anthropic.ExportedHaikuSlug
 	Gemini       ModelEnum = gemini.ExportedModelSlug
 	OpenAIMini   ModelEnum = "gpt-4o-mini"
 	OpenAI       ModelEnum = "gpt-4o"
@@ -20,7 +21,8 @@ const (
 const DefaultModel = ClaudeSonnet
 
 var availableModels = map[ModelEnum]string{
-	ClaudeSonnet: anthropic.ExportedModelDescription,
+	ClaudeSonnet: anthropic.ExportedSonnetDescription,
+	Haiku:        anthropic.ExportedHaikuDescription,
 	Gemini:       gemini.ExportedModelDescription,
 	OpenAIMini:   "GPT-4o-mini (OPENAI)",
 	OpenAI:       "GPT-4o (OPENAI)",

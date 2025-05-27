@@ -1,4 +1,4 @@
-package anthropic
+package openai
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/anthropics/anthropic-sdk-go/option"
+	"github.com/openai/openai-go/option"
 )
 
 func debugMiddleware(logger *slog.Logger) option.Middleware {
@@ -21,7 +21,6 @@ func debugMiddleware(logger *slog.Logger) option.Middleware {
 			r.Body = io.NopCloser(bytes.NewBuffer(body)) // Reset the body for the next handler
 		}
 		n, err := next(r)
-
 		if n != nil {
 			respLogger := logger.WithGroup("Response").With("StatusCode", n.StatusCode)
 			if n.Body != nil {
