@@ -9,7 +9,7 @@ import (
 	"github.com/openai/openai-go/option"
 )
 
-func debugMiddleware(logger *slog.Logger) option.Middleware {
+func DebugMiddleware(logger *slog.Logger) option.Middleware {
 	return func(r *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 		reqLogger := logger.WithGroup("Request").With("URL", r.URL.String()).With("Method", r.Method)
 		if r.Body != nil {

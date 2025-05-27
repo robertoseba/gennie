@@ -27,7 +27,7 @@ func WithBaseUrl(baseUrl string) opts {
 
 func WithLogger(logger *slog.Logger) opts {
 	return func(p *provider) {
-		p.options = append(p.options, option.WithMiddleware(debugMiddleware(logger)))
+		p.options = append(p.options, option.WithMiddleware(DebugMiddleware(logger)))
 		p.logger = logger
 	}
 }

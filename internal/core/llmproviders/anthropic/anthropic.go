@@ -9,6 +9,7 @@ import (
 	"github.com/anthropics/anthropic-sdk-go/option"
 	"github.com/robertoseba/gennie/internal/core/conversation"
 	"github.com/robertoseba/gennie/internal/core/llmcore"
+	"github.com/robertoseba/gennie/internal/core/llmproviders/openai"
 )
 
 const (
@@ -42,7 +43,7 @@ func NewProvider(apiKey string, model string, logger *slog.Logger, httpClient *h
 	}
 
 	client := anthropic.NewClient(
-		option.WithMiddleware(debugMiddleware(logger)),
+		option.WithMiddleware(openai.DebugMiddleware(logger)),
 		option.WithAPIKey(apiKey),
 		option.WithHTTPClient(httpClient),
 	)
