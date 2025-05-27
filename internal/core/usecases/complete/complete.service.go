@@ -9,7 +9,6 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/robertoseba/gennie/internal/core/config"
 	"github.com/robertoseba/gennie/internal/core/conversation"
@@ -48,8 +47,7 @@ func NewCompleteService(
 	httpClient *http.Client,
 	config *config.Config,
 ) *CompleteService {
-	filename := fmt.Sprintf("gennie-%s.log", time.Now().Format("20060102-150405"))
-	logFile, err := os.OpenFile(filename, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
+	logFile, err := os.OpenFile("gennie.log", os.O_TRUNC|os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		panic("Failed to open log file: " + err.Error())
 	}

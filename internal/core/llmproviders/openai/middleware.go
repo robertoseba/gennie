@@ -20,18 +20,23 @@ func DebugMiddleware(logger *slog.Logger) option.Middleware {
 			reqLogger.Debug("Sending request", "body", string(body))
 			r.Body = io.NopCloser(bytes.NewBuffer(body)) // Reset the body for the next handler
 		}
-		n, err := next(r)
-		if n != nil {
-			respLogger := logger.WithGroup("Response").With("StatusCode", n.StatusCode)
-			if n.Body != nil {
-				body, err := io.ReadAll(n.Body)
-				if err != nil {
-					respLogger.Error("Failed to read response body", "error", err)
-				}
-				respLogger.Debug("Received Response", "body", string(body))
-				n.Body = io.NopCloser(bytes.NewBuffer(body)) // Reset the body for the next handler
-			}
+
+		res, err := next(r)
+		if err != nil {
+			logger.Error("Response failed", "error", err)
 		}
-		return n, err
+
+		logger.Debug("Response Status: " + res.Status)
+		res.Body = io.NopCloser(io.TeeReader(res.Body, &logStream{logger: logger}))
+		return res, err
 	}
+}
+
+type logStream struct {
+	logger *slog.Logger
+}
+
+func (l *logStream) Write(p []byte) (n int, err error) {
+	l.logger.Debug("received streamed data:", "payload", string(p))
+	return len(p), nil
 }

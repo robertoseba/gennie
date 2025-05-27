@@ -7,6 +7,7 @@ import (
 	"github.com/robertoseba/gennie/internal/core/config"
 	"github.com/robertoseba/gennie/internal/core/llmcore"
 	"github.com/robertoseba/gennie/internal/core/llmproviders/anthropic"
+	"github.com/robertoseba/gennie/internal/core/llmproviders/gemini"
 	"github.com/robertoseba/gennie/internal/core/llmproviders/openai"
 )
 
@@ -16,10 +17,14 @@ func NewProvider(modelEnum ModelEnum, logger *slog.Logger, httpClient *http.Clie
 		return anthropic.NewProvider(config.APIKeys.AnthropicApiKey, modelEnum.Slug(), logger, httpClient)
 	case Haiku:
 		return anthropic.NewProvider(config.APIKeys.AnthropicApiKey, modelEnum.Slug(), logger, httpClient)
-	// case Gemini:
-	// 	return gemini.NewProvider(config.APIKeys.GeminiApiKey, modelEnum.Slug(), httpClient)
-	// case OpenAI:
-	// 	return openai.NewProvider(config.APIKeys.OpenAiApiKey, modelEnum.Slug())
+	case Gemini:
+		return gemini.NewProvider(config.APIKeys.GeminiApiKey, modelEnum.Slug(), httpClient)
+	case OpenAI:
+		return openai.NewProvider(config.APIKeys.OpenAiApiKey,
+			openai.WithModel(modelEnum.Slug()),
+			openai.WithHttpClient(httpClient),
+			openai.WithLogger(logger),
+		)
 	case OpenAIMini:
 		return openai.NewProvider(config.APIKeys.OpenAiApiKey,
 			openai.WithModel(modelEnum.Slug()),
@@ -28,8 +33,14 @@ func NewProvider(modelEnum ModelEnum, logger *slog.Logger, httpClient *http.Clie
 		)
 	// case Maritaca:
 	// 	return maritaca.NewProvider(m.Slug(), config.APIKeys.MaritacaApiKey)
-	// case Groq:
-	// 	return groq.NewProvider(m.Slug(), config.APIKeys.GroqApiKey)
+	case Groq:
+		return openai.NewProvider(config.APIKeys.GroqApiKey,
+			openai.WithModel("qwen-qwq-32b"),
+			openai.WithHttpClient(httpClient),
+			openai.WithLogger(logger),
+			openai.WithBaseUrl("https://api.groq.com/openai/v1"),
+		)
+
 	case Ollama:
 		return openai.NewProvider(config.APIKeys.OpenAiApiKey,
 			openai.WithModel(config.Ollama.Model),
