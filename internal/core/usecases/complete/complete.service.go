@@ -47,7 +47,7 @@ func NewCompleteService(
 	httpClient *http.Client,
 	config *config.Config,
 ) *CompleteService {
-	logFile, err := os.OpenFile("gennie.log", os.O_TRUNC|os.O_RDWR|os.O_CREATE, 0644)
+	logFile, err := os.OpenFile(config.ConversationCacheDir+"/gennie.log", os.O_TRUNC|os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		panic("Failed to open log file: " + err.Error())
 	}
