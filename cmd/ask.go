@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"errors"
 	"os"
 	"strings"
 	"time"
@@ -17,7 +18,6 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 	var appendFileFlag string
 	var modelFlag string
 	var profileFlag string
-	var isStreamableFlag bool
 
 	cmdAsk := &cobra.Command{
 		Use:   "ask [question for the llm model]",
@@ -31,10 +31,7 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 			if isTerminalFlag {
 				spinner = output.NewSpinner("Starting...")
 				spinner.Start()
-			} else {
-				isStreamableFlag = false
 			}
-
 			startProcessingTime := time.Now()
 
 			req := &complete.Request{
@@ -62,8 +59,12 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 				}
 
 				if !isTerminalFlag {
-					if response.Type == "" { // when piping we only print if it's not related to interface types
+					// When piping we only print the models answer
+					if response.Type == "" || response.Type == llmcore.LlmAnswer {
 						cmd.Print(response.Data)
+					}
+					if response.Type == llmcore.ApprovalRequest {
+						return errors.New("Tool use approval is required. Please run the command in a terminal to approve the request.")
 					}
 					continue
 				}
@@ -76,23 +77,14 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 						modelInfo = response.Data
 					case llmcore.ProfileInfo:
 						profileInfo = response.Data
-					case llmcore.ToolResultInfo:
-						// TODO: think of a better way to present this
-						spinner.Stop()
-						cmd.Println()
-						p.Print("Tool result:", output.Yellow)
-						cmd.Println(response.Data)
-						spinner.Start()
-
 					case llmcore.ApprovalRequest:
-						// TODO: what to do if this is not a terminal?
 						spinner.Stop()
 						cmd.Println("Please approve the tool use to continue:")
 						cmd.Println(response.Data)
 						cmd.Println("If you want to cancel the request, please use Ctrl+C.")
 						bufio.NewReader(os.Stdin).ReadBytes('\n')
 						spinner.Start()
-					default: // answer received
+					default: // Answer received
 						spinner.Stop()
 						cmd.Print(response.Data)
 					}
@@ -130,7 +122,6 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 	cmdAsk.Flags().StringVarP(&appendFileFlag, "append", "a", "", "appends the content of a file to the question.")
 	cmdAsk.Flags().StringVarP(&modelFlag, "model", "m", "", "specifies the model to use.")
 	cmdAsk.Flags().StringVarP(&profileFlag, "profile", "p", "", "specifies the profile to use.")
-	cmdAsk.Flags().BoolVarP(&isStreamableFlag, "stream", "s", true, "controls if response should be streamed")
 
 	return cmdAsk
 }
