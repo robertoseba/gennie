@@ -47,20 +47,12 @@ func NewCompleteService(
 	httpClient *http.Client,
 	config *config.Config,
 ) *CompleteService {
-	logFile, err := os.OpenFile(config.ConversationCacheDir+"/gennie.log", os.O_TRUNC|os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		panic("Failed to open log file: " + err.Error())
-	}
-	logger := slog.New(slog.NewJSONHandler(logFile, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	}))
-	// TODO: shutdown file.Close() and mcpClient.Close() properly
 	return &CompleteService{
 		conversationRepo: cr,
 		profileRepo:      pr,
 		httpClient:       httpClient,
 		config:           config,
-		logger:           logger,
+		logger:           slog.Default(),
 	}
 }
 
@@ -273,6 +265,8 @@ func (s *CompleteService) processInput(input *InputDTO) (*conversation.Conversat
 }
 
 func (s *CompleteService) loadProfile(profileSlug string, conv *conversation.Conversation) (*profile.Profile, error) {
+	s.logger.Debug("Loading profile: ", "slug", profileSlug, "conversationProfileSlug", conv.ProfileSlug)
+
 	if profileSlug == "" {
 		profileSlug = conv.ProfileSlug
 	}
@@ -289,7 +283,7 @@ func (s *CompleteService) loadLlmProvider(modelSlug string, conv *conversation.C
 		return nil, factory.DefaultModel, llmcore.ErrModelNotFound
 	}
 
-	return factory.NewProvider(modelEnum, s.logger, s.httpClient, *s.config), modelEnum, nil
+	return factory.NewProvider(modelEnum, s.httpClient, *s.config), modelEnum, nil
 }
 
 func (s *CompleteService) setQuestion(conv *conversation.Conversation, question string, filename string) error {

@@ -30,7 +30,7 @@ type provider struct {
 	systemPrompt string
 }
 
-func NewProvider(apiKey string, model string, logger *slog.Logger, httpClient *http.Client) *provider {
+func NewProvider(apiKey string, model string, httpClient *http.Client) *provider {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
@@ -43,7 +43,7 @@ func NewProvider(apiKey string, model string, logger *slog.Logger, httpClient *h
 	}
 
 	client := anthropic.NewClient(
-		option.WithMiddleware(openai.DebugMiddleware(logger)),
+		option.WithMiddleware(openai.DebugMiddleware(slog.Default())),
 		option.WithAPIKey(apiKey),
 		option.WithHTTPClient(httpClient),
 	)

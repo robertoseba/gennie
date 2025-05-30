@@ -1,8 +1,12 @@
 package cmd
 
 import (
+	"context"
 	"io"
+	"log"
+	"log/slog"
 	"os"
+	"path"
 
 	"github.com/robertoseba/gennie/internal/infra/container"
 	"github.com/robertoseba/gennie/internal/output"
@@ -15,6 +19,13 @@ func Run(version string, stdOut io.Writer, stdErr io.Writer) {
 	printer := output.NewPrinter(stdOut, stdErr)
 
 	command := newRootCmd(version, stdOut, stdErr)
+
+	slog.SetDefault(slog.New(slog.DiscardHandler))
+	if os.Getenv("DEBUG") != "" {
+		logFile := setupDebugLogger(path.Join(container.GetConfig().ConversationCacheDir, "gennie.log"))
+		defer logFile.Close()
+	}
+
 	setupSubCommands(command, container, printer)
 
 	if container.GetConfig().IsNew() {
@@ -32,7 +43,7 @@ func Run(version string, stdOut io.Writer, stdErr io.Writer) {
 		}
 	}
 
-	err := command.Execute()
+	err := command.ExecuteContext(context.Background())
 	if err != nil {
 		command.PrintErrf("Error executing command: %v\n", err)
 		os.Exit(1)
@@ -69,4 +80,18 @@ func setupSubCommands(c *cobra.Command, container *container.Container, printer 
 		NewConversationCmd(container.GetExportConversationService(), printer),
 	}
 	c.AddCommand(subcmds...)
+}
+
+func setupDebugLogger(logFilename string) *os.File {
+	logFile, err := os.OpenFile(logFilename, os.O_TRUNC|os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		log.Fatalf("Error opening log file %s: %v", logFilename, err)
+		os.Exit(1)
+	}
+	logger := slog.New(slog.NewTextHandler(logFile, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}))
+
+	slog.SetDefault(logger)
+	return logFile
 }

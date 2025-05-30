@@ -43,6 +43,7 @@ func NewProvider(apiKey string, opts ...opts) *provider {
 		options: make([]option.RequestOption, 0, len(opts)+1),
 	}
 	p.options = append(p.options, option.WithAPIKey(apiKey))
+	p.options = append(p.options, option.WithMiddleware(DebugMiddleware(slog.Default())))
 
 	for _, opt := range opts {
 		opt(p)
