@@ -8,10 +8,10 @@ type (
 )
 
 const (
-	StopReasonTools StopReason = "tool_calling"
-	StopReasonEnd   StopReason = "end_response"
-	StopReasonError StopReason = "error"
-	StopReasonNone  StopReason = ""
+	StopReasonToolCall StopReason = "tool_calling"
+	StopReasonEnd      StopReason = "end_response"
+	StopReasonError    StopReason = "error"
+	StopReasonNone     StopReason = ""
 )
 
 // This is the response converted from a providers response
@@ -21,6 +21,10 @@ type LlmResponse struct {
 	Error        error
 	StopReason   StopReason
 	FunctionCall FunctionCall // TODO: maybe this should be an slice of function calls
+}
+
+func (r LlmResponse) IsToolCall() bool {
+	return r.StopReason == StopReasonToolCall
 }
 
 type FunctionCall struct {
