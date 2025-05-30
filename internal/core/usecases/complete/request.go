@@ -2,9 +2,6 @@ package complete
 
 import (
 	"context"
-
-	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/profile"
 )
 
 type ctxKey string
@@ -17,8 +14,6 @@ type Request struct {
 	ModelSlug      string
 	IsFollowUp     bool
 	AppendFilename string
-	Conversation   *conversation.Conversation
-	Profile        *profile.Profile
 }
 
 func AddRequestToCtx(ctx context.Context, req *Request) context.Context {

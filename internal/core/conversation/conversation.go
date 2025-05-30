@@ -7,10 +7,6 @@ import (
 
 var ErrNewQuestionBeforeAnswer = errors.New("previous question hasn't been answered yet")
 
-// TODO: DO we need this?
-// ErrEmptyConversation           = errors.New("there are no questions to answer")
-// ErrLastQuestionAlreadyAnswered = errors.New("last conversation has already been answered")
-
 type Conversation struct {
 	QAs         []qa      `json:"qa,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`

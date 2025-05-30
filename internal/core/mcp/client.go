@@ -16,11 +16,11 @@ type McpClientInterface interface {
 	ExecTool(ctx context.Context, toolName string, args map[string]any) ([]byte, error)
 }
 
+var _ McpClientInterface = &McpClient{}
+
 type McpClient struct {
 	client *client.Client
 }
-
-var _ McpClientInterface = &McpClient{}
 
 func NewStdioClient(ctx context.Context, cmd string, env []string, args []string) (*McpClient, error) {
 	c, err := client.NewStdioMCPClient(cmd, env, args...)
