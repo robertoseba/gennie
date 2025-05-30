@@ -34,7 +34,7 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 			}
 			startProcessingTime := time.Now()
 
-			req := &complete.Request{
+			req := complete.Request{
 				Question:       strings.Join(args, " "),
 				ProfileSlug:    profileFlag,
 				ModelSlug:      modelFlag,
@@ -42,8 +42,7 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 				AppendFilename: appendFileFlag,
 			}
 
-			ctx := complete.AddRequestToCtx(cmd.Context(), req)
-			respChan, err := askCmd.Execute(ctx)
+			respChan, err := askCmd.Execute(cmd.Context(), req)
 			if err != nil {
 				if isTerminalFlag {
 					spinner.Stop()

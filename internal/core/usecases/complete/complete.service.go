@@ -48,35 +48,34 @@ func NewCompleteService(
 	}
 }
 
-func (s *CompleteService) Execute(ctx context.Context) (<-chan llmcore.CompleteResponse, error) {
+func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan llmcore.CompleteResponse, error) {
 	var err error
 
 	activeConversation, err := s.conversationRepo.LoadActive()
 	if err != nil {
 		return nil, err
 	}
-	req, _ := GetRequestFromCtx(ctx)
 
-	llmProvider, err := s.processRequestToConversation(*req, activeConversation)
+	llmProvider, activeProfile, err := s.processRequestToConversation(req, activeConversation)
 	if err != nil {
 		return nil, err
 	}
 
-	llmProvider.SetSystemPrompt(req.Profile.Data)
+	llmProvider.SetSystemPrompt(activeProfile.Data)
 
 	modelResponseChan := make(chan llmcore.CompleteResponse)
-	outputChan := s.pipeToSaveConversation(req.Conversation, modelResponseChan)
+	outputChan := s.pipeToSaveConversation(activeConversation, modelResponseChan)
 
 	go func() {
 		defer close(modelResponseChan)
 
-		outputChan <- llmcore.CompleteResponse{Data: req.Conversation.ModelSlug, Type: llmcore.ModelInfo, Err: nil}
-		outputChan <- llmcore.CompleteResponse{Data: req.Profile.Name, Type: llmcore.ProfileInfo, Err: nil}
+		outputChan <- llmcore.CompleteResponse{Data: activeConversation.ModelSlug, Type: llmcore.ModelInfo, Err: nil}
+		outputChan <- llmcore.CompleteResponse{Data: activeProfile.Name, Type: llmcore.ProfileInfo, Err: nil}
 
-		if len(req.Profile.McpServers) > 0 {
+		if len(activeProfile.McpServers) > 0 {
 			outputChan <- llmcore.CompleteResponse{Data: "Loading MCP Servers...", Type: llmcore.LoadingInfo, Err: nil}
 
-			mcpTools, err := startMcpServers(ctx)
+			mcpTools, err := startMcpServers(ctx, activeProfile)
 			if err != nil {
 				outputChan <- llmcore.CompleteResponse{Err: err}
 			}
@@ -101,7 +100,7 @@ func (s *CompleteService) Execute(ctx context.Context) (<-chan llmcore.CompleteR
 		// Keeps calling the model while it needs to return function calls
 		outputChan <- llmcore.CompleteResponse{Data: "Asking the model...", Type: llmcore.LoadingInfo, Err: nil}
 		for {
-			resp := complete(ctx, llmProvider, toolResults, modelResponseChan)
+			resp := complete(ctx, activeConversation, llmProvider, toolResults, modelResponseChan)
 
 			// If does not need to send function call back to model than breaks out of the loop
 			if resp.StopReason != llmcore.StopReasonTools {
@@ -149,9 +148,8 @@ func (s *CompleteService) pipeToSaveConversation(conv *conversation.Conversation
 	return outputChan
 }
 
-func complete(ctx context.Context, llmProvider llmcore.LlmProvider, toolResults []llmcore.ToolResult, outputChan chan<- llmcore.CompleteResponse) llmcore.LlmResponse {
-	req, _ := GetRequestFromCtx(ctx)
-	respChan := llmProvider.Complete(ctx, req.Conversation, toolResults)
+func complete(ctx context.Context, activeConversation *conversation.Conversation, llmProvider llmcore.LlmProvider, toolResults []llmcore.ToolResult, outputChan chan<- llmcore.CompleteResponse) llmcore.LlmResponse {
+	respChan := llmProvider.Complete(ctx, activeConversation, toolResults)
 
 	var toolCallRequest llmcore.LlmResponse
 
@@ -165,11 +163,6 @@ func complete(ctx context.Context, llmProvider llmcore.LlmProvider, toolResults 
 	}
 
 	return toolCallRequest
-}
-
-func readFile(filePath string) (string, error) {
-	content, err := os.ReadFile(filePath)
-	return string(content), err
 }
 
 func (s *CompleteService) callTool(ctx context.Context, llmResponse *llmcore.LlmResponse) *llmcore.ToolResult {
@@ -196,12 +189,11 @@ func (s *CompleteService) callTool(ctx context.Context, llmResponse *llmcore.Llm
 	return llmcore.NewToolResponseFrom(llmResponse, toolResponse)
 }
 
-func startMcpServers(ctx context.Context) (map[string]toolDetails, error) {
+func startMcpServers(ctx context.Context, activeProfile *profile.Profile) (map[string]toolDetails, error) {
 	// TODO: we are not closing these clients
 	returnTools := make(map[string]toolDetails)
-	req, _ := GetRequestFromCtx(ctx)
 
-	for _, server := range req.Profile.McpServers {
+	for _, server := range activeProfile.McpServers {
 
 		mcpServer, err := mcp.NewStdioClient(ctx, server.Command, server.Envs, server.Args)
 		if err != nil {
@@ -230,21 +222,21 @@ func startMcpServers(ctx context.Context) (map[string]toolDetails, error) {
 	return returnTools, nil
 }
 
-func (s *CompleteService) processRequestToConversation(req Request, activeConversation *conversation.Conversation) (llmcore.LlmProvider, error) {
+func (s *CompleteService) processRequestToConversation(req Request, activeConversation *conversation.Conversation) (llmcore.LlmProvider, *profile.Profile, error) {
 	activeProfile, err := s.loadProfile(req.ProfileSlug, activeConversation)
 	if err != nil {
-		return nil, err
+		return nil, activeProfile, err
 	}
 	activeConversation.SetProfileTo(activeProfile.Slug)
 
 	if req.ModelSlug != "" {
 		activeConversation.ModelSlug = req.ModelSlug
+		activeConversation.SetModelTo(req.ModelSlug)
 	}
-	activeConversation.SetModelTo(req.ModelSlug)
 
 	llmProvider, err := factory.NewProvider(activeConversation.ModelSlug, s.httpClient, *s.config)
 	if err != nil {
-		return nil, err
+		return nil, activeProfile, err
 	}
 
 	if !req.IsFollowUp {
@@ -252,28 +244,15 @@ func (s *CompleteService) processRequestToConversation(req Request, activeConver
 	}
 
 	if req.AppendFilename != "" {
-		content, err := readFile(req.AppendFilename)
+		content, err := os.ReadFile(req.AppendFilename)
 		if err != nil {
-			return nil, err
+			return nil, activeProfile, err
 		}
-		req.Question += "\n" + content
+		req.Question += "\n" + string(content)
 	}
 	activeConversation.NewQuestion(req.Question)
 
-	return llmProvider, nil
-}
-
-func (c *CompleteService) loadModelEnum(modelSlug string, activeConversation *conversation.Conversation) (factory.ModelEnum, error) {
-	if modelSlug == "" {
-		modelSlug = activeConversation.ModelSlug
-	}
-
-	modelEnum, ok := factory.ParseFrom(modelSlug)
-	if !ok {
-		return "", fmt.Errorf("%w: %s", llmcore.ErrModelNotFound, modelSlug)
-	}
-
-	return modelEnum, nil
+	return llmProvider, activeProfile, nil
 }
 
 func (c *CompleteService) loadProfile(profileSlug string, activeConversation *conversation.Conversation) (*profile.Profile, error) {
