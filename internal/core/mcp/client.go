@@ -10,13 +10,13 @@ import (
 	"github.com/robertoseba/gennie/internal/core/llmcore"
 )
 
-type McpClientInterface interface {
+type IMcpClient interface {
 	Close()
 	ListTools(ctx context.Context) ([]llmcore.Tool, error)
 	ExecTool(ctx context.Context, toolName string, args map[string]any) ([]byte, error)
 }
 
-var _ McpClientInterface = &McpClient{}
+var _ IMcpClient = &McpClient{}
 
 type McpClient struct {
 	client *client.Client

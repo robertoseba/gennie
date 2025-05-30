@@ -28,7 +28,7 @@ type CompleteService struct {
 }
 
 type toolDetails struct {
-	mcpClient        mcp.McpClientInterface
+	mcpClient        mcp.IMcpClient
 	tool             llmcore.Tool
 	requiresApproval bool
 }
