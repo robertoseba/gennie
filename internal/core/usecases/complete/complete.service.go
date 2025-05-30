@@ -18,44 +18,7 @@ import (
 	"github.com/robertoseba/gennie/internal/core/profile"
 )
 
-type CompleteService struct {
-	conversationRepo conversation.IConversationRepository
-	profileRepo      profile.IProfileRepository
-	httpClient       *http.Client
-	config           *config.Config
-	logger           *slog.Logger
-	tools            map[string]toolDetails // each toolName maps to a mcpClient so we can make a request
-}
-
-type toolDetails struct {
-	mcpClient        mcp.IMcpClient
-	tool             llmcore.Tool
-	requiresApproval bool
-}
-
-type (
-	ResponseType string
-	Response     struct {
-		Data string
-		Err  error
-		Type ResponseType
-	}
-)
-
-const (
-	RtLoading     ResponseType = "loading_info"
-	RtModel       ResponseType = "model_info"
-	RtProfile     ResponseType = "profile_info"
-	RtApprovalReq ResponseType = "approval_request"
-	RtLlmAnswer   ResponseType = "llm_answer"
-)
-
-func NewCompleteService(
-	cr conversation.IConversationRepository,
-	pr profile.IProfileRepository,
-	httpClient *http.Client,
-	config *config.Config,
-) *CompleteService {
+func NewCompleteService(cr conversation.IConversationRepository, pr profile.IProfileRepository, httpClient *http.Client, config *config.Config) *CompleteService {
 	return &CompleteService{
 		conversationRepo: cr,
 		profileRepo:      pr,
