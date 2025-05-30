@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/robertoseba/gennie/internal/core/llmcore"
 	"github.com/robertoseba/gennie/internal/core/usecases/complete"
 	"github.com/robertoseba/gennie/internal/output"
 	"github.com/spf13/cobra"
@@ -42,7 +41,7 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 				AppendFilename: appendFileFlag,
 			}
 
-			respChan, err := askCmd.Execute(cmd.Context(), req)
+			responseChan, err := askCmd.Execute(cmd.Context(), req)
 			if err != nil {
 				if isTerminalFlag {
 					spinner.Stop()
@@ -52,17 +51,17 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 
 			var modelInfo, profileInfo string
 
-			for response := range respChan {
+			for response := range responseChan {
 				if response.Err != nil {
 					return response.Err
 				}
 
 				if !isTerminalFlag {
 					// When piping we only print the models answer
-					if response.Type == "" || response.Type == llmcore.LlmAnswer {
+					if response.Type == "" || response.Type == complete.RtLlmAnswer {
 						cmd.Print(response.Data)
 					}
-					if response.Type == llmcore.ApprovalRequest {
+					if response.Type == complete.RtApprovalReq {
 						return errors.New("Tool use approval is required. Please run the command in a terminal to approve the request.")
 					}
 					continue
@@ -70,13 +69,13 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 
 				if spinner.IsRunning() {
 					switch response.Type {
-					case llmcore.LoadingInfo:
+					case complete.RtLoading:
 						spinner.SetMessage(response.Data)
-					case llmcore.ModelInfo:
+					case complete.RtModel:
 						modelInfo = response.Data
-					case llmcore.ProfileInfo:
+					case complete.RtProfile:
 						profileInfo = response.Data
-					case llmcore.ApprovalRequest:
+					case complete.RtApprovalReq:
 						spinner.Stop()
 						cmd.Println("Please approve the tool use to continue:")
 						cmd.Println(response.Data)
@@ -89,13 +88,13 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 					}
 				} else {
 					switch response.Type {
-					case llmcore.ApprovalRequest:
+					case complete.RtApprovalReq:
 						cmd.Println()
 						p.Print("\nPlease approve the tool use to continue:", output.Yellow)
 						cmd.Println(response.Data)
 						p.Print("\nIf you want to cancel the request, please use Ctrl+C.", output.Red)
 						bufio.NewReader(os.Stdin).ReadBytes('\n')
-					case llmcore.LoadingInfo:
+					case complete.RtLoading:
 						cmd.Println()
 						spinner = output.NewSpinner(response.Data)
 						spinner.Start()

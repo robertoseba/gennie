@@ -18,12 +18,6 @@ import (
 	"github.com/robertoseba/gennie/internal/core/profile"
 )
 
-type toolDetails struct {
-	mcpClient        mcp.McpClientInterface
-	tool             llmcore.Tool
-	requiresApproval bool
-}
-
 type CompleteService struct {
 	conversationRepo conversation.IConversationRepository
 	profileRepo      profile.IProfileRepository
@@ -32,6 +26,29 @@ type CompleteService struct {
 	logger           *slog.Logger
 	tools            map[string]toolDetails // each toolName maps to a mcpClient so we can make a request
 }
+
+type toolDetails struct {
+	mcpClient        mcp.McpClientInterface
+	tool             llmcore.Tool
+	requiresApproval bool
+}
+
+type (
+	ResponseType string
+	Response     struct {
+		Data string
+		Err  error
+		Type ResponseType
+	}
+)
+
+const (
+	RtLoading     ResponseType = "loading_info"
+	RtModel       ResponseType = "model_info"
+	RtProfile     ResponseType = "profile_info"
+	RtApprovalReq ResponseType = "approval_request"
+	RtLlmAnswer   ResponseType = "llm_answer"
+)
 
 func NewCompleteService(
 	cr conversation.IConversationRepository,
@@ -48,7 +65,7 @@ func NewCompleteService(
 	}
 }
 
-func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan llmcore.CompleteResponse, error) {
+func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Response, error) {
 	var err error
 
 	activeConversation, err := s.conversationRepo.LoadActive()
@@ -63,21 +80,21 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan llmc
 
 	llmProvider.SetSystemPrompt(activeProfile.Data)
 
-	modelResponseChan := make(chan llmcore.CompleteResponse)
-	outputChan := s.pipeToSaveConversation(activeConversation, modelResponseChan)
+	modelResponseChan := make(chan Response)
+	outputChan := s.pipeToSaveConversation(ctx, activeConversation, modelResponseChan)
 
 	go func() {
 		defer close(modelResponseChan)
 
-		outputChan <- llmcore.CompleteResponse{Data: activeConversation.ModelSlug, Type: llmcore.ModelInfo, Err: nil}
-		outputChan <- llmcore.CompleteResponse{Data: activeProfile.Name, Type: llmcore.ProfileInfo, Err: nil}
+		outputChan <- Response{Data: activeConversation.ModelSlug, Type: RtModel}
+		outputChan <- Response{Data: activeProfile.Name, Type: RtProfile}
 
 		if len(activeProfile.McpServers) > 0 {
-			outputChan <- llmcore.CompleteResponse{Data: "Loading MCP Servers...", Type: llmcore.LoadingInfo, Err: nil}
+			outputChan <- Response{Data: "Loading MCP Servers...", Type: RtLoading}
 
 			mcpTools, err := startMcpServers(ctx, activeProfile)
 			if err != nil {
-				outputChan <- llmcore.CompleteResponse{Err: err}
+				outputChan <- Response{Err: err}
 			}
 
 			s.tools = mcpTools
@@ -98,7 +115,7 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan llmc
 		toolResults := make([]llmcore.ToolResult, 0)
 
 		// Keeps calling the model while it needs to return function calls
-		outputChan <- llmcore.CompleteResponse{Data: "Asking the model...", Type: llmcore.LoadingInfo, Err: nil}
+		outputChan <- Response{Data: "Asking the model...", Type: RtLoading, Err: nil}
 		for {
 			resp := complete(ctx, activeConversation, llmProvider, toolResults, modelResponseChan)
 
@@ -108,10 +125,10 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan llmc
 			}
 
 			if s.tools[resp.FunctionCall.Name].requiresApproval {
-				outputChan <- llmcore.CompleteResponse{Data: fmt.Sprintf("Can I run this tool: %s with parameters (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: llmcore.ApprovalRequest, Err: nil}
+				outputChan <- Response{Data: fmt.Sprintf("Can I run this tool: %s with parameters (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: RtApprovalReq, Err: nil}
 			}
 
-			outputChan <- llmcore.CompleteResponse{Data: fmt.Sprintf("Using tool: %s -> (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: llmcore.LoadingInfo, Err: nil}
+			outputChan <- Response{Data: fmt.Sprintf("Using tool: %s -> (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: RtLoading, Err: nil}
 			result := s.callTool(ctx, &resp)
 
 			toolResults = append(toolResults, *result)
@@ -121,34 +138,39 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan llmc
 	return outputChan, nil
 }
 
-// TODO: pass context and check for cancellation
-func (s *CompleteService) pipeToSaveConversation(conv *conversation.Conversation, inputChan <-chan llmcore.CompleteResponse) chan llmcore.CompleteResponse {
-	outputChan := make(chan llmcore.CompleteResponse)
+func (s *CompleteService) pipeToSaveConversation(ctx context.Context, conv *conversation.Conversation, inputChan <-chan Response) chan Response {
+	outputChan := make(chan Response)
 
 	go func() {
 		defer close(outputChan)
 
 		convBuffer := strings.Builder{}
 		for msg := range inputChan {
-			outputChan <- msg
-			if msg.Err == nil {
-				convBuffer.WriteString(msg.Data)
+			select {
+			case <-ctx.Done():
+				s.logger.Debug("Context done, stopping conversation saving", "error", ctx.Err())
+				return
+			case outputChan <- msg:
+				if msg.Err == nil {
+					convBuffer.WriteString(msg.Data)
+				}
 			}
 		}
+
 		err := conv.AnswerLastQuestion(convBuffer.String())
 		if err != nil {
-			outputChan <- llmcore.CompleteResponse{Err: err}
+			outputChan <- Response{Err: err}
 		}
 		err = s.conversationRepo.SaveAsActive(conv)
 		if err != nil {
-			outputChan <- llmcore.CompleteResponse{Err: err}
+			outputChan <- Response{Err: err}
 		}
 	}()
 
 	return outputChan
 }
 
-func complete(ctx context.Context, activeConversation *conversation.Conversation, llmProvider llmcore.LlmProvider, toolResults []llmcore.ToolResult, outputChan chan<- llmcore.CompleteResponse) llmcore.LlmResponse {
+func complete(ctx context.Context, activeConversation *conversation.Conversation, llmProvider llmcore.LlmProvider, toolResults []llmcore.ToolResult, llmResponseChan chan<- Response) llmcore.LlmResponse {
 	respChan := llmProvider.Complete(ctx, activeConversation, toolResults)
 
 	var toolCallRequest llmcore.LlmResponse
@@ -159,7 +181,7 @@ func complete(ctx context.Context, activeConversation *conversation.Conversation
 			continue
 		}
 
-		outputChan <- llmcore.CompleteResponse{Data: llmResponse.Text, Err: llmResponse.Error}
+		llmResponseChan <- Response{Data: llmResponse.Text, Err: llmResponse.Error}
 	}
 
 	return toolCallRequest
