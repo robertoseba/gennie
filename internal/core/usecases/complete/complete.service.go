@@ -21,7 +21,6 @@ type toolDetails struct {
 	mcpClient        *McpClient
 	tool             llmcore.Tool
 	requiresApproval bool
-	showToolOutput   bool
 }
 
 type CompleteService struct {
@@ -78,6 +77,7 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan llmcore.CompleteRespo
 
 		if len(profile.McpServers) > 0 {
 			outputChan <- llmcore.CompleteResponse{Data: "Loading MCP Servers...", Type: llmcore.LoadingInfo, Err: nil}
+
 			mcpTools, err := startMcpServers(profile)
 			if err != nil {
 				outputChan <- llmcore.CompleteResponse{Err: err}
@@ -98,6 +98,7 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan llmcore.CompleteRespo
 			llmProvider.SetTools(modelTools)
 		}
 
+		// TODO: context TODO
 		ctx := context.Background()
 		toolResults := make([]llmcore.ToolResult, 0)
 
@@ -117,10 +118,6 @@ func (s *CompleteService) Execute(input *InputDTO) (<-chan llmcore.CompleteRespo
 
 			outputChan <- llmcore.CompleteResponse{Data: fmt.Sprintf("Using tool: %s -> (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: llmcore.LoadingInfo, Err: nil}
 			result := s.callTool(&resp)
-
-			if s.tools[resp.FunctionCall.Name].showToolOutput {
-				outputChan <- llmcore.CompleteResponse{Data: fmt.Sprintf("Tool %s returned: %s", resp.FunctionCall.Name, result.Result), Type: llmcore.ToolResultInfo, Err: nil}
-			}
 
 			toolResults = append(toolResults, *result)
 		}
@@ -191,7 +188,10 @@ func (s *CompleteService) callTool(llmResponse *llmcore.LlmResponse) *llmcore.To
 		}
 	}
 
+	// TODO: context TODO
 	toolResponse, err := s.tools[llmResponse.FunctionCall.Name].mcpClient.ExecTool(context.TODO(), llmResponse.FunctionCall.Name, args)
+	s.logger.Debug("Tool response", "toolName", llmResponse.FunctionCall.Name, "response", toolResponse)
+
 	if err != nil {
 		return llmcore.NewToolResponseError(nil, err)
 	}
@@ -214,7 +214,7 @@ func startMcpServers(profile *profile.Profile) (map[string]toolDetails, error) {
 		mcpTools, err := mcpServer.ListTools(ctx)
 		if err != nil {
 			fmt.Printf("error %v", err)
-			panic(err)
+			return nil, fmt.Errorf("failed to list tools from MCP server %s: %w", server.Command, err)
 		}
 
 		// Filter tools based on profile allowed tools
@@ -224,7 +224,6 @@ func startMcpServers(profile *profile.Profile) (map[string]toolDetails, error) {
 					tool:             tool,
 					mcpClient:        mcpServer,
 					requiresApproval: server.RequiresApproval,
-					showToolOutput:   server.ShowToolOutput,
 				}
 			}
 		}
@@ -265,7 +264,7 @@ func (s *CompleteService) processInput(input *InputDTO) (*conversation.Conversat
 }
 
 func (s *CompleteService) loadProfile(profileSlug string, conv *conversation.Conversation) (*profile.Profile, error) {
-	s.logger.Debug("Loading profile: ", "slug", profileSlug, "conversationProfileSlug", conv.ProfileSlug)
+	s.logger.Debug("Loading profile: ", "profile flag", profileSlug, "prev. conversation profile", conv.ProfileSlug)
 
 	if profileSlug == "" {
 		profileSlug = conv.ProfileSlug
@@ -274,6 +273,8 @@ func (s *CompleteService) loadProfile(profileSlug string, conv *conversation.Con
 }
 
 func (s *CompleteService) loadLlmProvider(modelSlug string, conv *conversation.Conversation) (llmcore.LlmProvider, factory.ModelEnum, error) {
+	s.logger.Debug("Loading model: ", "model flag", modelSlug, "prev. conversation model", conv.ModelSlug)
+
 	if modelSlug == "" {
 		modelSlug = conv.ModelSlug
 	}

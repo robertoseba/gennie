@@ -25,5 +25,4 @@ type mcpServer struct {
 	RequiresApproval bool     `toml:"requires_approval"`
 	Envs             []string `toml:"envs"`
 	AllowedTools     []string `toml:"allowed_tools"`
-	ShowToolOutput   bool     `toml:"show_tool_output"`
 }

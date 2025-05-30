@@ -26,7 +26,6 @@ args = [
 ]
 envs = []
 # requires_approval = true
-# show_tool_output = true
 allowed_tools = ["list_volumes"]
 
 [mcpServers.exa]
@@ -35,4 +34,3 @@ args = ["run", "-i", "--rm", "-e", "EXA_API_KEY", "mcp/exa"]
 # needs to be run with the EXA_API_KEY environment variable set in terminal
 # envs = ["EXA_API_KEY=${EXA_API_KEY}"]
 requires_approval = true
-# show_tool_output = true
