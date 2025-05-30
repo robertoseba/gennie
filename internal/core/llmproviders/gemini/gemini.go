@@ -161,7 +161,6 @@ func convertToolsToProvider(tools []llmcore.Tool) []*genai.FunctionDeclaration {
 			log.Printf("Error marshaling tool input schema: %v", err)
 			continue
 		}
-		schema.Type = genai.TypeObject
 
 		functionDec := &genai.FunctionDeclaration{
 			Name:        tool.Name,
