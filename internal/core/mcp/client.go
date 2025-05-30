@@ -51,8 +51,7 @@ func (c *McpClient) Close() {
 }
 
 func (c *McpClient) ListTools(ctx context.Context) ([]llmcore.Tool, error) {
-	toolsRequest := mcp.ListToolsRequest{}
-	mcpToolsResponse, err := c.client.ListTools(ctx, toolsRequest)
+	mcpToolsResponse, err := c.client.ListTools(ctx, mcp.ListToolsRequest{})
 	if err != nil {
 		return nil, err
 	}
