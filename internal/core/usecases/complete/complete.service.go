@@ -55,7 +55,9 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 		if len(activeProfile.McpServers) > 0 {
 			outputChan <- Response{Data: "Loading MCP Servers...", Type: RtLoading}
 
-			mcpTools, err := startMcpServers(ctx, activeProfile)
+			mcpTools, shutdown, err := startMcpServers(ctx, activeProfile)
+			defer shutdown()
+
 			if err != nil {
 				outputChan <- Response{Err: err}
 			}
@@ -172,37 +174,46 @@ func (s *CompleteService) callTool(ctx context.Context, llmResponse *llmcore.Llm
 	return llmcore.NewToolResponseFrom(llmResponse, toolResponse)
 }
 
-func startMcpServers(ctx context.Context, activeProfile *profile.Profile) (map[string]toolDetails, error) {
-	// TODO: we are not closing these clients
-	returnTools := make(map[string]toolDetails)
+type shutdownFunc func()
+
+func startMcpServers(ctx context.Context, activeProfile *profile.Profile) (map[string]toolDetails, shutdownFunc, error) {
+	result := make(map[string]toolDetails)
+
+	var cleanupFuncs []shutdownFunc
 
 	for _, server := range activeProfile.McpServers {
-
-		mcpServer, err := mcp.NewStdioClient(ctx, server.Command, server.Envs, server.Args)
+		mcpClient, err := mcp.NewStdioClient(ctx, server.Command, server.Envs, server.Args)
 		if err != nil {
 			fmt.Printf("error %v", err)
 			continue
 		}
 
-		mcpTools, err := mcpServer.ListTools(ctx)
+		mcpTools, err := mcpClient.ListTools(ctx)
 		if err != nil {
 			fmt.Printf("error %v", err)
-			return nil, fmt.Errorf("failed to list tools from MCP server %s: %w", server.Command, err)
+			return nil, nil, fmt.Errorf("failed to list tools from MCP server %s: %w", server.Command, err)
 		}
 
 		// Filter tools based on profile allowed tools
 		for _, tool := range mcpTools {
-			if slices.Contains(server.AllowedTools, tool.Name) || len(server.AllowedTools) == 0 {
-				returnTools[tool.Name] = toolDetails{
+			if len(server.AllowedTools) == 0 || slices.Contains(server.AllowedTools, tool.Name) {
+				result[tool.Name] = toolDetails{
 					tool:             tool,
-					mcpClient:        mcpServer,
+					mcpClient:        mcpClient,
 					requiresApproval: server.RequiresApproval,
 				}
+				cleanupFuncs = append(cleanupFuncs, mcpClient.Close)
 			}
 		}
 	}
 
-	return returnTools, nil
+	var shutdown shutdownFunc = func() {
+		for _, cleanup := range cleanupFuncs {
+			cleanup()
+		}
+	}
+
+	return result, shutdown, nil
 }
 
 func (s *CompleteService) processRequestToConversation(req Request, activeConversation *conversation.Conversation) (llmcore.LlmProvider, *profile.Profile, error) {
