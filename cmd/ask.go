@@ -37,15 +37,16 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 
 			startProcessingTime := time.Now()
 
-			dto := &complete.InputDTO{
-				Question:    strings.Join(args, " "),
-				ProfileSlug: profileFlag,
-				ModelSlug:   modelFlag,
-				IsFollowUp:  isFollowUpFlag,
-				AppendFile:  appendFileFlag,
+			req := &complete.Request{
+				Question:       strings.Join(args, " "),
+				ProfileSlug:    profileFlag,
+				ModelSlug:      modelFlag,
+				IsFollowUp:     isFollowUpFlag,
+				AppendFilename: appendFileFlag,
 			}
 
-			respChan, err := askCmd.Execute(dto)
+			ctx := complete.AddRequestToCtx(cmd.Context(), req)
+			respChan, err := askCmd.Execute(ctx)
 			if err != nil {
 				if isTerminalFlag {
 					spinner.Stop()
