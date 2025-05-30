@@ -2,11 +2,14 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log"
 	"log/slog"
 	"os"
+	"os/signal"
 	"path"
+	"syscall"
 
 	"github.com/robertoseba/gennie/internal/infra/container"
 	"github.com/robertoseba/gennie/internal/output"
@@ -43,9 +46,16 @@ func Run(version string, stdOut io.Writer, stdErr io.Writer) {
 		}
 	}
 
-	err := command.ExecuteContext(context.Background())
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	err := command.ExecuteContext(ctx)
 	if err != nil {
-		command.PrintErrf("Error executing command: %v\n", err)
+		if errors.Is(err, context.Canceled) {
+			command.PrintErrln("\nTerminated! Cancelled by user")
+			os.Exit(0)
+		}
+		command.PrintErrf("Ops! Something went wrong! %s\n\n", err)
 		os.Exit(1)
 	}
 }

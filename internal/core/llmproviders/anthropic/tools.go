@@ -12,7 +12,7 @@ func parseToolUseFrom(message *anthropic.Message) []llmcore.LlmResponse {
 		switch variant := block.AsAny().(type) {
 		case anthropic.ToolUseBlock:
 			response := llmcore.LlmResponse{
-				StopReason: llmcore.StopReasonTools,
+				StopReason: llmcore.StopReasonToolCall,
 				FunctionCall: llmcore.FunctionCall{
 					ID:        variant.ID,
 					Name:      variant.Name,

@@ -103,7 +103,7 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 
 			functionCalls := result.FunctionCalls()
 			if len(functionCalls) > 0 {
-				response.StopReason = llmcore.StopReasonTools
+				response.StopReason = llmcore.StopReasonToolCall
 				for _, functionCall := range functionCalls {
 					argsBytes, err := json.Marshal(functionCall.Args)
 					if err != nil {

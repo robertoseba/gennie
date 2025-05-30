@@ -114,13 +114,11 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 
 		toolResults := make([]llmcore.ToolResult, 0)
 
-		// Keeps calling the model while it needs to return function calls
 		outputChan <- Response{Data: "Asking the model...", Type: RtLoading, Err: nil}
 		for {
-			resp := complete(ctx, activeConversation, llmProvider, toolResults, modelResponseChan)
+			resp := askLlm(ctx, activeConversation, llmProvider, toolResults, modelResponseChan)
 
-			// If does not need to send function call back to model than breaks out of the loop
-			if resp.StopReason != llmcore.StopReasonTools {
+			if !resp.IsToolCall() {
 				break
 			}
 
@@ -170,13 +168,13 @@ func (s *CompleteService) pipeToSaveConversation(ctx context.Context, conv *conv
 	return outputChan
 }
 
-func complete(ctx context.Context, activeConversation *conversation.Conversation, llmProvider llmcore.LlmProvider, toolResults []llmcore.ToolResult, llmResponseChan chan<- Response) llmcore.LlmResponse {
+func askLlm(ctx context.Context, activeConversation *conversation.Conversation, llmProvider llmcore.LlmProvider, toolResults []llmcore.ToolResult, llmResponseChan chan<- Response) llmcore.LlmResponse {
 	respChan := llmProvider.Complete(ctx, activeConversation, toolResults)
 
 	var toolCallRequest llmcore.LlmResponse
 
 	for llmResponse := range respChan {
-		if llmResponse.StopReason == llmcore.StopReasonTools {
+		if llmResponse.StopReason == llmcore.StopReasonToolCall {
 			toolCallRequest = llmResponse
 			continue
 		}

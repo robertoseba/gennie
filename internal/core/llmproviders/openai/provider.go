@@ -142,7 +142,7 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			output <- llmcore.LlmResponse{
 				Text:       acc.Choices[0].Message.Content,
 				Error:      nil,
-				StopReason: llmcore.StopReasonTools,
+				StopReason: llmcore.StopReasonToolCall,
 				FunctionCall: llmcore.FunctionCall{
 					ID:        id,
 					Name:      f.Name,
