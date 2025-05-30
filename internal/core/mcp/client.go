@@ -1,4 +1,4 @@
-package complete
+package mcp
 
 import (
 	"context"
@@ -10,11 +10,19 @@ import (
 	"github.com/robertoseba/gennie/internal/core/llmcore"
 )
 
+type McpClientInterface interface {
+	Close()
+	ListTools(ctx context.Context) ([]llmcore.Tool, error)
+	ExecTool(ctx context.Context, toolName string, args map[string]any) ([]byte, error)
+}
+
 type McpClient struct {
 	client *client.Client
 }
 
-func StartMcpServer(ctx context.Context, cmd string, env []string, args []string) (*McpClient, error) {
+var _ McpClientInterface = &McpClient{}
+
+func NewStdioClient(ctx context.Context, cmd string, env []string, args []string) (*McpClient, error) {
 	c, err := client.NewStdioMCPClient(cmd, env, args...)
 	if err != nil {
 		return nil, err

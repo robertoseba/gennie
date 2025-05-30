@@ -15,6 +15,7 @@ import (
 var (
 	ErrNoActiveConversation = errors.New("no active conversation")
 	ErrConversationNotFound = errors.New("conversation not found")
+	ErrFailedUnmarshall     = errors.New("conversation could not be unmarshalled from file")
 )
 
 const ActiveConversationFileName = "active.json"
@@ -33,7 +34,7 @@ func (r *ConversationRepository) LoadActive() (*conversation.Conversation, error
 	// TODO: cache conversation loaded
 	c, err := r.loadFrom(path.Join(r.cacheDir, ActiveConversationFileName))
 	if err != nil {
-		if errors.Is(err, ErrConversationNotFound) {
+		if errors.Is(err, ErrConversationNotFound) || errors.Is(err, ErrFailedUnmarshall) {
 			return conversation.NewConversation(profile.DefaultProfileSlug, factory.DefaultModel.Slug()), nil
 		}
 		return nil, err
@@ -75,7 +76,7 @@ func (r *ConversationRepository) loadFrom(filepath string) (*conversation.Conver
 
 	err = json.Unmarshal(content, conversation)
 	if err != nil {
-		return nil, fmt.Errorf("error decoding conversation: %w", err)
+		return nil, fmt.Errorf("%w: %s", ErrFailedUnmarshall, err.Error())
 	}
 
 	return conversation, nil
