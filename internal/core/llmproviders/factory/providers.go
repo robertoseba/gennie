@@ -25,7 +25,7 @@ var availableModels = map[ModelEnum]string{
 	Gemini:       gemini.ExportedModelDescription,
 	OpenAIMini:   "GPT-4.1-mini (OPENAI)",
 	OpenAI:       "GPT-4.1 (OPENAI)",
-	Groq:         "Groq (DeepSeek-R1-Distill-Llama-70B)",
+	Groq:         "Groq (Qwen-QWQ-32B)",
 	Ollama:       "Ollama",
 }
 
