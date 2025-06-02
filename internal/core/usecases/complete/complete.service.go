@@ -48,6 +48,9 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 	go func() {
 		defer close(modelResponseChan)
 
+		outputChan <- Response{Data: activeConversation.ModelSlug, Type: RtModel}
+		outputChan <- Response{Data: activeProfile.Name, Type: RtProfile}
+
 		// setup mcps
 		mcpGroup := mcp.NewGroup()
 		if len(activeProfile.McpServers) > 0 {
@@ -66,12 +69,9 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 		}
 		defer mcpGroup.Shutdown()
 
-		outputChan <- Response{Data: activeConversation.ModelSlug, Type: RtModel}
-		outputChan <- Response{Data: activeProfile.Name, Type: RtProfile}
-
 		outputChan <- Response{Data: "Asking the model...", Type: RtLoading, Err: nil}
-		toolResults := make([]llmcore.ToolResult, 0)
 
+		toolResults := make([]llmcore.ToolResult, 0)
 		for {
 			resp := askLlm(ctx, activeConversation, llmProvider, toolResults, modelResponseChan)
 
