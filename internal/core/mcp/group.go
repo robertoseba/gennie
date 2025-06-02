@@ -37,7 +37,7 @@ func (g *Group) Add(ctx context.Context, cmd string, env []string, args []string
 
 	err = g.retrieveToolsFrom(ctx, mcpClient, allowedTools)
 	if err != nil {
-		return fmt.Errorf("failed to retrieve tools from MCP server %s: %w", mcpClient.Name(), err)
+		return fmt.Errorf("failed to retrieve tools from MCP server %s: %w", mcpClient.name, err)
 	}
 
 	// TODO: curretly we leave all mcp tools enabled.But it might be better to close and open as needed
@@ -48,7 +48,7 @@ func (g *Group) Add(ctx context.Context, cmd string, env []string, args []string
 
 func (g *Group) Shutdown() {
 	for _, tool := range g.tools {
-		tool.mcpClient.Close()
+		tool.mcpClient.close()
 	}
 }
 
@@ -67,7 +67,7 @@ func (g *Group) ExecTool(ctx context.Context, name string, args map[string]any) 
 		return "", fmt.Errorf("tool %s not found", name)
 	}
 
-	result, err := tool.mcpClient.ExecTool(ctx, name, args)
+	result, err := tool.mcpClient.execTool(ctx, name, args)
 	if err != nil {
 		return "", fmt.Errorf("failed to execute tool %s: %w", name, err)
 	}
@@ -86,7 +86,7 @@ func (g *Group) RequiresApproval(toolName string) bool {
 func (g *Group) retrieveToolsFrom(ctx context.Context, client *mcpClient, allowedTools []string) error {
 	mcpToolsResponse, err := client.client.ListTools(ctx, mcp.ListToolsRequest{})
 	if err != nil {
-		return fmt.Errorf("failed to list tools from MCP server %s: %w", client.Name(), err)
+		return fmt.Errorf("failed to list tools from MCP server %s: %w", client.name, err)
 	}
 
 	for _, t := range mcpToolsResponse.Tools {

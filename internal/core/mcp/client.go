@@ -10,15 +10,16 @@ import (
 )
 
 type mcpClient struct {
-	name string
-	args []string
-	env  []string
+	name             string
+	args             []string
+	env              []string
+	requiresApproval bool // If true, the tool requires approval before execution
+	client           *client.Client
+
 	// This can be used by clients to improve the LLM's understanding of
 	// available tools, resources, etc. It can be thought of like a "hint" to the model.
 	// For example, this information MAY be added to the system prompt.
-	instructions     string
-	requiresApproval bool // If true, the tool requires approval before execution
-	client           *client.Client
+	instructions string // TODO: currently not used, but we might use it in the future
 }
 
 func newStdioClient(ctx context.Context, cmd string, env []string, args []string, requiresApproval bool) (*mcpClient, error) {
@@ -50,15 +51,11 @@ func newStdioClient(ctx context.Context, cmd string, env []string, args []string
 	return mcpClient, nil
 }
 
-func (c *mcpClient) Name() string {
-	return c.name
-}
-
-func (c *mcpClient) Close() {
+func (c *mcpClient) close() {
 	c.client.Close()
 }
 
-func (c *mcpClient) ExecTool(ctx context.Context, toolName string, args map[string]any) (string, error) {
+func (c *mcpClient) execTool(ctx context.Context, toolName string, args map[string]any) (string, error) {
 	request := mcp.CallToolRequest{
 		Request: mcp.Request{
 			Method: "tools/call",
