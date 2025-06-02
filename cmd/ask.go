@@ -62,7 +62,7 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 						cmd.Print(response.Data)
 					}
 					if response.Type == complete.RtApprovalReq {
-						return errors.New("Tool use approval is required. Please run the command in a terminal to approve the request.")
+						return errors.New("Tool use approval is required. Please run the command in a terminal to approve the request or set in the profile the ` + "`requires_approval`" + ` flag to false.")
 					}
 					continue
 				}
@@ -79,8 +79,12 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 						spinner.Stop()
 						cmd.Println("Please approve the tool use to continue:")
 						cmd.Println(response.Data)
-						cmd.Println("If you want to cancel the request, please use Ctrl+C.")
-						bufio.NewReader(os.Stdin).ReadBytes('\n')
+						cmd.Println("Should I continue? (y/N)")
+						shouldContinue, _ := bufio.NewReader(os.Stdin).ReadBytes('\n')
+						if strings.TrimSpace(string(shouldContinue)) != "y" {
+							p.Print("Tool use approval was not granted. Exiting.", output.Red)
+							return nil
+						}
 						spinner.Start()
 					default: // Answer received
 						spinner.Stop()
@@ -91,9 +95,12 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 					case complete.RtApprovalReq:
 						cmd.Println()
 						p.Print("\nPlease approve the tool use to continue:", output.Yellow)
-						cmd.Println(response.Data)
-						p.Print("\nIf you want to cancel the request, please use Ctrl+C.", output.Red)
-						bufio.NewReader(os.Stdin).ReadBytes('\n')
+						cmd.Print("Should I continue? (y/N)")
+						shouldContinue, _ := bufio.NewReader(os.Stdin).ReadBytes('\n')
+						if strings.TrimSpace(string(shouldContinue)) != "y" {
+							p.Print("Tool use approval was not granted. Exiting.", output.Red)
+							return nil
+						}
 					case complete.RtLoading:
 						cmd.Println()
 						spinner = output.NewSpinner(response.Data)
