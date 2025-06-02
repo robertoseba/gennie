@@ -62,7 +62,7 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 						cmd.Print(response.Data)
 					}
 					if response.Type == complete.RtApprovalReq {
-						return errors.New("Tool use approval is required. Please run the command in a terminal to approve the request or set in the profile the ` + "`requires_approval`" + ` flag to false.")
+						return errors.New("Tool use approval is required. Please run the command in a terminal to approve the request or set in the profile the `requires_approval` flag to false.")
 					}
 					continue
 				}
