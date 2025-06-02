@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"slices"
 	"strings"
 
 	"github.com/robertoseba/gennie/internal/core/config"
@@ -48,38 +47,30 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 
 	go func() {
 		defer close(modelResponseChan)
+		// setup mcps
+		mcpGroup := mcp.NewGroup()
+		if len(activeProfile.McpServers) > 0 {
+			outputChan <- Response{Data: "Loading MCP Servers...", Type: RtLoading}
+			for _, mcpProfile := range activeProfile.McpServers {
+				err := mcpGroup.Add(ctx, mcpProfile.Command, mcpProfile.Envs, mcpProfile.Args, mcpProfile.RequiresApproval, mcpProfile.AllowedTools)
+				if err != nil {
+					outputChan <- Response{Err: fmt.Errorf("failed to add MCP server %s: %w", mcpProfile.Command, err)}
+				}
+			}
+			tools, err := mcpGroup.ListTools()
+			if err != nil {
+				outputChan <- Response{Err: fmt.Errorf("failed to list tools from MCP servers: %w", err)}
+			}
+			llmProvider.SetTools(tools)
+		}
+		defer mcpGroup.Shutdown()
 
 		outputChan <- Response{Data: activeConversation.ModelSlug, Type: RtModel}
 		outputChan <- Response{Data: activeProfile.Name, Type: RtProfile}
 
-		if len(activeProfile.McpServers) > 0 {
-			outputChan <- Response{Data: "Loading MCP Servers...", Type: RtLoading}
-
-			mcpTools, shutdown, err := startMcpServers(ctx, activeProfile)
-			defer shutdown()
-
-			if err != nil {
-				outputChan <- Response{Err: err}
-			}
-
-			s.tools = mcpTools
-			var modelTools []llmcore.Tool
-			for toolName := range s.tools {
-				tool := llmcore.Tool{
-					Name:        s.tools[toolName].tool.Name,
-					Description: s.tools[toolName].tool.Description,
-					InputSchema: llmcore.ToolInputSchema{
-						Properties: s.tools[toolName].tool.InputSchema.Properties,
-					},
-				}
-				modelTools = append(modelTools, tool)
-			}
-			llmProvider.SetTools(modelTools)
-		}
-
+		outputChan <- Response{Data: "Asking the model...", Type: RtLoading, Err: nil}
 		toolResults := make([]llmcore.ToolResult, 0)
 
-		outputChan <- Response{Data: "Asking the model...", Type: RtLoading, Err: nil}
 		for {
 			resp := askLlm(ctx, activeConversation, llmProvider, toolResults, modelResponseChan)
 
@@ -87,12 +78,12 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 				break
 			}
 
-			if s.tools[resp.FunctionCall.Name].requiresApproval {
+			if mcpGroup.RequiresApproval(resp.FunctionCall.Name) {
 				outputChan <- Response{Data: fmt.Sprintf("Can I run this tool: %s with parameters (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: RtApprovalReq, Err: nil}
 			}
 
 			outputChan <- Response{Data: fmt.Sprintf("Using tool: %s -> (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: RtLoading, Err: nil}
-			result := s.callTool(ctx, &resp)
+			result := s.callTool(ctx, &resp, mcpGroup)
 
 			toolResults = append(toolResults, *result)
 		}
@@ -150,11 +141,7 @@ func askLlm(ctx context.Context, activeConversation *conversation.Conversation, 
 	return toolCallRequest
 }
 
-func (s *CompleteService) callTool(ctx context.Context, llmResponse *llmcore.LlmResponse) *llmcore.ToolResult {
-	if _, ok := s.tools[llmResponse.FunctionCall.Name]; !ok {
-		return llmcore.NewToolResponseError(llmResponse, fmt.Errorf("tool %s not found", llmResponse.FunctionCall.Name))
-	}
-
+func (s *CompleteService) callTool(ctx context.Context, llmResponse *llmcore.LlmResponse, mcpGroup *mcp.Group) *llmcore.ToolResult {
 	var args map[string]any
 	if len(llmResponse.FunctionCall.Arguments) > 0 {
 		args = make(map[string]any)
@@ -164,56 +151,14 @@ func (s *CompleteService) callTool(ctx context.Context, llmResponse *llmcore.Llm
 		}
 	}
 
-	toolResponse, err := s.tools[llmResponse.FunctionCall.Name].mcpClient.ExecTool(ctx, llmResponse.FunctionCall.Name, args)
+	toolResponse, err := mcpGroup.ExecTool(ctx, llmResponse.FunctionCall.Name, args)
+	if err != nil {
+		s.logger.Error("Failed to execute tool", "toolName", llmResponse.FunctionCall.Name, "error", err)
+		return llmcore.NewToolResponseError(llmResponse, err)
+	}
 	s.logger.Debug("Tool response", "toolName", llmResponse.FunctionCall.Name, "response", toolResponse)
 
-	if err != nil {
-		return llmcore.NewToolResponseError(nil, err)
-	}
-
-	return llmcore.NewToolResponseFrom(llmResponse, toolResponse)
-}
-
-type shutdownFunc func()
-
-func startMcpServers(ctx context.Context, activeProfile *profile.Profile) (map[string]toolDetails, shutdownFunc, error) {
-	result := make(map[string]toolDetails)
-
-	var cleanupFuncs []shutdownFunc
-
-	for _, server := range activeProfile.McpServers {
-		mcpClient, err := mcp.NewStdioClient(ctx, server.Command, server.Envs, server.Args)
-		if err != nil {
-			fmt.Printf("error %v", err)
-			continue
-		}
-
-		mcpTools, err := mcpClient.ListTools(ctx)
-		if err != nil {
-			fmt.Printf("error %v", err)
-			return nil, nil, fmt.Errorf("failed to list tools from MCP server %s: %w", server.Command, err)
-		}
-
-		// Filter tools based on profile allowed tools
-		for _, tool := range mcpTools {
-			if len(server.AllowedTools) == 0 || slices.Contains(server.AllowedTools, tool.Name) {
-				result[tool.Name] = toolDetails{
-					tool:             tool,
-					mcpClient:        mcpClient,
-					requiresApproval: server.RequiresApproval,
-				}
-				cleanupFuncs = append(cleanupFuncs, mcpClient.Close)
-			}
-		}
-	}
-
-	var shutdown shutdownFunc = func() {
-		for _, cleanup := range cleanupFuncs {
-			cleanup()
-		}
-	}
-
-	return result, shutdown, nil
+	return llmcore.NewToolResponseFrom(llmResponse, []byte(toolResponse))
 }
 
 func (s *CompleteService) processRequestToConversation(req Request, activeConversation *conversation.Conversation) (llmcore.LlmProvider, *profile.Profile, error) {

@@ -6,8 +6,6 @@ import (
 
 	"github.com/robertoseba/gennie/internal/core/config"
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/llmcore"
-	"github.com/robertoseba/gennie/internal/core/mcp"
 	"github.com/robertoseba/gennie/internal/core/profile"
 )
 
@@ -21,8 +19,7 @@ type CompleteService struct {
 }
 
 type toolDetails struct {
-	mcpClient        mcp.IMcpClient
-	tool             llmcore.Tool
+	name             string
 	requiresApproval bool
 }
 

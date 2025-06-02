@@ -2,27 +2,26 @@ package mcp
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/robertoseba/gennie/internal/core/llmcore"
 )
 
-type IMcpClient interface {
-	Close()
-	ListTools(ctx context.Context) ([]llmcore.Tool, error)
-	ExecTool(ctx context.Context, toolName string, args map[string]any) ([]byte, error)
+type mcpClient struct {
+	name string
+	args []string
+	env  []string
+	// This can be used by clients to improve the LLM's understanding of
+	// available tools, resources, etc. It can be thought of like a "hint" to the model.
+	// For example, this information MAY be added to the system prompt.
+	instructions     string
+	requiresApproval bool // If true, the tool requires approval before execution
+	client           *client.Client
 }
 
-var _ IMcpClient = &McpClient{}
-
-type McpClient struct {
-	client *client.Client
-}
-
-func NewStdioClient(ctx context.Context, cmd string, env []string, args []string) (*McpClient, error) {
+func newStdioClient(ctx context.Context, cmd string, env []string, args []string, requiresApproval bool) (*mcpClient, error) {
 	c, err := client.NewStdioMCPClient(cmd, env, args...)
 	if err != nil {
 		return nil, err
@@ -35,44 +34,31 @@ func NewStdioClient(ctx context.Context, cmd string, env []string, args []string
 		Version: "1.0.0",
 	}
 
-	_, err = c.Initialize(ctx, initRequest)
+	result, err := c.Initialize(ctx, initRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	mcpClient := &McpClient{
-		client: c,
+	mcpClient := &mcpClient{
+		name:             cmd,
+		args:             args,
+		env:              env,
+		instructions:     result.Instructions,
+		requiresApproval: requiresApproval,
+		client:           c,
 	}
 	return mcpClient, nil
 }
 
-func (c *McpClient) Close() {
+func (c *mcpClient) Name() string {
+	return c.name
+}
+
+func (c *mcpClient) Close() {
 	c.client.Close()
 }
 
-func (c *McpClient) ListTools(ctx context.Context) ([]llmcore.Tool, error) {
-	mcpToolsResponse, err := c.client.ListTools(ctx, mcp.ListToolsRequest{})
-	if err != nil {
-		return nil, err
-	}
-
-	var toolItems []llmcore.Tool
-	for _, t := range mcpToolsResponse.Tools {
-		toolItem := llmcore.Tool{
-			Name:        t.Name,
-			Description: t.Description,
-			InputSchema: llmcore.ToolInputSchema{
-				Type:       t.InputSchema.Type,
-				Properties: t.InputSchema.Properties,
-				Required:   t.InputSchema.Required,
-			},
-		}
-		toolItems = append(toolItems, toolItem)
-	}
-	return toolItems, nil
-}
-
-func (c *McpClient) ExecTool(ctx context.Context, toolName string, args map[string]any) ([]byte, error) {
+func (c *mcpClient) ExecTool(ctx context.Context, toolName string, args map[string]any) (string, error) {
 	request := mcp.CallToolRequest{
 		Request: mcp.Request{
 			Method: "tools/call",
@@ -85,28 +71,24 @@ func (c *McpClient) ExecTool(ctx context.Context, toolName string, args map[stri
 
 	result, err := c.client.CallTool(ctx, request)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return parseToolResult(result)
 }
 
-func parseToolResult(toolResponse *mcp.CallToolResult) ([]byte, error) {
+func parseToolResult(toolResponse *mcp.CallToolResult) (string, error) {
 	if len(toolResponse.Content) == 0 {
-		return nil, fmt.Errorf("no content in tool result")
+		return "", fmt.Errorf("no content in tool result")
 	}
 
-	result := make([]byte, 0)
+	result := strings.Builder{}
 
 	for _, content := range toolResponse.Content {
-		if textContent, ok := content.(mcp.TextContent); ok {
-			result = append(result, []byte(textContent.Text)...)
-		} else {
-			jsonBytes, err := json.Marshal(content)
-			if err != nil {
-				return nil, fmt.Errorf("error marshalling content: %v", err)
-			}
-			result = append(result, jsonBytes...)
+		textContent, ok := content.(mcp.TextContent)
+		if !ok {
+			return "", fmt.Errorf("server return a content type not supported. We currently only support text responses from mcp servers")
 		}
+		result.WriteString(textContent.Text)
 	}
-	return result, nil
+	return result.String(), nil
 }
