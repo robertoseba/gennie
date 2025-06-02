@@ -47,6 +47,7 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 
 	go func() {
 		defer close(modelResponseChan)
+
 		// setup mcps
 		mcpGroup := mcp.NewGroup()
 		if len(activeProfile.McpServers) > 0 {
