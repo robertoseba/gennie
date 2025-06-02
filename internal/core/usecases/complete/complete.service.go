@@ -35,18 +35,22 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 		return nil, err
 	}
 
-	llmProvider, activeProfile, err := s.processRequestToConversation(req, activeConversation)
+	activeProfile, err := s.processRequestToConversation(req, activeConversation)
+	if err != nil {
+		return nil, err
+	}
+
+	llmProvider, err := factory.NewProvider(activeConversation.ModelSlug, s.httpClient, *s.config)
 	if err != nil {
 		return nil, err
 	}
 
 	llmProvider.SetSystemPrompt(activeProfile.Data)
 
-	modelResponseChan := make(chan Response)
-	outputChan := s.pipeToSaveConversation(ctx, activeConversation, modelResponseChan)
+	outputChan := make(chan Response)
 
 	go func() {
-		defer close(modelResponseChan)
+		defer close(outputChan)
 
 		outputChan <- Response{Data: activeConversation.ModelSlug, Type: RtModel}
 		outputChan <- Response{Data: activeProfile.Name, Type: RtProfile}
@@ -72,74 +76,53 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 		outputChan <- Response{Data: "Asking the model...", Type: RtLoading, Err: nil}
 
 		toolResults := make([]llmcore.ToolResult, 0)
+		answer := strings.Builder{}
 		for {
-			resp := askLlm(ctx, activeConversation, llmProvider, toolResults, modelResponseChan)
+			llmCompleteChan := llmProvider.Complete(ctx, activeConversation, toolResults)
 
-			if !resp.IsToolCall() {
+			toolCallRequest := llmcore.LlmResponse{}
+			for llmResponse := range llmCompleteChan {
+				if llmResponse.StopReason == llmcore.StopReasonToolCall {
+					toolCallRequest = llmResponse
+					continue
+				}
+
+				outputChan <- Response{Data: llmResponse.Text, Err: llmResponse.Error}
+				answer.WriteString(llmResponse.Text)
+			}
+
+			if !toolCallRequest.IsToolCall() {
 				break
 			}
 
-			if mcpGroup.RequiresApproval(resp.FunctionCall.Name) {
-				outputChan <- Response{Data: fmt.Sprintf("Can I run this tool: %s with parameters (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: RtApprovalReq, Err: nil}
+			if mcpGroup.RequiresApproval(toolCallRequest.FunctionCall.Name) {
+				outputChan <- Response{Data: fmt.Sprintf("Can I run this tool: %s with parameters (%s)", toolCallRequest.FunctionCall.Name, toolCallRequest.FunctionCall.Arguments), Type: RtApprovalReq, Err: nil}
 			}
 
-			outputChan <- Response{Data: fmt.Sprintf("Using tool: %s -> (%s)", resp.FunctionCall.Name, resp.FunctionCall.Arguments), Type: RtLoading, Err: nil}
-			result := s.callTool(ctx, &resp, mcpGroup)
+			outputChan <- Response{Data: fmt.Sprintf("Using tool: %s -> (%s)", toolCallRequest.FunctionCall.Name, toolCallRequest.FunctionCall.Arguments), Type: RtLoading, Err: nil}
+			result := s.callTool(ctx, &toolCallRequest, mcpGroup)
 
 			toolResults = append(toolResults, *result)
 		}
+
+		s.answerConversation(ctx, activeConversation, answer.String())
 	}()
 
 	return outputChan, nil
 }
 
-func (s *CompleteService) pipeToSaveConversation(ctx context.Context, conv *conversation.Conversation, inputChan <-chan Response) chan Response {
-	outputChan := make(chan Response)
-
-	go func() {
-		defer close(outputChan)
-
-		convBuffer := strings.Builder{}
-		for msg := range inputChan {
-			select {
-			case <-ctx.Done():
-				s.logger.Debug("Context done, stopping conversation saving", "error", ctx.Err())
-				return
-			case outputChan <- msg:
-				if msg.Err == nil {
-					convBuffer.WriteString(msg.Data)
-				}
-			}
-		}
-
-		err := conv.AnswerLastQuestion(convBuffer.String())
-		if err != nil {
-			outputChan <- Response{Err: err}
-		}
-		err = s.conversationRepo.SaveAsActive(conv)
-		if err != nil {
-			outputChan <- Response{Err: err}
-		}
-	}()
-
-	return outputChan
-}
-
-func askLlm(ctx context.Context, activeConversation *conversation.Conversation, llmProvider llmcore.LlmProvider, toolResults []llmcore.ToolResult, llmResponseChan chan<- Response) llmcore.LlmResponse {
-	respChan := llmProvider.Complete(ctx, activeConversation, toolResults)
-
-	var toolCallRequest llmcore.LlmResponse
-
-	for llmResponse := range respChan {
-		if llmResponse.StopReason == llmcore.StopReasonToolCall {
-			toolCallRequest = llmResponse
-			continue
-		}
-
-		llmResponseChan <- Response{Data: llmResponse.Text, Err: llmResponse.Error}
+func (s *CompleteService) answerConversation(ctx context.Context, conv *conversation.Conversation, answer string) error {
+	err := conv.AnswerLastQuestion(answer)
+	if err != nil {
+		return fmt.Errorf("failed to answer the last question: %w", err)
 	}
 
-	return toolCallRequest
+	err = s.conversationRepo.SaveAsActive(conv)
+	if err != nil {
+		return fmt.Errorf("failed to answer the last question: %w", err)
+	}
+
+	return nil
 }
 
 func (s *CompleteService) callTool(ctx context.Context, llmResponse *llmcore.LlmResponse, mcpGroup *mcp.Group) *llmcore.ToolResult {
@@ -162,21 +145,16 @@ func (s *CompleteService) callTool(ctx context.Context, llmResponse *llmcore.Llm
 	return llmcore.NewToolResponseFrom(llmResponse, []byte(toolResponse))
 }
 
-func (s *CompleteService) processRequestToConversation(req Request, activeConversation *conversation.Conversation) (llmcore.LlmProvider, *profile.Profile, error) {
+func (s *CompleteService) processRequestToConversation(req Request, activeConversation *conversation.Conversation) (*profile.Profile, error) {
 	activeProfile, err := s.loadProfile(req.ProfileSlug, activeConversation)
 	if err != nil {
-		return nil, activeProfile, err
+		return activeProfile, err
 	}
 	activeConversation.SetProfileTo(activeProfile.Slug)
 
 	if req.ModelSlug != "" {
 		activeConversation.ModelSlug = req.ModelSlug
 		activeConversation.SetModelTo(req.ModelSlug)
-	}
-
-	llmProvider, err := factory.NewProvider(activeConversation.ModelSlug, s.httpClient, *s.config)
-	if err != nil {
-		return nil, activeProfile, err
 	}
 
 	if !req.IsFollowUp {
@@ -186,13 +164,13 @@ func (s *CompleteService) processRequestToConversation(req Request, activeConver
 	if req.AppendFilename != "" {
 		content, err := os.ReadFile(req.AppendFilename)
 		if err != nil {
-			return nil, activeProfile, err
+			return activeProfile, err
 		}
 		req.Question += "\n" + string(content)
 	}
 	activeConversation.NewQuestion(req.Question)
 
-	return llmProvider, activeProfile, nil
+	return activeProfile, nil
 }
 
 func (c *CompleteService) loadProfile(profileSlug string, activeConversation *conversation.Conversation) (*profile.Profile, error) {
