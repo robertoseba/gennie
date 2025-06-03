@@ -93,7 +93,8 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 			}
 
 			if mcpGroup.RequiresApproval(toolCallRequest.FunctionCall.Name) {
-				outputChan <- NewApprovalRequestResponse(fmt.Sprintf("Tool call request for '%s' requires approval. Please approve to continue.", toolCallRequest.FunctionCall.Name))
+				outputChan <- NewApprovalRequestResponse(fmt.Sprintf("Tool call request for '%s' with params (%s) requires approval.",
+					toolCallRequest.FunctionCall.Name, toolCallRequest.FunctionCall.Arguments))
 			}
 
 			outputChan <- NewLoadingResponse(fmt.Sprintf("Using tool: %s -> (%s)", toolCallRequest.FunctionCall.Name, toolCallRequest.FunctionCall.Arguments))
