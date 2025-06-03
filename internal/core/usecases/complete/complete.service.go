@@ -59,17 +59,14 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 		mcpGroup := mcp.NewGroup()
 		if len(activeProfile.McpServers) > 0 {
 			outputChan <- Response{Data: "Loading MCP Servers...", Type: RtLoading}
-			for _, mcpProfile := range activeProfile.McpServers {
-				err := mcpGroup.Add(ctx, mcpProfile.Command, mcpProfile.Envs, mcpProfile.Args, mcpProfile.RequiresApproval, mcpProfile.AllowedTools)
+			for _, mcpServer := range activeProfile.McpServers {
+				err := mcpGroup.Add(ctx, mcpServer)
 				if err != nil {
-					outputChan <- Response{Err: fmt.Errorf("failed to add MCP server %s: %w", mcpProfile.Command, err)}
+					outputChan <- Response{Err: fmt.Errorf("failed to add MCP server %s: %w", mcpServer.Cmd, err)}
 				}
 			}
-			tools, err := mcpGroup.ListTools()
-			if err != nil {
-				outputChan <- Response{Err: fmt.Errorf("failed to list tools from MCP servers: %w", err)}
-			}
-			llmProvider.SetTools(tools)
+
+			llmProvider.SetTools(mcpGroup.ListTools())
 		}
 		defer mcpGroup.Shutdown()
 

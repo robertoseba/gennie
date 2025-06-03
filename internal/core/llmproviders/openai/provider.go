@@ -135,7 +135,7 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 		}
 
 		// Processing tool calls if they exist
-		if acc.Choices[0].FinishReason == "tool_calls" {
+		if len(acc.Choices) > 0 && acc.Choices[0].FinishReason == "tool_calls" {
 			// TODO: currently only supports a single tool call
 			f := acc.Choices[0].Message.ToolCalls[0].Function
 			id := acc.Choices[0].Message.ToolCalls[0].ID

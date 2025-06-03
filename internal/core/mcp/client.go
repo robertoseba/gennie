@@ -7,14 +7,20 @@ import (
 
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/robertoseba/gennie/internal/core/llmcore"
 )
 
+type Server struct {
+	Cmd              string   `toml:"command"`
+	Args             []string `toml:"args"`
+	Envs             []string `toml:"envs"`
+	AllowedTools     []string `toml:"allowed_tools"`
+	RequiresApproval bool     `toml:"requires_approval"`
+}
+
 type mcpClient struct {
-	name             string
-	args             []string
-	env              []string
-	requiresApproval bool // If true, the tool requires approval before execution
-	client           *client.Client
+	server Server         // The server this client is connected to.
+	client *client.Client // mcp client to communicate with the MCP server.
 
 	// This can be used by clients to improve the LLM's understanding of
 	// available tools, resources, etc. It can be thought of like a "hint" to the model.
@@ -22,8 +28,8 @@ type mcpClient struct {
 	instructions string // TODO: currently not used, but we might use it in the future
 }
 
-func newStdioClient(ctx context.Context, cmd string, env []string, args []string, requiresApproval bool) (*mcpClient, error) {
-	c, err := client.NewStdioMCPClient(cmd, env, args...)
+func newStdioClient(ctx context.Context, server Server) (*mcpClient, error) {
+	c, err := client.NewStdioMCPClient(server.Cmd, server.Envs, server.Args...)
 	if err != nil {
 		return nil, err
 	}
@@ -41,18 +47,43 @@ func newStdioClient(ctx context.Context, cmd string, env []string, args []string
 	}
 
 	mcpClient := &mcpClient{
-		name:             cmd,
-		args:             args,
-		env:              env,
-		instructions:     result.Instructions,
-		requiresApproval: requiresApproval,
-		client:           c,
+		server:       server,
+		instructions: result.Instructions,
+		client:       c,
 	}
 	return mcpClient, nil
 }
 
 func (c *mcpClient) close() {
 	c.client.Close()
+}
+
+func (c *mcpClient) requiresApproval() bool {
+	return c.server.RequiresApproval
+}
+
+// Returns a list of tools available in the MCP server indexed by their name.
+func (c *mcpClient) ListTools(ctx context.Context) (map[string]llmcore.Tool, error) {
+	request := mcp.ListToolsRequest{}
+
+	result, err := c.client.ListTools(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+
+	tools := make(map[string]llmcore.Tool, len(result.Tools))
+	for _, t := range result.Tools {
+		tools[t.Name] = llmcore.Tool{
+			Name:        t.Name,
+			Description: t.Description,
+			InputSchema: llmcore.ToolInputSchema{
+				Type:       t.InputSchema.Type,
+				Properties: t.InputSchema.Properties,
+				Required:   t.InputSchema.Required,
+			},
+		}
+	}
+	return tools, nil
 }
 
 func (c *mcpClient) execTool(ctx context.Context, toolName string, args map[string]any) (string, error) {

@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/robertoseba/gennie/internal/core/llmcore"
 )
 
 type (
-	toolNameType string
+	Group struct {
+		tools map[string]toolDetails // tools indexed by name
+	}
 
 	toolDetails struct {
 		llmcore.Tool
@@ -18,29 +19,26 @@ type (
 	}
 )
 
-type Group struct {
-	tools map[toolNameType]toolDetails
-}
-
 func NewGroup() *Group {
 	return &Group{
-		tools: make(map[toolNameType]toolDetails),
+		tools: make(map[string]toolDetails),
 	}
 }
 
-func (g *Group) Add(ctx context.Context, cmd string, env []string, args []string, requiresApproval bool, allowedTools []string) error {
+func (g *Group) Add(ctx context.Context, server Server) error {
 	// TODO: Add support for SSE Mcp servers
-	mcpClient, err := newStdioClient(ctx, cmd, env, args, requiresApproval)
+	mcpClient, err := newStdioClient(ctx, server)
 	if err != nil {
 		return fmt.Errorf("failed to create MCP client: %w", err)
 	}
 
-	err = g.retrieveToolsFrom(ctx, mcpClient, allowedTools)
+	err = g.retrieveToolsFrom(ctx, mcpClient, server.AllowedTools)
 	if err != nil {
-		return fmt.Errorf("failed to retrieve tools from MCP server %s: %w", mcpClient.name, err)
+		return fmt.Errorf("failed to retrieve tools from MCP server %s: %w", mcpClient.server.Cmd, err)
 	}
 
-	// TODO: curretly we leave all mcp tools enabled.But it might be better to close and open as needed
+	// TODO: curretly we leave all mcp tools enabled.Not sure if it might be better to close and open as needed
+	// because we have to load all of the them to get the tool list.
 	// mcpClient.Close()
 
 	return nil
@@ -52,17 +50,17 @@ func (g *Group) Shutdown() {
 	}
 }
 
-func (g *Group) ListTools() ([]llmcore.Tool, error) {
+func (g *Group) ListTools() []llmcore.Tool {
 	result := make([]llmcore.Tool, 0, len(g.tools))
 	for _, tool := range g.tools {
 		result = append(result, tool.Tool)
 	}
 
-	return result, nil
+	return result
 }
 
 func (g *Group) ExecTool(ctx context.Context, name string, args map[string]any) (string, error) {
-	tool, ok := g.tools[toolNameType(name)]
+	tool, ok := g.tools[name]
 	if !ok {
 		return "", fmt.Errorf("tool %s not found", name)
 	}
@@ -76,36 +74,26 @@ func (g *Group) ExecTool(ctx context.Context, name string, args map[string]any) 
 }
 
 func (g *Group) RequiresApproval(toolName string) bool {
-	tool, ok := g.tools[toolNameType(toolName)]
+	tool, ok := g.tools[toolName]
 	if !ok {
 		return false
 	}
-	return tool.RequiresApproval
+	return tool.mcpClient.requiresApproval()
 }
 
 func (g *Group) retrieveToolsFrom(ctx context.Context, client *mcpClient, allowedTools []string) error {
-	mcpToolsResponse, err := client.client.ListTools(ctx, mcp.ListToolsRequest{})
+	mcpToolsResponse, err := client.ListTools(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to list tools from MCP server %s: %w", client.name, err)
+		return fmt.Errorf("failed to list tools from MCP server %s: %w", client.server.Cmd, err)
 	}
 
-	for _, t := range mcpToolsResponse.Tools {
-		if !slices.Contains(allowedTools, t.Name) && len(allowedTools) > 0 {
+	for name, tool := range mcpToolsResponse {
+		if !slices.Contains(allowedTools, name) && len(allowedTools) > 0 {
 			continue
 		}
 
-		toolItem := llmcore.Tool{
-			Name:        t.Name,
-			Description: t.Description,
-			InputSchema: llmcore.ToolInputSchema{
-				Type:       t.InputSchema.Type,
-				Properties: t.InputSchema.Properties,
-				Required:   t.InputSchema.Required,
-			},
-			RequiresApproval: client.requiresApproval,
-		}
-		g.tools[toolNameType(t.Name)] = toolDetails{
-			Tool:      toolItem,
+		g.tools[name] = toolDetails{
+			Tool:      tool,
 			mcpClient: client,
 		}
 	}

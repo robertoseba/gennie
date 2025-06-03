@@ -5,10 +5,9 @@ import (
 )
 
 type Tool struct {
-	Name             string          `json:"name"`
-	Description      string          `json:"description"`
-	InputSchema      ToolInputSchema `json:"input_schema"`
-	RequiresApproval bool            `json:"_"`
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+	InputSchema ToolInputSchema `json:"input_schema"`
 }
 
 type ToolInputSchema struct {
