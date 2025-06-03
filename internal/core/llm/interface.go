@@ -6,7 +6,7 @@ import (
 	"github.com/robertoseba/gennie/internal/core/conversation"
 )
 
-type LlmProvider interface {
+type Provider interface {
 	Complete(ctx context.Context, conversation *conversation.Conversation, toolResult []ToolResult) <-chan Response
 	SetSystemPrompt(systemPrompt string)
 	SetTools(tools []Tool)

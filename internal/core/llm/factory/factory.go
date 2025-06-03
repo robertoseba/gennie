@@ -14,7 +14,7 @@ import (
 
 var ErrModelNotFound = errors.New("model not found")
 
-func NewProvider(modelSlug string, httpClient *http.Client, config config.Config) (llm.LlmProvider, error) {
+func NewProvider(modelSlug string, httpClient *http.Client, config config.Config) (llm.Provider, error) {
 	modelEnum, _ := ParseFrom(modelSlug)
 
 	switch modelEnum {

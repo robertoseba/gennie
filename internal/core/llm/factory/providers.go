@@ -3,6 +3,7 @@ package factory
 import (
 	"github.com/robertoseba/gennie/internal/core/llm/anthropic"
 	"github.com/robertoseba/gennie/internal/core/llm/gemini"
+	"github.com/robertoseba/gennie/internal/core/llm/openai"
 )
 
 type ModelEnum string
@@ -11,8 +12,8 @@ const (
 	ClaudeSonnet ModelEnum = anthropic.ExportedSonnetSlug
 	Haiku        ModelEnum = anthropic.ExportedHaikuSlug
 	Gemini       ModelEnum = gemini.ExportedModelSlug
-	OpenAIMini   ModelEnum = "gpt-4.1-mini"
-	OpenAI       ModelEnum = "gpt-4.1"
+	OpenAIMini   ModelEnum = openai.ExportedModelSlug_Mini
+	OpenAI       ModelEnum = openai.ExportedModelSlug
 	Groq         ModelEnum = "groq"
 	Ollama       ModelEnum = "ollama"
 )
@@ -23,8 +24,8 @@ var availableModels = map[ModelEnum]string{
 	ClaudeSonnet: anthropic.ExportedSonnetDescription,
 	Haiku:        anthropic.ExportedHaikuDescription,
 	Gemini:       gemini.ExportedModelDescription,
-	OpenAIMini:   "GPT-4.1-mini (OPENAI)",
-	OpenAI:       "GPT-4.1 (OPENAI)",
+	OpenAIMini:   openai.ExportedModelDescription_Mini,
+	OpenAI:       openai.ExportedModelDescription,
 	Groq:         "Groq (Qwen-QWQ-32B)",
 	Ollama:       "Ollama",
 }

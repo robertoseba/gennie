@@ -3,8 +3,6 @@ package factory
 import (
 	"testing"
 
-	"github.com/robertoseba/gennie/internal/core/llm/anthropic"
-	"github.com/robertoseba/gennie/internal/core/llm/gemini"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +18,7 @@ func TestParseFrom(t *testing.T) {
 		model, ok := ParseFrom("gpt-4o-mini-2")
 
 		require.False(t, ok)
-		require.Equal(t, DefaultModel, model)
+		require.Equal(t, "", string(model))
 	})
 }
 
@@ -42,11 +40,11 @@ func TestSlugAndString(t *testing.T) {
 		expectedSlug   string
 		expectedString string
 	}{
-		{OpenAI, "gpt-4.1", "GPT-4.1 (OPENAI)"},
-		{OpenAIMini, "gpt-4.1-mini", "GPT-4.1-mini (OPENAI)"},
-		{ClaudeSonnet, anthropic.ExportedSonnetSlug, anthropic.ExportedSonnetDescription},
-		{Haiku, anthropic.ExportedHaikuSlug, anthropic.ExportedHaikuDescription},
-		{Gemini, gemini.ExportedModelSlug, gemini.ExportedModelDescription},
+		{OpenAI, "gpt-4.1", "OpenAI GPT-4.1"},
+		{OpenAIMini, "gpt-4.1-mini", "OpenAI GPT-4.1 Mini"},
+		{ClaudeSonnet, "sonnet", "Claude Sonnet 4"},
+		{Haiku, "haiku", "Haiku 3.5"},
+		{Gemini, "gemini", "Gemini Flash 2.5"},
 		{Groq, "groq", "Groq (Qwen-QWQ-32B)"},
 		{Ollama, "ollama", "Ollama"},
 	}
