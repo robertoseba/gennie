@@ -47,3 +47,27 @@ const (
 	RtApprovalReq ResponseType = "approval_request"
 	RtLlmAnswer   ResponseType = "llm_answer"
 )
+
+func NewErrorResponse(err error) Response {
+	return Response{Err: err}
+}
+
+func NewLoadingResponse(data string) Response {
+	return Response{Data: data, Type: RtLoading}
+}
+
+func NewModelInfoResponse(data string) Response {
+	return Response{Data: data, Type: RtModel}
+}
+
+func NewProfileInfoResponse(data string) Response {
+	return Response{Data: data, Type: RtProfile}
+}
+
+func NewApprovalRequestResponse(data string) Response {
+	return Response{Data: data, Type: RtApprovalReq}
+}
+
+func NewAnswerResponse(data string) Response {
+	return Response{Data: data, Type: RtLlmAnswer}
+}

@@ -50,17 +50,18 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 	go func() {
 		defer close(outputChan)
 
-		outputChan <- Response{Data: currConversation.ModelSlug, Type: RtModel}
-		outputChan <- Response{Data: currProfile.Name, Type: RtProfile}
+		outputChan <- NewModelInfoResponse(currConversation.ModelSlug)
+		outputChan <- NewProfileInfoResponse(currProfile.Slug)
 
 		// setup mcps
 		mcpGroup := mcp.NewGroup()
 		if len(currProfile.McpServers) > 0 {
-			outputChan <- Response{Data: "Loading MCP Servers...", Type: RtLoading}
+			outputChan <- NewLoadingResponse("Setting up MCP servers...")
 			for _, mcpServer := range currProfile.McpServers {
+				outputChan <- NewLoadingResponse(fmt.Sprintf("Adding MCP server: %s", mcpServer.Cmd))
 				err := mcpGroup.Add(ctx, mcpServer)
 				if err != nil {
-					outputChan <- Response{Err: fmt.Errorf("failed to add MCP server %s: %w", mcpServer.Cmd, err)}
+					outputChan <- NewErrorResponse(fmt.Errorf("failed to add MCP server %s: %w", mcpServer.Cmd, err))
 				}
 			}
 
@@ -68,45 +69,46 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 		}
 		defer mcpGroup.Shutdown()
 
-		outputChan <- Response{Data: "Asking the model...", Type: RtLoading, Err: nil}
-
+		outputChan <- NewLoadingResponse("Asking question...")
 		toolResults := make([]llm.ToolResult, 0)
-		answer := strings.Builder{}
+		answerAcc := strings.Builder{}
+
 		for {
 			llmCompleteChan := llmProvider.Complete(ctx, currConversation, toolResults)
 
-			toolCallRequest := llm.Response{}
+			var toolCallRequest *llm.Response
+
 			for llmResponse := range llmCompleteChan {
-				if llmResponse.StopReason == llm.StopReasonToolCall {
-					toolCallRequest = llmResponse
+				if llmResponse.IsToolCall() {
+					toolCallRequest = &llmResponse
 					continue
 				}
 
 				outputChan <- Response{Data: llmResponse.Text, Err: llmResponse.Error}
-				answer.WriteString(llmResponse.Text)
+				answerAcc.WriteString(llmResponse.Text)
 			}
 
-			if !toolCallRequest.IsToolCall() {
+			if toolCallRequest == nil {
 				break
 			}
 
 			if mcpGroup.RequiresApproval(toolCallRequest.FunctionCall.Name) {
-				outputChan <- Response{Data: fmt.Sprintf("Can I run this tool: %s with parameters (%s)", toolCallRequest.FunctionCall.Name, toolCallRequest.FunctionCall.Arguments), Type: RtApprovalReq, Err: nil}
+				outputChan <- NewApprovalRequestResponse(fmt.Sprintf("Tool call request for '%s' requires approval. Please approve to continue.", toolCallRequest.FunctionCall.Name))
 			}
 
-			outputChan <- Response{Data: fmt.Sprintf("Using tool: %s -> (%s)", toolCallRequest.FunctionCall.Name, toolCallRequest.FunctionCall.Arguments), Type: RtLoading, Err: nil}
-			result := s.callTool(ctx, &toolCallRequest, mcpGroup)
+			outputChan <- NewLoadingResponse(fmt.Sprintf("Using tool: %s -> (%s)", toolCallRequest.FunctionCall.Name, toolCallRequest.FunctionCall.Arguments))
 
+			result := s.callTool(ctx, toolCallRequest, mcpGroup)
 			toolResults = append(toolResults, *result)
 		}
 
-		s.answerConversation(ctx, currConversation, answer.String())
+		s.saveConversation(ctx, currConversation, answerAcc.String())
 	}()
 
 	return outputChan, nil
 }
 
-func (s *CompleteService) answerConversation(ctx context.Context, conv *conversation.Conversation, answer string) error {
+func (s *CompleteService) saveConversation(ctx context.Context, conv *conversation.Conversation, answer string) error {
 	err := conv.AnswerLastQuestion(answer)
 	if err != nil {
 		return fmt.Errorf("failed to answer the last question: %w", err)
@@ -114,7 +116,7 @@ func (s *CompleteService) answerConversation(ctx context.Context, conv *conversa
 
 	err = s.conversationRepo.SaveAsActive(conv)
 	if err != nil {
-		return fmt.Errorf("failed to answer the last question: %w", err)
+		return fmt.Errorf("failed to save the conversation: %w", err)
 	}
 
 	return nil
@@ -122,6 +124,7 @@ func (s *CompleteService) answerConversation(ctx context.Context, conv *conversa
 
 func (s *CompleteService) callTool(ctx context.Context, llmResponse *llm.Response, mcpGroup *mcp.Group) *llm.ToolResult {
 	var args map[string]any
+
 	if len(llmResponse.FunctionCall.Arguments) > 0 {
 		args = make(map[string]any)
 		err := json.Unmarshal([]byte(llmResponse.FunctionCall.Arguments), &args)
