@@ -8,14 +8,14 @@ import (
 	"github.com/robertoseba/gennie/internal/core/config"
 )
 
-type ConfigRepository struct {
+type configRepository struct {
 	filename     string
 	dirPath      string
 	configCached *config.Config
 }
 
-func NewConfigRepository(configDir string) *ConfigRepository {
-	return &ConfigRepository{
+func NewConfigRepository(configDir string) *configRepository {
+	return &configRepository{
 		filename:     "config.json",
 		dirPath:      configDir,
 		configCached: nil,
@@ -25,7 +25,7 @@ func NewConfigRepository(configDir string) *ConfigRepository {
 // Loads the config from a gob file into the Config struct
 // If the file does not exist, it returns a new Config with default values
 // Once loaded config is cached until the cli quits
-func (cr *ConfigRepository) Load() (*config.Config, error) {
+func (cr *configRepository) Load() (*config.Config, error) {
 	if cr.configCached != nil {
 		return cr.configCached, nil
 	}
@@ -33,7 +33,7 @@ func (cr *ConfigRepository) Load() (*config.Config, error) {
 	file := cr.ConfigFile()
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		config := config.NewConfig()
-		//Default cache dir is the same as config path
+		// Default cache dir is the same as config path
 		config.ConversationCacheDir = cr.dirPath
 		cr.configCached = config
 		return config, nil
@@ -54,13 +54,13 @@ func (cr *ConfigRepository) Load() (*config.Config, error) {
 }
 
 // Returns the full path to the config file
-func (cr *ConfigRepository) ConfigFile() string {
+func (cr *configRepository) ConfigFile() string {
 	return path.Join(cr.dirPath, cr.filename)
 }
 
 // Saves the config to a json file
 // Caches the config in repository cache
-func (cr *ConfigRepository) Save(config *config.Config) error {
+func (cr *configRepository) Save(config *config.Config) error {
 	config.MarkAsNotNew()
 	content, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
@@ -88,7 +88,6 @@ func CreateConfigDir() (string, error) {
 
 	if _, err := os.Stat(defaultConfigDir); os.IsNotExist(err) {
 		err = os.Mkdir(defaultConfigDir, 0755)
-
 		if err != nil {
 			return fallbackExecDir()
 		}

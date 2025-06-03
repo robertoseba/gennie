@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewStatusCmd(configRepo config.IConfigRepository, p *output.Printer) *cobra.Command {
+func NewStatusCmd(configRepo config.ConfigRepository, p *output.Printer) *cobra.Command {
 	cmdStatus := &cobra.Command{
 		Use:   "status",
 		Short: "Shows the current status of gennie",

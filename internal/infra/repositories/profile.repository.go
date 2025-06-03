@@ -13,13 +13,13 @@ import (
 
 var ErrNoProfilesDir = fmt.Errorf("no profiles found. Please add profiles to the profiles folder.")
 
-type ProfileRepository struct {
+type profileRepository struct {
 	profilesDir   string
 	profileSuffix string
 }
 
-func NewProfileRepository(profilesDir string) *ProfileRepository {
-	return &ProfileRepository{
+func NewProfileRepository(profilesDir string) *profileRepository {
+	return &profileRepository{
 		profilesDir:   profilesDir,
 		profileSuffix: ".profile.toml",
 	}
@@ -27,9 +27,8 @@ func NewProfileRepository(profilesDir string) *ProfileRepository {
 
 // Lists all profiles found in the profiles directory, plus a default profile created in the application
 // If dir does not exist, returns the default profile only and the error ErrNoProfilesDir
-func (pr *ProfileRepository) ListAll() (map[string]*profile.Profile, error) {
+func (pr *profileRepository) ListAll() (map[string]*profile.Profile, error) {
 	profiles, err := pr.scanProfiles()
-
 	if err != nil {
 		if errors.Is(err, ErrNoProfilesDir) {
 			return map[string]*profile.Profile{profile.DefaultProfileSlug: profile.DefaultProfile()}, err
@@ -42,7 +41,7 @@ func (pr *ProfileRepository) ListAll() (map[string]*profile.Profile, error) {
 }
 
 // Loads a profile from a toml file named as the slug. Ie: "test.profile.toml" for slug "test"
-func (pr *ProfileRepository) FindBySlug(slug string) (*profile.Profile, error) {
+func (pr *profileRepository) FindBySlug(slug string) (*profile.Profile, error) {
 	if slug == profile.DefaultProfileSlug {
 		return profile.DefaultProfile(), nil
 	}
@@ -53,7 +52,7 @@ func (pr *ProfileRepository) FindBySlug(slug string) (*profile.Profile, error) {
 }
 
 // Scans the profiles directory and loads all profiles found
-func (pr *ProfileRepository) scanProfiles() (map[string]*profile.Profile, error) {
+func (pr *profileRepository) scanProfiles() (map[string]*profile.Profile, error) {
 	prDir := pr.profilesDir
 
 	files, err := os.ReadDir(prDir)
@@ -67,7 +66,7 @@ func (pr *ProfileRepository) scanProfiles() (map[string]*profile.Profile, error)
 		if !file.IsDir() {
 			filename := file.Name()
 			if strings.HasSuffix(filename, pr.profileSuffix) {
-				//TODO: load profiles in parallel
+				// TODO: load profiles in parallel
 				loadedProfile, err := pr.loadProfileFile(path.Join(prDir, file.Name()))
 				if err != nil {
 					return nil, err
@@ -87,10 +86,9 @@ func (pr *ProfileRepository) scanProfiles() (map[string]*profile.Profile, error)
 	return profiles, nil
 }
 
-func (pr *ProfileRepository) loadProfileFile(filePath string) (*profile.Profile, error) {
+func (pr *profileRepository) loadProfileFile(filePath string) (*profile.Profile, error) {
 	profile := &profile.Profile{}
 	_, err := toml.DecodeFile(filePath, profile)
-
 	if err != nil {
 		return nil, fmt.Errorf("error loading toml file: %w", err)
 	}

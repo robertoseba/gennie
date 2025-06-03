@@ -1,6 +1,6 @@
 package config
 
-type IConfigRepository interface {
+type ConfigRepository interface {
 	Load() (*Config, error)
 	Save(config *Config) error
 	ConfigFile() string

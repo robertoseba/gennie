@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewConfigCmd(configRepo config.IConfigRepository, p *output.Printer) *cobra.Command {
+func NewConfigCmd(configRepo config.ConfigRepository, p *output.Printer) *cobra.Command {
 	clearCmd := &cobra.Command{
 		Use:   "config",
 		Short: "Configures Gennie",

@@ -10,8 +10,8 @@ import (
 )
 
 type CompleteService struct {
-	conversationRepo conversation.IConversationRepository
-	profileRepo      profile.IProfileRepository
+	conversationRepo conversation.ConversationRepository
+	profileRepo      profile.ProfileRepository
 	httpClient       *http.Client
 	config           *config.Config
 	logger           *slog.Logger

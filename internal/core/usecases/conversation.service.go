@@ -3,10 +3,10 @@ package usecases
 import "github.com/robertoseba/gennie/internal/core/conversation"
 
 type ConversationService struct {
-	conversationRepo conversation.IConversationRepository
+	conversationRepo conversation.ConversationRepository
 }
 
-func NewConversationService(conversationRepo conversation.IConversationRepository) *ConversationService {
+func NewConversationService(conversationRepo conversation.ConversationRepository) *ConversationService {
 	return &ConversationService{
 		conversationRepo: conversationRepo,
 	}

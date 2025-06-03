@@ -12,9 +12,9 @@ import (
 )
 
 type Container struct {
-	conversationRepository conversation.IConversationRepository
-	profileRepository      profile.IProfileRepository
-	configRepository       config.IConfigRepository
+	conversationRepository conversation.ConversationRepository
+	profileRepository      profile.ProfileRepository
+	configRepository       config.ConfigRepository
 	httpClient             *http.Client
 	config                 *config.Config
 }
@@ -45,7 +45,7 @@ func (c *Container) GetConfig() *config.Config {
 	return c.config
 }
 
-func (c *Container) GetConfigRepository() config.IConfigRepository {
+func (c *Container) GetConfigRepository() config.ConfigRepository {
 	return c.configRepository
 }
 

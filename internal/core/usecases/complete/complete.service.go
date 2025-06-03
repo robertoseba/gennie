@@ -17,7 +17,7 @@ import (
 	"github.com/robertoseba/gennie/internal/core/profile"
 )
 
-func NewCompleteService(cr conversation.IConversationRepository, pr profile.IProfileRepository, httpClient *http.Client, config *config.Config) *CompleteService {
+func NewCompleteService(cr conversation.ConversationRepository, pr profile.ProfileRepository, httpClient *http.Client, config *config.Config) *CompleteService {
 	return &CompleteService{
 		conversationRepo: cr,
 		profileRepo:      pr,
