@@ -33,7 +33,7 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 		return nil, err
 	}
 
-	activeProfile, currConversation, err := s.processRequest(req, previousConversation)
+	currProfile, currConversation, err := s.processRequest(req, previousConversation)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 		return nil, err
 	}
 
-	llmProvider.SetSystemPrompt(activeProfile.Data)
+	llmProvider.SetSystemPrompt(currProfile.Data)
 
 	outputChan := make(chan Response)
 
@@ -51,13 +51,13 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 		defer close(outputChan)
 
 		outputChan <- Response{Data: currConversation.ModelSlug, Type: RtModel}
-		outputChan <- Response{Data: activeProfile.Name, Type: RtProfile}
+		outputChan <- Response{Data: currProfile.Name, Type: RtProfile}
 
 		// setup mcps
 		mcpGroup := mcp.NewGroup()
-		if len(activeProfile.McpServers) > 0 {
+		if len(currProfile.McpServers) > 0 {
 			outputChan <- Response{Data: "Loading MCP Servers...", Type: RtLoading}
-			for _, mcpServer := range activeProfile.McpServers {
+			for _, mcpServer := range currProfile.McpServers {
 				err := mcpGroup.Add(ctx, mcpServer)
 				if err != nil {
 					outputChan <- Response{Err: fmt.Errorf("failed to add MCP server %s: %w", mcpServer.Cmd, err)}
@@ -143,11 +143,11 @@ func (s *CompleteService) callTool(ctx context.Context, llmResponse *llm.Respons
 func (s *CompleteService) processRequest(req Request, previousConversation *conversation.Conversation) (*profile.Profile, *conversation.Conversation, error) {
 	currConversation := conversation.NewConversation(previousConversation.ProfileSlug, previousConversation.ModelSlug)
 
-	activeProfile, err := s.loadProfile(req.ProfileSlug, previousConversation)
+	currProfile, err := s.loadProfile(req.ProfileSlug, previousConversation)
 	if err != nil {
-		return activeProfile, nil, err
+		return currProfile, nil, err
 	}
-	currConversation.SetProfileTo(activeProfile.Slug)
+	currConversation.SetProfileTo(currProfile.Slug)
 
 	if req.ModelSlug != "" {
 		currConversation.ModelSlug = req.ModelSlug
@@ -161,24 +161,24 @@ func (s *CompleteService) processRequest(req Request, previousConversation *conv
 	if req.AppendFilename != "" {
 		content, err := os.ReadFile(req.AppendFilename)
 		if err != nil {
-			return activeProfile, nil, err
+			return currProfile, nil, err
 		}
 		req.Question += "\n" + string(content)
 	}
 	currConversation.NewQuestion(req.Question)
 
-	return activeProfile, currConversation, nil
+	return currProfile, currConversation, nil
 }
 
-func (c *CompleteService) loadProfile(profileSlug string, activeConversation *conversation.Conversation) (*profile.Profile, error) {
+func (c *CompleteService) loadProfile(profileSlug string, currConversation *conversation.Conversation) (*profile.Profile, error) {
 	if profileSlug == "" {
-		profileSlug = activeConversation.ProfileSlug
+		profileSlug = currConversation.ProfileSlug
 	}
 
-	activeProfile, err := c.profileRepo.FindBySlug(profileSlug)
+	currProfile, err := c.profileRepo.FindBySlug(profileSlug)
 	if err != nil {
 		return nil, err
 	}
 
-	return activeProfile, nil
+	return currProfile, nil
 }
