@@ -62,16 +62,4 @@ func TestConversation(t *testing.T) {
 		require.NoError(t, c.NewQuestion("What is your name?"))
 		require.ErrorIs(t, ErrNewQuestionBeforeAnswer, c.NewQuestion("What is your age?"))
 	})
-
-	t.Run("Clears conversation", func(t *testing.T) {
-		c := NewConversation("profile-slug", "model-slug")
-
-		require.NoError(t, c.NewQuestion("What is your name?"))
-		require.Equal(t, 1, c.Len())
-
-		c.Clear()
-
-		require.Equal(t, 0, c.Len())
-		require.Equal(t, "", c.LastQuestion())
-	})
 }

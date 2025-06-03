@@ -18,6 +18,14 @@ type CompleteService struct {
 	tools            map[string]toolDetails // each toolName maps to a mcpClient so we can make a request
 }
 
+type Request struct {
+	Question       string
+	ProfileSlug    string
+	ModelSlug      string
+	IsFollowUp     bool
+	AppendFilename string
+}
+
 type toolDetails struct {
 	name             string
 	requiresApproval bool

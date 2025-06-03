@@ -28,14 +28,12 @@ func NewCompleteService(cr conversation.ConversationRepository, pr profile.Profi
 }
 
 func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Response, error) {
-	var err error
-
 	activeConversation, err := s.conversationRepo.LoadActive()
 	if err != nil {
 		return nil, err
 	}
 
-	activeProfile, err := s.processRequestToConversation(req, activeConversation)
+	activeProfile, err := s.processRequest(req, activeConversation)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +140,7 @@ func (s *CompleteService) callTool(ctx context.Context, llmResponse *llm.Respons
 	return llm.NewToolResponseFrom(llmResponse, []byte(toolResponse))
 }
 
-func (s *CompleteService) processRequestToConversation(req Request, activeConversation *conversation.Conversation) (*profile.Profile, error) {
+func (s *CompleteService) processRequest(req Request, activeConversation *conversation.Conversation) (*profile.Profile, error) {
 	activeProfile, err := s.loadProfile(req.ProfileSlug, activeConversation)
 	if err != nil {
 		return activeProfile, err
@@ -155,7 +153,7 @@ func (s *CompleteService) processRequestToConversation(req Request, activeConver
 	}
 
 	if !req.IsFollowUp {
-		activeConversation.Clear()
+		*activeConversation = *conversation.NewConversation(activeConversation.ProfileSlug, activeConversation.ModelSlug)
 	}
 
 	if req.AppendFilename != "" {

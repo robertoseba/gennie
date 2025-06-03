@@ -26,11 +26,6 @@ func NewConversation(profileSlug string, modelSlug string) *Conversation {
 	}
 }
 
-func (c *Conversation) Clear() {
-	c.QAs = make([]qa, 0)
-	c.markAsUpdated()
-}
-
 func (c *Conversation) Len() int {
 	return len(c.QAs)
 }
