@@ -7,7 +7,7 @@ import (
 
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/robertoseba/gennie/internal/core/llmcore"
+	"github.com/robertoseba/gennie/internal/core/llm"
 )
 
 type Server struct {
@@ -63,7 +63,7 @@ func (c *mcpClient) requiresApproval() bool {
 }
 
 // Returns a list of tools available in the MCP server indexed by their name.
-func (c *mcpClient) ListTools(ctx context.Context) (map[string]llmcore.Tool, error) {
+func (c *mcpClient) ListTools(ctx context.Context) (map[string]llm.Tool, error) {
 	request := mcp.ListToolsRequest{}
 
 	result, err := c.client.ListTools(ctx, request)
@@ -71,12 +71,12 @@ func (c *mcpClient) ListTools(ctx context.Context) (map[string]llmcore.Tool, err
 		return nil, err
 	}
 
-	tools := make(map[string]llmcore.Tool, len(result.Tools))
+	tools := make(map[string]llm.Tool, len(result.Tools))
 	for _, t := range result.Tools {
-		tools[t.Name] = llmcore.Tool{
+		tools[t.Name] = llm.Tool{
 			Name:        t.Name,
 			Description: t.Description,
-			InputSchema: llmcore.ToolInputSchema{
+			InputSchema: llm.ToolInputSchema{
 				Type:       t.InputSchema.Type,
 				Properties: t.InputSchema.Properties,
 				Required:   t.InputSchema.Required,

@@ -7,7 +7,7 @@ package complete
 // 	"github.com/robertoseba/gennie/internal/core/config"
 // 	"github.com/robertoseba/gennie/internal/core/conversation"
 // 	"github.com/robertoseba/gennie/internal/core/llmcore"
-// 	"github.com/robertoseba/gennie/internal/core/llmproviders/factory"
+// 	"github.com/robertoseba/gennie/internal/core/llm.factory"
 // 	"github.com/robertoseba/gennie/internal/core/profile"
 // 	apimock "github.com/robertoseba/gennie/internal/infra/apiclient/mocks"
 // 	"github.com/robertoseba/gennie/internal/infra/repositories/mocks"
@@ -240,7 +240,7 @@ package complete
 // 			AppendFile:  "",
 // 		})
 //
-// 		require.ErrorIs(t, err, llmcore.ErrModelNotFound)
+// 		require.ErrorIs(t, err, llm.ErrModelNotFound)
 // 	})
 // }
 //

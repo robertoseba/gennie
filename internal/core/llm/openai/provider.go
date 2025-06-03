@@ -11,7 +11,7 @@ import (
 	"github.com/openai/openai-go/packages/param"
 	"github.com/openai/openai-go/shared"
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/llmcore"
+	"github.com/robertoseba/gennie/internal/core/llm"
 )
 
 const (
@@ -59,12 +59,12 @@ func (p *provider) SetSystemPrompt(systemPrompt string) {
 	p.systemPrompt = systemPrompt
 }
 
-func (p *provider) SetTools(tools []llmcore.Tool) {
+func (p *provider) SetTools(tools []llm.Tool) {
 	p.tools = convertToolsToProvider(tools)
 }
 
-func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []llmcore.ToolResult) <-chan llmcore.LlmResponse {
-	output := make(chan llmcore.LlmResponse, 10)
+func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []llm.ToolResult) <-chan llm.LlmResponse {
+	output := make(chan llm.LlmResponse, 10)
 
 	go func() {
 		defer close(output)
@@ -101,11 +101,11 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			// 	// msg := acc.ChatCompletion.Choices[0].Message.ToParam()
 			// 	// b, _ := json.Marshal(msg)
 			// 	// fmt.Println("Tool call finished:", string(b))
-			// 	output <- llmcore.LlmResponse{
+			// 	output <- llm.LlmResponse{
 			// 		Text:       chunk.Choices[0].Delta.Content,
 			// 		Error:      nil,
-			// 		StopReason: llmcore.StopReasonTools,
-			// 		FunctionCall: llmcore.FunctionCall{
+			// 		StopReason: llm.StopReasonTools,
+			// 		FunctionCall: llm.FunctionCall{
 			// 			ID:        tool.ID,
 			// 			Name:      tool.Name,
 			// 			Arguments: []byte(tool.Arguments),
@@ -118,19 +118,19 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			}
 
 			if len(chunk.Choices) > 0 {
-				output <- llmcore.LlmResponse{
+				output <- llm.LlmResponse{
 					Text:       chunk.Choices[0].Delta.Content,
 					Error:      nil,
-					StopReason: llmcore.StopReasonNone,
+					StopReason: llm.StopReasonNone,
 				}
 			}
 		}
 
 		if stream.Err() != nil {
-			output <- llmcore.LlmResponse{
+			output <- llm.LlmResponse{
 				Error:      stream.Err(),
 				Text:       "something went wrong",
-				StopReason: llmcore.StopReasonError,
+				StopReason: llm.StopReasonError,
 			}
 		}
 
@@ -139,11 +139,11 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			// TODO: currently only supports a single tool call
 			f := acc.Choices[0].Message.ToolCalls[0].Function
 			id := acc.Choices[0].Message.ToolCalls[0].ID
-			output <- llmcore.LlmResponse{
+			output <- llm.LlmResponse{
 				Text:       acc.Choices[0].Message.Content,
 				Error:      nil,
-				StopReason: llmcore.StopReasonToolCall,
-				FunctionCall: llmcore.FunctionCall{
+				StopReason: llm.StopReasonToolCall,
+				FunctionCall: llm.FunctionCall{
 					ID:        id,
 					Name:      f.Name,
 					Arguments: []byte(f.Arguments),
@@ -155,7 +155,7 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 	return output
 }
 
-func convertToolsToProvider(tools []llmcore.Tool) []openai.ChatCompletionToolParam {
+func convertToolsToProvider(tools []llm.Tool) []openai.ChatCompletionToolParam {
 	converted := make([]openai.ChatCompletionToolParam, len(tools))
 	for i, tool := range tools {
 		byteSchema, err := json.Marshal(tool.InputSchema)
@@ -182,7 +182,7 @@ func convertToolsToProvider(tools []llmcore.Tool) []openai.ChatCompletionToolPar
 	return converted
 }
 
-func addToolResultsToMessages(messages []openai.ChatCompletionMessageParamUnion, toolResults []llmcore.ToolResult) []openai.ChatCompletionMessageParamUnion {
+func addToolResultsToMessages(messages []openai.ChatCompletionMessageParamUnion, toolResults []llm.ToolResult) []openai.ChatCompletionMessageParamUnion {
 	assistantCall := openai.ChatCompletionAssistantMessageParam{
 		ToolCalls: make([]openai.ChatCompletionMessageToolCallParam, 0, len(toolResults)),
 	}

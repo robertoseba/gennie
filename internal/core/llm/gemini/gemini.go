@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/llmcore"
+	"github.com/robertoseba/gennie/internal/core/llm"
 	"google.golang.org/genai"
 )
 
@@ -47,12 +47,12 @@ func (p *provider) SetSystemPrompt(systemPrompt string) {
 	p.systemPrompt = systemPrompt
 }
 
-func (p *provider) SetTools(tools []llmcore.Tool) {
+func (p *provider) SetTools(tools []llm.Tool) {
 	p.tools = convertToolsToProvider(tools)
 }
 
-func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []llmcore.ToolResult) <-chan llmcore.LlmResponse {
-	output := make(chan llmcore.LlmResponse, 10)
+func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []llm.ToolResult) <-chan llm.LlmResponse {
+	output := make(chan llm.LlmResponse, 10)
 
 	go func() {
 		defer close(output)
@@ -83,33 +83,33 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 
 		for result, err := range streamRes {
 			if err != nil {
-				output <- llmcore.LlmResponse{
+				output <- llm.LlmResponse{
 					Error:      err,
 					Text:       "something went wrong",
-					StopReason: llmcore.StopReasonError,
+					StopReason: llm.StopReasonError,
 				}
 				continue
 			}
 
 			textResponse := result.Candidates[0].Content.Parts[0].Text
-			response := llmcore.LlmResponse{
+			response := llm.LlmResponse{
 				Text:       textResponse,
-				StopReason: llmcore.StopReasonNone,
+				StopReason: llm.StopReasonNone,
 			}
 
 			if result.Candidates[0].FinishReason == genai.FinishReasonStop {
-				response.StopReason = llmcore.StopReasonEnd
+				response.StopReason = llm.StopReasonEnd
 			}
 
 			functionCalls := result.FunctionCalls()
 			if len(functionCalls) > 0 {
-				response.StopReason = llmcore.StopReasonToolCall
+				response.StopReason = llm.StopReasonToolCall
 				for _, functionCall := range functionCalls {
 					argsBytes, err := json.Marshal(functionCall.Args)
 					if err != nil {
 						log.Printf("Error marshaling function call arguments: %v", err)
 					}
-					response.FunctionCall = llmcore.FunctionCall{
+					response.FunctionCall = llm.FunctionCall{
 						ID:        functionCall.ID,
 						Name:      functionCall.Name,
 						Arguments: argsBytes,
@@ -124,7 +124,7 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 	return output
 }
 
-func addToolResultsToMessages(messages []*genai.Content, toolResults []llmcore.ToolResult) []*genai.Content {
+func addToolResultsToMessages(messages []*genai.Content, toolResults []llm.ToolResult) []*genai.Content {
 	for _, toolResult := range toolResults {
 		if toolResult.IsError() {
 			toolMessage := genai.NewContentFromFunctionResponse(toolResult.Name, map[string]any{"error": toolResult.Error.Error()}, genai.RoleUser)
@@ -145,7 +145,7 @@ func addToolResultsToMessages(messages []*genai.Content, toolResults []llmcore.T
 	return messages
 }
 
-func convertToolsToProvider(tools []llmcore.Tool) []*genai.FunctionDeclaration {
+func convertToolsToProvider(tools []llm.Tool) []*genai.FunctionDeclaration {
 	functions := make([]*genai.FunctionDeclaration, 0, len(tools))
 
 	for _, tool := range tools {

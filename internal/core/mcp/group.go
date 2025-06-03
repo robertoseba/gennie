@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/robertoseba/gennie/internal/core/llmcore"
+	"github.com/robertoseba/gennie/internal/core/llm"
 )
 
 type (
@@ -14,7 +14,7 @@ type (
 	}
 
 	toolDetails struct {
-		llmcore.Tool
+		llm.Tool
 		mcpClient *mcpClient
 	}
 )
@@ -50,8 +50,8 @@ func (g *Group) Shutdown() {
 	}
 }
 
-func (g *Group) ListTools() []llmcore.Tool {
-	result := make([]llmcore.Tool, 0, len(g.tools))
+func (g *Group) ListTools() []llm.Tool {
+	result := make([]llm.Tool, 0, len(g.tools))
 	for _, tool := range g.tools {
 		result = append(result, tool.Tool)
 	}

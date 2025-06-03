@@ -3,10 +3,9 @@ package factory
 import (
 	"testing"
 
+	"github.com/robertoseba/gennie/internal/core/llm/anthropic"
+	"github.com/robertoseba/gennie/internal/core/llm/gemini"
 	"github.com/stretchr/testify/require"
-
-	"github.com/robertoseba/gennie/internal/core/llmproviders/anthropic"
-	"github.com/robertoseba/gennie/internal/core/llmproviders/gemini"
 )
 
 func TestParseFrom(t *testing.T) {

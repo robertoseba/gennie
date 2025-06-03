@@ -2,7 +2,7 @@ package usecases
 
 import (
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/llmproviders/factory"
+	"github.com/robertoseba/gennie/internal/core/llm/factory"
 )
 
 type SelectModelService struct {

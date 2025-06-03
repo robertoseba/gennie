@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/robertoseba/gennie/internal/core/llmproviders/factory"
+	"github.com/robertoseba/gennie/internal/core/llm/factory"
 	"github.com/robertoseba/gennie/internal/core/usecases"
 	output "github.com/robertoseba/gennie/internal/output"
 	cobra "github.com/spf13/cobra"

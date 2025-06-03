@@ -1,8 +1,8 @@
 package factory
 
 import (
-	"github.com/robertoseba/gennie/internal/core/llmproviders/anthropic"
-	"github.com/robertoseba/gennie/internal/core/llmproviders/gemini"
+	"github.com/robertoseba/gennie/internal/core/llm/anthropic"
+	"github.com/robertoseba/gennie/internal/core/llm/gemini"
 )
 
 type ModelEnum string

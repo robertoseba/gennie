@@ -8,8 +8,8 @@ import (
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/llmcore"
-	"github.com/robertoseba/gennie/internal/core/llmproviders/openai"
+	"github.com/robertoseba/gennie/internal/core/llm"
+	"github.com/robertoseba/gennie/internal/core/llm/openai"
 )
 
 const (
@@ -57,12 +57,12 @@ func (p *provider) SetSystemPrompt(systemPrompt string) {
 	p.systemPrompt = systemPrompt
 }
 
-func (p *provider) SetTools(tools []llmcore.Tool) {
+func (p *provider) SetTools(tools []llm.Tool) {
 	p.tools = convertToolsToProvider(tools)
 }
 
-func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []llmcore.ToolResult) <-chan llmcore.LlmResponse {
-	output := make(chan llmcore.LlmResponse, 10)
+func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []llm.ToolResult) <-chan llm.LlmResponse {
+	output := make(chan llm.LlmResponse, 10)
 
 	go func() {
 		defer close(output)
@@ -104,18 +104,18 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			case anthropic.ContentBlockDeltaEvent:
 				switch deltaVariant := eventVariant.Delta.AsAny().(type) {
 				case anthropic.TextDelta:
-					output <- llmcore.LlmResponse{
+					output <- llm.LlmResponse{
 						Text:       deltaVariant.Text,
 						Error:      nil,
-						StopReason: llmcore.StopReasonNone,
+						StopReason: llm.StopReasonNone,
 					}
 				}
 			}
 			if stream.Err() != nil {
-				output <- llmcore.LlmResponse{
+				output <- llm.LlmResponse{
 					Text:       "something went wrong!!",
 					Error:      stream.Err(),
-					StopReason: llmcore.StopReasonError,
+					StopReason: llm.StopReasonError,
 				}
 			}
 		}

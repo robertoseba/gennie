@@ -1,4 +1,4 @@
-package llmcore
+package llm
 
 import (
 	"context"

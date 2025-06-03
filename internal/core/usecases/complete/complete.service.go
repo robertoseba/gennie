@@ -11,8 +11,8 @@ import (
 
 	"github.com/robertoseba/gennie/internal/core/config"
 	"github.com/robertoseba/gennie/internal/core/conversation"
-	"github.com/robertoseba/gennie/internal/core/llmcore"
-	"github.com/robertoseba/gennie/internal/core/llmproviders/factory"
+	"github.com/robertoseba/gennie/internal/core/llm"
+	"github.com/robertoseba/gennie/internal/core/llm/factory"
 	"github.com/robertoseba/gennie/internal/core/mcp"
 	"github.com/robertoseba/gennie/internal/core/profile"
 )
@@ -72,14 +72,14 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 
 		outputChan <- Response{Data: "Asking the model...", Type: RtLoading, Err: nil}
 
-		toolResults := make([]llmcore.ToolResult, 0)
+		toolResults := make([]llm.ToolResult, 0)
 		answer := strings.Builder{}
 		for {
 			llmCompleteChan := llmProvider.Complete(ctx, activeConversation, toolResults)
 
-			toolCallRequest := llmcore.LlmResponse{}
+			toolCallRequest := llm.LlmResponse{}
 			for llmResponse := range llmCompleteChan {
-				if llmResponse.StopReason == llmcore.StopReasonToolCall {
+				if llmResponse.StopReason == llm.StopReasonToolCall {
 					toolCallRequest = llmResponse
 					continue
 				}
@@ -122,24 +122,24 @@ func (s *CompleteService) answerConversation(ctx context.Context, conv *conversa
 	return nil
 }
 
-func (s *CompleteService) callTool(ctx context.Context, llmResponse *llmcore.LlmResponse, mcpGroup *mcp.Group) *llmcore.ToolResult {
+func (s *CompleteService) callTool(ctx context.Context, llmResponse *llm.LlmResponse, mcpGroup *mcp.Group) *llm.ToolResult {
 	var args map[string]any
 	if len(llmResponse.FunctionCall.Arguments) > 0 {
 		args = make(map[string]any)
 		err := json.Unmarshal([]byte(llmResponse.FunctionCall.Arguments), &args)
 		if err != nil {
-			return llmcore.NewToolResponseError(nil, err)
+			return llm.NewToolResponseError(nil, err)
 		}
 	}
 
 	toolResponse, err := mcpGroup.ExecTool(ctx, llmResponse.FunctionCall.Name, args)
 	if err != nil {
 		s.logger.Error("Failed to execute tool", "toolName", llmResponse.FunctionCall.Name, "error", err)
-		return llmcore.NewToolResponseError(llmResponse, err)
+		return llm.NewToolResponseError(llmResponse, err)
 	}
 	s.logger.Debug("Tool response", "toolName", llmResponse.FunctionCall.Name, "response", toolResponse)
 
-	return llmcore.NewToolResponseFrom(llmResponse, []byte(toolResponse))
+	return llm.NewToolResponseFrom(llmResponse, []byte(toolResponse))
 }
 
 func (s *CompleteService) processRequestToConversation(req Request, activeConversation *conversation.Conversation) (*profile.Profile, error) {

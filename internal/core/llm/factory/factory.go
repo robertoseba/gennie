@@ -5,16 +5,16 @@ import (
 	"net/http"
 
 	"github.com/robertoseba/gennie/internal/core/config"
-	"github.com/robertoseba/gennie/internal/core/llmcore"
-	"github.com/robertoseba/gennie/internal/core/llmproviders/anthropic"
-	"github.com/robertoseba/gennie/internal/core/llmproviders/gemini"
-	"github.com/robertoseba/gennie/internal/core/llmproviders/openai"
+	"github.com/robertoseba/gennie/internal/core/llm"
+	"github.com/robertoseba/gennie/internal/core/llm/anthropic"
+	"github.com/robertoseba/gennie/internal/core/llm/gemini"
+	"github.com/robertoseba/gennie/internal/core/llm/openai"
 )
 
-func NewProvider(modelSlug string, httpClient *http.Client, config config.Config) (llmcore.LlmProvider, error) {
+func NewProvider(modelSlug string, httpClient *http.Client, config config.Config) (llm.LlmProvider, error) {
 	modelEnum, ok := ParseFrom(modelSlug)
 	if !ok {
-		return nil, fmt.Errorf("%w: %s", llmcore.ErrModelNotFound, modelSlug)
+		return nil, fmt.Errorf("%w: %s", llm.ErrModelNotFound, modelSlug)
 	}
 	switch modelEnum {
 	case ClaudeSonnet:
@@ -47,5 +47,5 @@ func NewProvider(modelSlug string, httpClient *http.Client, config config.Config
 			openai.WithBaseUrl(config.Ollama.Host),
 		), nil
 	}
-	return nil, fmt.Errorf("%w: %s", llmcore.ErrModelNotFound, modelSlug)
+	return nil, fmt.Errorf("%w: %s", llm.ErrModelNotFound, modelSlug)
 }

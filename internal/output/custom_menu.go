@@ -1,6 +1,6 @@
 package output
 
-import "github.com/robertoseba/gennie/internal/core/llmproviders/factory"
+import "github.com/robertoseba/gennie/internal/core/llm/factory"
 
 // TODO: create in menu a NewMenu that receives titles and items[names, values] and returns a menu
 func MenuModel(m map[factory.ModelEnum]string, selected factory.ModelEnum) factory.ModelEnum {
