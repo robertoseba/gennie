@@ -16,14 +16,14 @@ const (
 
 // This is the response converted from a providers response
 // Every provider should convert their response to this base response
-type LlmResponse struct {
+type Response struct {
 	Text         string
 	Error        error
 	StopReason   StopReason
 	FunctionCall FunctionCall // TODO: maybe this should be an slice of function calls
 }
 
-func (r LlmResponse) IsToolCall() bool {
+func (r Response) IsToolCall() bool {
 	return r.StopReason == StopReasonToolCall
 }
 

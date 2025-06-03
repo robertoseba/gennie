@@ -1,6 +1,7 @@
 package factory
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -11,11 +12,11 @@ import (
 	"github.com/robertoseba/gennie/internal/core/llm/openai"
 )
 
+var ErrModelNotFound = errors.New("model not found")
+
 func NewProvider(modelSlug string, httpClient *http.Client, config config.Config) (llm.LlmProvider, error) {
-	modelEnum, ok := ParseFrom(modelSlug)
-	if !ok {
-		return nil, fmt.Errorf("%w: %s", llm.ErrModelNotFound, modelSlug)
-	}
+	modelEnum, _ := ParseFrom(modelSlug)
+
 	switch modelEnum {
 	case ClaudeSonnet:
 		return anthropic.NewProvider(config.APIKeys.AnthropicApiKey, modelEnum.Slug(), httpClient), nil
@@ -47,5 +48,5 @@ func NewProvider(modelSlug string, httpClient *http.Client, config config.Config
 			openai.WithBaseUrl(config.Ollama.Host),
 		), nil
 	}
-	return nil, fmt.Errorf("%w: %s", llm.ErrModelNotFound, modelSlug)
+	return nil, fmt.Errorf("%w: %s", ErrModelNotFound, modelSlug)
 }

@@ -63,8 +63,8 @@ func (p *provider) SetTools(tools []llm.Tool) {
 	p.tools = convertToolsToProvider(tools)
 }
 
-func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []llm.ToolResult) <-chan llm.LlmResponse {
-	output := make(chan llm.LlmResponse, 10)
+func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []llm.ToolResult) <-chan llm.Response {
+	output := make(chan llm.Response, 10)
 
 	go func() {
 		defer close(output)
@@ -118,7 +118,7 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			}
 
 			if len(chunk.Choices) > 0 {
-				output <- llm.LlmResponse{
+				output <- llm.Response{
 					Text:       chunk.Choices[0].Delta.Content,
 					Error:      nil,
 					StopReason: llm.StopReasonNone,
@@ -127,7 +127,7 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 		}
 
 		if stream.Err() != nil {
-			output <- llm.LlmResponse{
+			output <- llm.Response{
 				Error:      stream.Err(),
 				Text:       "something went wrong",
 				StopReason: llm.StopReasonError,
@@ -139,7 +139,7 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			// TODO: currently only supports a single tool call
 			f := acc.Choices[0].Message.ToolCalls[0].Function
 			id := acc.Choices[0].Message.ToolCalls[0].ID
-			output <- llm.LlmResponse{
+			output <- llm.Response{
 				Text:       acc.Choices[0].Message.Content,
 				Error:      nil,
 				StopReason: llm.StopReasonToolCall,

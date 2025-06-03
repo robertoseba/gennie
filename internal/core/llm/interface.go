@@ -7,7 +7,7 @@ import (
 )
 
 type LlmProvider interface {
-	Complete(ctx context.Context, conversation *conversation.Conversation, toolResult []ToolResult) <-chan LlmResponse
+	Complete(ctx context.Context, conversation *conversation.Conversation, toolResult []ToolResult) <-chan Response
 	SetSystemPrompt(systemPrompt string)
 	SetTools(tools []Tool)
 }

@@ -51,8 +51,8 @@ func (p *provider) SetTools(tools []llm.Tool) {
 	p.tools = convertToolsToProvider(tools)
 }
 
-func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []llm.ToolResult) <-chan llm.LlmResponse {
-	output := make(chan llm.LlmResponse, 10)
+func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []llm.ToolResult) <-chan llm.Response {
+	output := make(chan llm.Response, 10)
 
 	go func() {
 		defer close(output)
@@ -83,7 +83,7 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 
 		for result, err := range streamRes {
 			if err != nil {
-				output <- llm.LlmResponse{
+				output <- llm.Response{
 					Error:      err,
 					Text:       "something went wrong",
 					StopReason: llm.StopReasonError,
@@ -92,7 +92,7 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			}
 
 			textResponse := result.Candidates[0].Content.Parts[0].Text
-			response := llm.LlmResponse{
+			response := llm.Response{
 				Text:       textResponse,
 				StopReason: llm.StopReasonNone,
 			}

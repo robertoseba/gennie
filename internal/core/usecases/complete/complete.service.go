@@ -77,7 +77,7 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 		for {
 			llmCompleteChan := llmProvider.Complete(ctx, activeConversation, toolResults)
 
-			toolCallRequest := llm.LlmResponse{}
+			toolCallRequest := llm.Response{}
 			for llmResponse := range llmCompleteChan {
 				if llmResponse.StopReason == llm.StopReasonToolCall {
 					toolCallRequest = llmResponse
@@ -122,7 +122,7 @@ func (s *CompleteService) answerConversation(ctx context.Context, conv *conversa
 	return nil
 }
 
-func (s *CompleteService) callTool(ctx context.Context, llmResponse *llm.LlmResponse, mcpGroup *mcp.Group) *llm.ToolResult {
+func (s *CompleteService) callTool(ctx context.Context, llmResponse *llm.Response, mcpGroup *mcp.Group) *llm.ToolResult {
 	var args map[string]any
 	if len(llmResponse.FunctionCall.Arguments) > 0 {
 		args = make(map[string]any)

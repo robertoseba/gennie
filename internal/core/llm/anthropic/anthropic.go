@@ -61,8 +61,8 @@ func (p *provider) SetTools(tools []llm.Tool) {
 	p.tools = convertToolsToProvider(tools)
 }
 
-func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []llm.ToolResult) <-chan llm.LlmResponse {
-	output := make(chan llm.LlmResponse, 10)
+func (p *provider) Complete(ctx context.Context, conversation *conversation.Conversation, toolResults []llm.ToolResult) <-chan llm.Response {
+	output := make(chan llm.Response, 10)
 
 	go func() {
 		defer close(output)
@@ -104,7 +104,7 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 			case anthropic.ContentBlockDeltaEvent:
 				switch deltaVariant := eventVariant.Delta.AsAny().(type) {
 				case anthropic.TextDelta:
-					output <- llm.LlmResponse{
+					output <- llm.Response{
 						Text:       deltaVariant.Text,
 						Error:      nil,
 						StopReason: llm.StopReasonNone,
@@ -112,7 +112,7 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 				}
 			}
 			if stream.Err() != nil {
-				output <- llm.LlmResponse{
+				output <- llm.Response{
 					Text:       "something went wrong!!",
 					Error:      stream.Err(),
 					StopReason: llm.StopReasonError,

@@ -40,7 +40,7 @@ func (m ModelEnum) Slug() string {
 func ParseFrom(modelSlug string) (ModelEnum, bool) {
 	_, ok := availableModels[ModelEnum(modelSlug)]
 	if !ok {
-		return DefaultModel, false
+		return "", false
 	}
 
 	return ModelEnum(modelSlug), true

@@ -44,7 +44,7 @@ type ToolResult struct {
 	Error     error
 }
 
-func NewToolResponseFrom(modelResponse *LlmResponse, toolResult []byte) *ToolResult {
+func NewToolResponseFrom(modelResponse *Response, toolResult []byte) *ToolResult {
 	return &ToolResult{
 		ID:        modelResponse.FunctionCall.ID,
 		Name:      modelResponse.FunctionCall.Name,
@@ -54,7 +54,7 @@ func NewToolResponseFrom(modelResponse *LlmResponse, toolResult []byte) *ToolRes
 	}
 }
 
-func NewToolResponseError(modelResponse *LlmResponse, err error) *ToolResult {
+func NewToolResponseError(modelResponse *Response, err error) *ToolResult {
 	return &ToolResult{
 		ID:     modelResponse.FunctionCall.ID,
 		Name:   modelResponse.FunctionCall.Name,

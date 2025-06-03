@@ -5,13 +5,13 @@ import (
 	"github.com/robertoseba/gennie/internal/core/llm"
 )
 
-func parseToolUseFrom(message *anthropic.Message) []llm.LlmResponse {
-	var toolResponses []llm.LlmResponse
+func parseToolUseFrom(message *anthropic.Message) []llm.Response {
+	var toolResponses []llm.Response
 
 	for _, block := range message.Content {
 		switch variant := block.AsAny().(type) {
 		case anthropic.ToolUseBlock:
-			response := llm.LlmResponse{
+			response := llm.Response{
 				StopReason: llm.StopReasonToolCall,
 				FunctionCall: llm.FunctionCall{
 					ID:        variant.ID,
