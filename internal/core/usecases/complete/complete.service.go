@@ -28,17 +28,17 @@ func NewCompleteService(cr conversation.ConversationRepository, pr profile.Profi
 }
 
 func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Response, error) {
-	activeConversation, err := s.conversationRepo.LoadActive()
+	previousConversation, err := s.conversationRepo.LoadActive()
 	if err != nil {
 		return nil, err
 	}
 
-	activeProfile, err := s.processRequest(req, activeConversation)
+	activeProfile, currConversation, err := s.processRequest(req, previousConversation)
 	if err != nil {
 		return nil, err
 	}
 
-	llmProvider, err := factory.NewProvider(activeConversation.ModelSlug, s.httpClient, *s.config)
+	llmProvider, err := factory.NewProvider(currConversation.ModelSlug, s.httpClient, *s.config)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 	go func() {
 		defer close(outputChan)
 
-		outputChan <- Response{Data: activeConversation.ModelSlug, Type: RtModel}
+		outputChan <- Response{Data: currConversation.ModelSlug, Type: RtModel}
 		outputChan <- Response{Data: activeProfile.Name, Type: RtProfile}
 
 		// setup mcps
@@ -73,7 +73,7 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 		toolResults := make([]llm.ToolResult, 0)
 		answer := strings.Builder{}
 		for {
-			llmCompleteChan := llmProvider.Complete(ctx, activeConversation, toolResults)
+			llmCompleteChan := llmProvider.Complete(ctx, currConversation, toolResults)
 
 			toolCallRequest := llm.Response{}
 			for llmResponse := range llmCompleteChan {
@@ -100,7 +100,7 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 			toolResults = append(toolResults, *result)
 		}
 
-		s.answerConversation(ctx, activeConversation, answer.String())
+		s.answerConversation(ctx, currConversation, answer.String())
 	}()
 
 	return outputChan, nil
@@ -140,32 +140,34 @@ func (s *CompleteService) callTool(ctx context.Context, llmResponse *llm.Respons
 	return llm.NewToolResponseFrom(llmResponse, []byte(toolResponse))
 }
 
-func (s *CompleteService) processRequest(req Request, activeConversation *conversation.Conversation) (*profile.Profile, error) {
-	activeProfile, err := s.loadProfile(req.ProfileSlug, activeConversation)
+func (s *CompleteService) processRequest(req Request, previousConversation *conversation.Conversation) (*profile.Profile, *conversation.Conversation, error) {
+	currConversation := conversation.NewConversation(previousConversation.ProfileSlug, previousConversation.ModelSlug)
+
+	activeProfile, err := s.loadProfile(req.ProfileSlug, previousConversation)
 	if err != nil {
-		return activeProfile, err
+		return activeProfile, nil, err
 	}
-	activeConversation.SetProfileTo(activeProfile.Slug)
+	currConversation.SetProfileTo(activeProfile.Slug)
 
 	if req.ModelSlug != "" {
-		activeConversation.ModelSlug = req.ModelSlug
-		activeConversation.SetModelTo(req.ModelSlug)
+		currConversation.ModelSlug = req.ModelSlug
+		currConversation.SetModelTo(req.ModelSlug)
 	}
 
-	if !req.IsFollowUp {
-		*activeConversation = *conversation.NewConversation(activeConversation.ProfileSlug, activeConversation.ModelSlug)
+	if req.IsFollowUp {
+		currConversation.QAs = append(currConversation.QAs, previousConversation.QAs...)
 	}
 
 	if req.AppendFilename != "" {
 		content, err := os.ReadFile(req.AppendFilename)
 		if err != nil {
-			return activeProfile, err
+			return activeProfile, nil, err
 		}
 		req.Question += "\n" + string(content)
 	}
-	activeConversation.NewQuestion(req.Question)
+	currConversation.NewQuestion(req.Question)
 
-	return activeProfile, nil
+	return activeProfile, currConversation, nil
 }
 
 func (c *CompleteService) loadProfile(profileSlug string, activeConversation *conversation.Conversation) (*profile.Profile, error) {
