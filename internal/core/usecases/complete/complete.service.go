@@ -80,8 +80,9 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 
 			for llmResponse := range llmCompleteChan {
 				if llmResponse.IsToolCall() {
+					fmt.Printf("tool call %v+\n", llmResponse)
 					toolCallRequest = &llmResponse
-					continue
+					// continue
 				}
 
 				outputChan <- Response{Data: llmResponse.Text, Err: llmResponse.Error}
@@ -92,15 +93,17 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 				break
 			}
 
-			if mcpGroup.RequiresApproval(toolCallRequest.FunctionCall.Name) {
-				outputChan <- NewApprovalRequestResponse(fmt.Sprintf("Tool call request for '%s' with params (%s) requires approval.",
-					toolCallRequest.FunctionCall.Name, toolCallRequest.FunctionCall.Arguments))
+			for _, toolReq := range toolCallRequest.FunctionCalls {
+				if mcpGroup.RequiresApproval(toolReq.Name) {
+					outputChan <- NewApprovalRequestResponse(fmt.Sprintf("Tool call request for '%s' with params (%s) requires approval.",
+						toolReq.Name, toolReq.Arguments))
+				}
+
+				outputChan <- NewLoadingResponse(fmt.Sprintf("Using tool: %s -> (%s)", toolReq.Name, toolReq.Arguments))
+
+				result := s.callTool(ctx, toolReq, mcpGroup)
+				toolResults = append(toolResults, *result)
 			}
-
-			outputChan <- NewLoadingResponse(fmt.Sprintf("Using tool: %s -> (%s)", toolCallRequest.FunctionCall.Name, toolCallRequest.FunctionCall.Arguments))
-
-			result := s.callTool(ctx, toolCallRequest, mcpGroup)
-			toolResults = append(toolResults, *result)
 		}
 
 		s.saveConversation(ctx, currConversation, answerAcc.String())
@@ -123,25 +126,25 @@ func (s *CompleteService) saveConversation(ctx context.Context, conv *conversati
 	return nil
 }
 
-func (s *CompleteService) callTool(ctx context.Context, llmResponse *llm.Response, mcpGroup *mcp.Group) *llm.ToolResult {
+func (s *CompleteService) callTool(ctx context.Context, funcCall llm.FunctionCall, mcpGroup *mcp.Group) *llm.ToolResult {
 	var args map[string]any
 
-	if len(llmResponse.FunctionCall.Arguments) > 0 {
+	if len(funcCall.Arguments) > 0 {
 		args = make(map[string]any)
-		err := json.Unmarshal([]byte(llmResponse.FunctionCall.Arguments), &args)
+		err := json.Unmarshal([]byte(funcCall.Arguments), &args)
 		if err != nil {
-			return llm.NewToolResponseError(nil, err)
+			return llm.NewToolResponseError(funcCall, err)
 		}
 	}
 
-	toolResponse, err := mcpGroup.ExecTool(ctx, llmResponse.FunctionCall.Name, args)
+	toolResponse, err := mcpGroup.ExecTool(ctx, funcCall.Name, args)
 	if err != nil {
-		s.logger.Error("Failed to execute tool", "toolName", llmResponse.FunctionCall.Name, "error", err)
-		return llm.NewToolResponseError(llmResponse, err)
+		s.logger.Error("Failed to execute tool", "toolName", funcCall.Name, "error", err)
+		return llm.NewToolResponseError(funcCall, err)
 	}
-	s.logger.Debug("Tool response", "toolName", llmResponse.FunctionCall.Name, "response", toolResponse)
+	s.logger.Debug("Tool response", "toolCallId", funcCall.ID, "toolName", funcCall.Name, "response", toolResponse)
 
-	return llm.NewToolResponseFrom(llmResponse, []byte(toolResponse))
+	return llm.NewToolResponseFrom(funcCall, []byte(toolResponse))
 }
 
 func (s *CompleteService) processRequest(req Request, previousConversation *conversation.Conversation) (*profile.Profile, *conversation.Conversation, error) {

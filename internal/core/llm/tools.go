@@ -44,20 +44,20 @@ type ToolResult struct {
 	Error     error
 }
 
-func NewToolResponseFrom(modelResponse *Response, toolResult []byte) *ToolResult {
+func NewToolResponseFrom(funcCall FunctionCall, toolResult []byte) *ToolResult {
 	return &ToolResult{
-		ID:        modelResponse.FunctionCall.ID,
-		Name:      modelResponse.FunctionCall.Name,
-		Arguments: modelResponse.FunctionCall.Arguments,
+		ID:        funcCall.ID,
+		Name:      funcCall.Name,
+		Arguments: funcCall.Arguments,
 		Result:    toolResult,
 		Error:     nil,
 	}
 }
 
-func NewToolResponseError(modelResponse *Response, err error) *ToolResult {
+func NewToolResponseError(funcCall FunctionCall, err error) *ToolResult {
 	return &ToolResult{
-		ID:     modelResponse.FunctionCall.ID,
-		Name:   modelResponse.FunctionCall.Name,
+		ID:     funcCall.ID,
+		Name:   funcCall.Name,
 		Result: nil,
 		Error:  err,
 	}

@@ -17,10 +17,10 @@ const (
 // This is the response converted from a providers response
 // Every provider should convert their response to this base response
 type Response struct {
-	Text         string
-	Error        error
-	StopReason   StopReason
-	FunctionCall FunctionCall // TODO: maybe this should be an slice of function calls
+	Text          string
+	Error         error
+	StopReason    StopReason
+	FunctionCalls []FunctionCall
 }
 
 func (r Response) IsToolCall() bool {

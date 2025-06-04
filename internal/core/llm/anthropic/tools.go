@@ -13,10 +13,12 @@ func parseToolUseFrom(message *anthropic.Message) []llm.Response {
 		case anthropic.ToolUseBlock:
 			response := llm.Response{
 				StopReason: llm.StopReasonToolCall,
-				FunctionCall: llm.FunctionCall{
-					ID:        variant.ID,
-					Name:      variant.Name,
-					Arguments: variant.Input,
+				FunctionCalls: []llm.FunctionCall{
+					{
+						ID:        variant.ID,
+						Name:      variant.Name,
+						Arguments: variant.Input,
+					},
 				},
 			}
 			toolResponses = append(toolResponses, response)

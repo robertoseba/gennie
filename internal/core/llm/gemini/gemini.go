@@ -109,10 +109,12 @@ func (p *provider) Complete(ctx context.Context, conversation *conversation.Conv
 					if err != nil {
 						log.Printf("Error marshaling function call arguments: %v", err)
 					}
-					response.FunctionCall = llm.FunctionCall{
-						ID:        functionCall.ID,
-						Name:      functionCall.Name,
-						Arguments: argsBytes,
+					response.FunctionCalls = []llm.FunctionCall{
+						{
+							ID:        functionCall.ID,
+							Name:      functionCall.Name,
+							Arguments: argsBytes,
+						},
 					}
 				}
 			}
