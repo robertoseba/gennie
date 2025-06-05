@@ -131,7 +131,7 @@ func (s *CompleteService) callTool(ctx context.Context, funcCall llm.FunctionCal
 
 	if len(funcCall.Arguments) > 0 {
 		args = make(map[string]any)
-		err := json.Unmarshal([]byte(funcCall.Arguments), &args)
+		err := json.Unmarshal(funcCall.Arguments, &args)
 		if err != nil {
 			return llm.NewToolResponseError(funcCall, err)
 		}
