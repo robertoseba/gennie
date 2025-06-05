@@ -186,27 +186,24 @@ func convertToolsToProvider(tools []llm.Tool) []openai.ChatCompletionToolParam {
 }
 
 func addToolResultsToMessages(messages []openai.ChatCompletionMessageParamUnion, toolResults []llm.ToolResult) []openai.ChatCompletionMessageParamUnion {
-
 	for _, toolResult := range toolResults {
-		assistantCall := openai.ChatCompletionAssistantMessageParam{
-			ToolCalls: []openai.ChatCompletionMessageToolCallParam{
-				{
-					ID: toolResult.ID,
-					Function: openai.ChatCompletionMessageToolCallFunctionParam{
-						Name:      toolResult.Name,
-						Arguments: string(toolResult.Arguments),
+		assistantResponse := openai.ChatCompletionMessageParamUnion{
+			OfAssistant: &openai.ChatCompletionAssistantMessageParam{
+				ToolCalls: []openai.ChatCompletionMessageToolCallParam{
+					{
+						ID: toolResult.ID,
+						Function: openai.ChatCompletionMessageToolCallFunctionParam{
+							Name:      toolResult.Name,
+							Arguments: string(toolResult.Arguments),
+						},
 					},
 				},
 			},
 		}
+		messages = append(messages, assistantResponse)
 
-		msg := openai.ChatCompletionMessageParamUnion{
-			OfAssistant: &assistantCall,
-		}
-		messages = append(messages, msg)
-
-		message := openai.ToolMessage(string(toolResult.Result), toolResult.ID)
-		messages = append(messages, message)
+		toolResponse := openai.ToolMessage(string(toolResult.Result), toolResult.ID)
+		messages = append(messages, toolResponse)
 	}
 
 	return messages
