@@ -80,9 +80,8 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 
 			for llmResponse := range llmCompleteChan {
 				if llmResponse.IsToolCall() {
-					fmt.Printf("tool call %v+\n", llmResponse)
 					toolCallRequest = &llmResponse
-					// continue
+					continue
 				}
 
 				outputChan <- Response{Data: llmResponse.Text, Err: llmResponse.Error}
@@ -106,13 +105,13 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 			}
 		}
 
-		s.saveConversation(ctx, currConversation, answerAcc.String())
+		s.saveConversation(currConversation, answerAcc.String())
 	}()
 
 	return outputChan, nil
 }
 
-func (s *CompleteService) saveConversation(ctx context.Context, conv *conversation.Conversation, answer string) error {
+func (s *CompleteService) saveConversation(conv *conversation.Conversation, answer string) error {
 	err := conv.AnswerLastQuestion(answer)
 	if err != nil {
 		return fmt.Errorf("failed to answer the last question: %w", err)

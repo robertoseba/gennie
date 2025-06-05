@@ -15,7 +15,6 @@ type CompleteService struct {
 	httpClient       *http.Client
 	config           *config.Config
 	logger           *slog.Logger
-	tools            map[string]toolDetails // each toolName maps to a mcpClient so we can make a request
 }
 
 type Request struct {
@@ -24,11 +23,6 @@ type Request struct {
 	ModelSlug      string
 	IsFollowUp     bool
 	AppendFilename string
-}
-
-type toolDetails struct {
-	name             string
-	requiresApproval bool
 }
 
 type (

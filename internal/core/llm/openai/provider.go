@@ -187,7 +187,7 @@ func convertToolsToProvider(tools []llm.Tool) []openai.ChatCompletionToolParam {
 
 func addToolResultsToMessages(messages []openai.ChatCompletionMessageParamUnion, toolResults []llm.ToolResult) []openai.ChatCompletionMessageParamUnion {
 	for _, toolResult := range toolResults {
-		assistantResponse := openai.ChatCompletionMessageParamUnion{
+		assistantToolRequest := openai.ChatCompletionMessageParamUnion{
 			OfAssistant: &openai.ChatCompletionAssistantMessageParam{
 				ToolCalls: []openai.ChatCompletionMessageToolCallParam{
 					{
@@ -200,7 +200,7 @@ func addToolResultsToMessages(messages []openai.ChatCompletionMessageParamUnion,
 				},
 			},
 		}
-		messages = append(messages, assistantResponse)
+		messages = append(messages, assistantToolRequest)
 
 		toolResponse := openai.ToolMessage(string(toolResult.Result), toolResult.ID)
 		messages = append(messages, toolResponse)
