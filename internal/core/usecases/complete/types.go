@@ -2,19 +2,17 @@ package complete
 
 import (
 	"log/slog"
-	"net/http"
 
-	"github.com/robertoseba/gennie/internal/core/config"
 	"github.com/robertoseba/gennie/internal/core/conversation"
+	"github.com/robertoseba/gennie/internal/core/llm/factory"
 	"github.com/robertoseba/gennie/internal/core/profile"
 )
 
 type CompleteService struct {
 	conversationRepo conversation.ConversationRepository
 	profileRepo      profile.ProfileRepository
-	httpClient       *http.Client
-	config           *config.Config
 	logger           *slog.Logger
+	providerFactory  factory.ProviderFactory
 }
 
 type Request struct {

@@ -21,9 +21,8 @@ func NewCompleteService(cr conversation.ConversationRepository, pr profile.Profi
 	return &CompleteService{
 		conversationRepo: cr,
 		profileRepo:      pr,
-		httpClient:       httpClient,
-		config:           config,
 		logger:           slog.Default(),
+		providerFactory:  factory.NewProviderFactory(httpClient, *config),
 	}
 }
 
@@ -38,7 +37,7 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 		return nil, err
 	}
 
-	llmProvider, err := factory.NewProvider(currConversation.ModelSlug, s.httpClient, *s.config)
+	llmProvider, err := s.providerFactory.CreateProvider(currConversation.ModelSlug)
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +102,8 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 				result := s.callTool(ctx, toolReq, mcpGroup)
 				toolResults = append(toolResults, *result)
 			}
+
+			outputChan <- NewLoadingResponse("Sending tool response to model...")
 		}
 
 		s.saveConversation(currConversation, answerAcc.String())
