@@ -32,6 +32,10 @@ type (
 	}
 )
 
+func (r Response) IsAnswer() bool {
+	return r.Type == RtLlmAnswer || r.Type == ""
+}
+
 const (
 	RtLoading     ResponseType = "loading_info"
 	RtModel       ResponseType = "model_info"

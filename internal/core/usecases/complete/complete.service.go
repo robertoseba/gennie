@@ -78,12 +78,17 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 			var toolCallRequest *llm.Response
 
 			for llmResponse := range llmCompleteChan {
-				if llmResponse.IsToolCall() {
-					toolCallRequest = &llmResponse
+				if llmResponse.IsError() {
+					outputChan <- NewErrorResponse(llmResponse.Error)
 					continue
 				}
 
-				outputChan <- Response{Data: llmResponse.Text, Err: llmResponse.Error}
+				if llmResponse.IsToolCall() {
+					toolCallRequest = &llmResponse
+				}
+
+				outputChan <- NewAnswerResponse(llmResponse.Text)
+
 				answerAcc.WriteString(llmResponse.Text)
 			}
 

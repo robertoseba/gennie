@@ -58,7 +58,7 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 
 				if !isTerminalFlag {
 					// When piping we only print the models answer
-					if response.Type == "" || response.Type == complete.RtLlmAnswer {
+					if response.IsAnswer() {
 						cmd.Print(response.Data)
 					}
 					if response.Type == complete.RtApprovalReq {

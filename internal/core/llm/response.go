@@ -27,6 +27,10 @@ func (r Response) IsToolCall() bool {
 	return r.StopReason == StopReasonToolCall
 }
 
+func (r Response) IsError() bool {
+	return r.StopReason == StopReasonError || r.Error != nil
+}
+
 type FunctionCall struct {
 	ID        string
 	Name      string
