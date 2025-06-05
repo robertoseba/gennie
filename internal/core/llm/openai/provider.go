@@ -186,19 +186,20 @@ func convertToolsToProvider(tools []llm.Tool) []openai.ChatCompletionToolParam {
 }
 
 func addToolResultsToMessages(messages []openai.ChatCompletionMessageParamUnion, toolResults []llm.ToolResult) []openai.ChatCompletionMessageParamUnion {
-	assistantCall := openai.ChatCompletionAssistantMessageParam{
-		ToolCalls: make([]openai.ChatCompletionMessageToolCallParam, 0, len(toolResults)),
-	}
 
 	for _, toolResult := range toolResults {
-		toolCall := openai.ChatCompletionMessageToolCallParam{
-			ID: toolResult.ID,
-			Function: openai.ChatCompletionMessageToolCallFunctionParam{
-				Name:      toolResult.Name,
-				Arguments: string(toolResult.Arguments),
+		assistantCall := openai.ChatCompletionAssistantMessageParam{
+			ToolCalls: []openai.ChatCompletionMessageToolCallParam{
+				{
+					ID: toolResult.ID,
+					Function: openai.ChatCompletionMessageToolCallFunctionParam{
+						Name:      toolResult.Name,
+						Arguments: string(toolResult.Arguments),
+					},
+				},
 			},
 		}
-		assistantCall.ToolCalls = append(assistantCall.ToolCalls, toolCall)
+
 		msg := openai.ChatCompletionMessageParamUnion{
 			OfAssistant: &assistantCall,
 		}
@@ -207,5 +208,6 @@ func addToolResultsToMessages(messages []openai.ChatCompletionMessageParamUnion,
 		message := openai.ToolMessage(string(toolResult.Result), toolResult.ID)
 		messages = append(messages, message)
 	}
+
 	return messages
 }
