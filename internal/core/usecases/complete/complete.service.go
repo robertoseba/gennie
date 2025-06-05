@@ -56,11 +56,11 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 		mcpGroup := mcp.NewGroup()
 		if len(currProfile.McpServers) > 0 {
 			outputChan <- NewLoadingResponse("Setting up MCP servers...")
-			for _, mcpServer := range currProfile.McpServers {
-				outputChan <- NewLoadingResponse(fmt.Sprintf("Adding MCP server: %s", mcpServer.Cmd))
+			for name, mcpServer := range currProfile.McpServers {
+				outputChan <- NewLoadingResponse(fmt.Sprintf("Adding MCP server: %s", name))
 				err := mcpGroup.Add(ctx, mcpServer)
 				if err != nil {
-					outputChan <- NewErrorResponse(fmt.Errorf("failed to add MCP server %s: %w", mcpServer.Cmd, err))
+					outputChan <- NewErrorResponse(fmt.Errorf("failed to add MCP server %s: %w", name, err))
 				}
 			}
 
