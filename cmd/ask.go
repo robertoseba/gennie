@@ -51,60 +51,52 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 
 			var modelInfo, profileInfo string
 
-			for response := range responseChan {
-				if response.Err != nil {
-					return response.Err
+			for data := range responseChan {
+				if data.Err != nil {
+					return data.Err
 				}
 
 				if !isTerminalFlag {
-					// When piping we only print the models answer
-					if response.IsAnswer() {
-						cmd.Print(response.Data)
-					}
-					if response.Type == complete.RtApprovalReq {
+					if data.IsApprovalRequest() {
 						return errors.New("Tool use approval is required. Please run the command in a terminal to approve the request or set in the profile the `requires_approval` flag to false.")
+					}
+					// When piping we only print the models answer
+					if data.IsAnswer() {
+						cmd.Print(data.Data)
 					}
 					continue
 				}
 
-				if spinner.IsRunning() {
-					switch response.Type {
-					case complete.RtLoading:
-						spinner.SetMessage(response.Data)
-					case complete.RtModel:
-						modelInfo = response.Data
-					case complete.RtProfile:
-						profileInfo = response.Data
-					case complete.RtApprovalReq:
-						spinner.Stop()
-						cmd.Println(response.Data)
-						cmd.Println("Please approve the tool use to continue. Should I continue? (y/N)")
-						shouldContinue, _ := bufio.NewReader(os.Stdin).ReadBytes('\n')
-						if strings.TrimSpace(string(shouldContinue)) != "y" {
-							cmd.Println("Tool use approval was not granted. Exiting.")
-							return nil
-						}
+				switch data.Type {
+				case complete.RtLoading:
+					if !spinner.IsRunning() {
 						spinner.Start()
-					default: // Answer received
+					}
+					spinner.SetMessage(data.Data)
+
+				case complete.RtModel:
+					modelInfo = data.Data
+
+				case complete.RtProfile:
+					profileInfo = data.Data
+
+				case complete.RtApprovalReq:
+					if spinner.IsRunning() {
 						spinner.Stop()
-						cmd.Print(response.Data)
 					}
-				} else {
-					switch response.Type {
-					case complete.RtApprovalReq:
-						cmd.Println(response.Data)
-						cmd.Println("Please approve the tool use to continue. Should I continue? (y/N)")
-						shouldContinue, _ := bufio.NewReader(os.Stdin).ReadBytes('\n')
-						if strings.TrimSpace(string(shouldContinue)) != "y" {
-							cmd.Println("Tool use approval was not granted. Exiting.")
-							return nil
-						}
-					case complete.RtLoading:
-						spinner = output.NewSpinner(response.Data)
-						spinner.Start()
-					default:
-						cmd.Print(response.Data)
+					cmd.Println(data.Data)
+					cmd.Println("Please approve the tool use to continue. Should I continue? (y/N)")
+					shouldContinue, _ := bufio.NewReader(os.Stdin).ReadBytes('\n')
+					if strings.TrimSpace(string(shouldContinue)) != "y" {
+						cmd.Println("Tool use approval was not granted. Exiting.")
+						return nil
 					}
+
+				default:
+					if spinner.IsRunning() {
+						spinner.Stop()
+					}
+					cmd.Print(data.Data)
 				}
 			}
 

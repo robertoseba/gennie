@@ -36,6 +36,10 @@ func (r Response) IsAnswer() bool {
 	return r.Type == RtLlmAnswer || r.Type == ""
 }
 
+func (r Response) IsApprovalRequest() bool {
+	return r.Type == RtApprovalReq
+}
+
 const (
 	RtLoading     ResponseType = "loading_info"
 	RtModel       ResponseType = "model_info"
