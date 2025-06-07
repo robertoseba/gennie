@@ -24,6 +24,9 @@ func NewSpinner(message string) *Spinner {
 }
 
 func (s *Spinner) SetMessage(message string) {
+	if !s.isRunning {
+		s.Start()
+	}
 	s.message = message
 	fmt.Print("\r\033[K")
 	if s.index == 0 {

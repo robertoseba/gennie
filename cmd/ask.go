@@ -69,9 +69,6 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 
 				switch data.Type {
 				case complete.RtLoading:
-					if !spinner.IsRunning() {
-						spinner.Start()
-					}
 					spinner.SetMessage(data.Data)
 
 				case complete.RtModel:
