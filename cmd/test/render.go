@@ -167,14 +167,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.windowWidth = max(msg.Width, maxWidth)
+		m.windowWidth = min(msg.Width, maxWidth)
 		m.windowHeight = msg.Height
 
 		// Update viewport size (leaving space for status bar)
-		headerHeight := 1
-		statusBarHeight := statusBarStyle.GetHeight() + 4
+		headerHeight := 4
+		statusBarStyle = statusBarStyle.UnsetWidth().Width(m.windowWidth - 2)
 		m.viewport.Width = m.windowWidth
-		m.viewport.Height = msg.Height - headerHeight - statusBarHeight
+		m.viewport.Height = msg.Height - headerHeight - statusBarStyle.GetHeight() - 4
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -326,6 +326,13 @@ func main() {
 
 func max(a, b int) int {
 	if a > b {
+		return a
+	}
+	return b
+}
+
+func min(a, b int) int {
+	if a < b {
 		return a
 	}
 	return b
