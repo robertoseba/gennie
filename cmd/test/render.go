@@ -67,6 +67,13 @@ var (
 			Margin(0, 0, 1, 0).
 			Width(maxWidth)
 
+	HeaderStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("60")).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("60")).
+			Margin(1, 0, 0, 0).
+			Width(maxWidth - 2)
+
 	errorStatusStyle = lipgloss.NewStyle().
 				Background(lipgloss.Color("196")).
 				Foreground(lipgloss.Color("15")).
@@ -89,7 +96,7 @@ func initialModel(contentChan <-chan string) model {
 		BorderForeground(lipgloss.Color("15")).
 		Width(maxWidth+2).
 		Padding(0, 1).
-		Margin(1, 0, 0, 0)
+		Margin(0)
 	vp.SetContent("Waiting for content...\n")
 
 	prompt := huh.NewConfirm()
@@ -173,6 +180,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Update viewport size (leaving space for status bar)
 		headerHeight := 4
 		statusBarStyle = statusBarStyle.UnsetWidth().Width(m.windowWidth - 2)
+		HeaderStyle = HeaderStyle.UnsetWidth().Width(m.windowWidth - 2)
 		m.viewport.Width = m.windowWidth
 		m.viewport.Height = msg.Height - headerHeight - statusBarStyle.GetHeight() - 4
 
@@ -248,7 +256,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	// Header
-	header := "Press j/k to scroll, r to request, e for error, s to reset, q to quit"
+	headerText := "Press j/k to scroll, r to request, e for error, s to reset, q to quit"
+	header := HeaderStyle.Render(headerText)
 
 	// Main viewport
 	var viewportView string
