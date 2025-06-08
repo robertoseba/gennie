@@ -50,22 +50,28 @@ type model struct {
 	spinner      spinner.Model
 	status       status
 	prompt       *huh.Confirm
+	showPrompt   bool
 	ctx          context.Context
 	cancel       context.CancelFunc
 	windowWidth  int
 	windowHeight int
 }
 
+const maxWidth = 80
+
 var (
 	statusBarStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("#00BB22")).
 			Foreground(lipgloss.Color("15")).
-			Padding(0, 1)
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("15")).
+			Margin(0, 0, 1, 0).
+			Width(maxWidth)
 
 	errorStatusStyle = lipgloss.NewStyle().
 				Background(lipgloss.Color("196")).
 				Foreground(lipgloss.Color("15")).
-				Padding(0, 1)
+				Padding(0, 1).
+				Border(lipgloss.RoundedBorder())
 
 	spinnerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 )
@@ -74,10 +80,16 @@ func initialModel(contentChan <-chan string) model {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	s := spinner.New()
-	// s.Spinner = spinner.Dot
+	s.Spinner = spinner.Dot
 	s.Style = spinnerStyle
 
-	vp := viewport.New(80, 20)
+	vp := viewport.New(maxWidth, 20)
+	vp.Style = lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("15")).
+		Width(maxWidth+2).
+		Padding(0, 1).
+		Margin(1, 0, 0, 0)
 	vp.SetContent("Waiting for content...\n")
 
 	prompt := huh.NewConfirm()
@@ -92,8 +104,8 @@ func initialModel(contentChan <-chan string) model {
 		ctx:          ctx,
 		cancel:       cancel,
 		prompt:       prompt,
-		windowWidth:  80,
-		windowHeight: 24,
+		windowWidth:  maxWidth,
+		windowHeight: 20,
 	}
 }
 
@@ -155,13 +167,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.windowWidth = msg.Width
+		m.windowWidth = max(msg.Width, maxWidth)
 		m.windowHeight = msg.Height
 
 		// Update viewport size (leaving space for status bar)
-		headerHeight := 2
-		statusBarHeight := 1
-		m.viewport.Width = msg.Width
+		headerHeight := 1
+		statusBarHeight := statusBarStyle.GetHeight() + 4
+		m.viewport.Width = m.windowWidth
 		m.viewport.Height = msg.Height - headerHeight - statusBarHeight
 
 	case tea.KeyMsg:
@@ -169,6 +181,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "ctrl+c":
 			m.cancel()
 			return m, tea.Quit
+
 		case "j", "down":
 			m.viewport.ScrollDown(2)
 		case "k", "up":
@@ -243,6 +256,7 @@ func (m model) View() string {
 		viewportView = m.viewport.View()
 	} else {
 		m.prompt.Run()
+
 		m.status = statusIdle
 		viewportView = m.viewport.View()
 	}
