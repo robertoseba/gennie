@@ -60,25 +60,23 @@ type model struct {
 const maxWidth = 80
 
 var (
-	statusBarStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("15")).
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("15")).
-			Margin(0, 0, 1, 0).
-			Width(maxWidth)
-
 	HeaderStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("60")).
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("60")).
 			Margin(1, 0, 0, 0).
+			Padding(0, 1).
 			Width(maxWidth - 2)
 
-	errorStatusStyle = lipgloss.NewStyle().
-				Background(lipgloss.Color("196")).
-				Foreground(lipgloss.Color("15")).
-				Padding(0, 1).
-				Border(lipgloss.RoundedBorder())
+	statusBarStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("15")).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("15")).
+			Margin(0, 0, 1, 0).
+			Padding(0, 1).
+			Width(maxWidth)
+
+	errorStatusStyle = statusBarStyle.Foreground(lipgloss.Color("205"))
 
 	spinnerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 )
@@ -181,6 +179,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		headerHeight := 4
 		statusBarStyle = statusBarStyle.UnsetWidth().Width(m.windowWidth - 2)
 		HeaderStyle = HeaderStyle.UnsetWidth().Width(m.windowWidth - 2)
+		errorStatusStyle = errorStatusStyle.UnsetWidth().Width(m.windowWidth - 2)
 		m.viewport.Width = m.windowWidth
 		m.viewport.Height = msg.Height - headerHeight - statusBarStyle.GetHeight() - 4
 
