@@ -180,7 +180,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "q", "ctrl+c":
+		case "q", "ctrl+c", "esc":
 			m.cancel()
 			return m, tea.Quit
 
@@ -207,8 +207,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "p":
 			m.status = statusAskConfirm
-			m.prompt.Title("Can I run this tool?")
-			return m, nil
+			m.prompt = m.prompt.Title("Can I run this tool?")
+			cmd = m.prompt.Focus()
+			cmds = append(cmds, cmd)
 		}
 
 	case contentMsg:
@@ -240,6 +241,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	// Always update viewport
+	prompt, cmd := m.prompt.Update(msg)
+	m.prompt = prompt.(*huh.Confirm)
+	if cmd != nil {
+		cmds = append(cmds, cmd)
+	}
+
 	m.viewport, cmd = m.viewport.Update(msg)
 	if cmd != nil {
 		cmds = append(cmds, cmd)
@@ -258,10 +265,8 @@ func (m model) View() string {
 	if m.status != statusAskConfirm {
 		viewportView = m.viewport.View()
 	} else {
-		m.prompt.Run()
-
 		m.status = statusIdle
-		viewportView = m.viewport.View()
+		viewportView = lipgloss.Place(m.width, m.height-HeaderStyle.GetHeight()-30, lipgloss.Center, lipgloss.Center, m.prompt.View())
 	}
 
 	// Status bar
@@ -269,9 +274,9 @@ func (m model) View() string {
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
+		statusBar,
 		header,
 		viewportView,
-		statusBar,
 	)
 }
 
