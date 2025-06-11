@@ -44,20 +44,18 @@ func (s status) String() string {
 }
 
 type model struct {
-	viewport     viewport.Model
-	content      *strings.Builder
-	contentChan  <-chan string
-	spinner      spinner.Model
-	status       status
-	prompt       *huh.Confirm
-	showPrompt   bool
-	ctx          context.Context
-	cancel       context.CancelFunc
-	windowWidth  int
-	windowHeight int
+	width       int
+	height      int
+	viewport    viewport.Model
+	content     *strings.Builder
+	contentChan <-chan string
+	spinner     spinner.Model
+	status      status
+	prompt      *huh.Confirm
+	showPrompt  bool
+	ctx         context.Context
+	cancel      context.CancelFunc
 }
-
-const maxWidth = 80
 
 var (
 	HeaderStyle = lipgloss.NewStyle().
@@ -65,16 +63,14 @@ var (
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("60")).
 			Margin(1, 0, 0, 0).
-			Padding(0, 1).
-			Width(maxWidth - 2)
+			Padding(0, 1)
 
 	statusBarStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("15")).
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("15")).
 			Margin(0, 0, 1, 0).
-			Padding(0, 1).
-			Width(maxWidth)
+			Padding(0, 1)
 
 	errorStatusStyle = statusBarStyle.Foreground(lipgloss.Color("205"))
 
@@ -88,29 +84,28 @@ func initialModel(contentChan <-chan string) model {
 	s.Spinner = spinner.Dot
 	s.Style = spinnerStyle
 
-	vp := viewport.New(maxWidth, 20)
+	vp := viewport.New(80, 20)
 	vp.Style = lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("15")).
-		Width(maxWidth+2).
 		Padding(0, 1).
 		Margin(0)
-	vp.SetContent("Waiting for content...\n")
+	vp.SetContent("loading...")
 
 	prompt := huh.NewConfirm()
 	prompt.Negative("Cancel").Affirmative("Continue")
 
 	return model{
-		viewport:     vp,
-		content:      &strings.Builder{},
-		contentChan:  contentChan,
-		spinner:      s,
-		status:       statusIdle,
-		ctx:          ctx,
-		cancel:       cancel,
-		prompt:       prompt,
-		windowWidth:  maxWidth,
-		windowHeight: 20,
+		width:       80,
+		height:      20,
+		viewport:    vp,
+		content:     &strings.Builder{},
+		contentChan: contentChan,
+		spinner:     s,
+		status:      statusIdle,
+		ctx:         ctx,
+		cancel:      cancel,
+		prompt:      prompt,
 	}
 }
 
@@ -172,16 +167,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.windowWidth = min(msg.Width, maxWidth)
-		m.windowHeight = msg.Height
+		m.width = min(msg.Width, 120)
+		m.height = msg.Height - 2
 
 		// Update viewport size (leaving space for status bar)
 		headerHeight := 4
-		statusBarStyle = statusBarStyle.UnsetWidth().Width(m.windowWidth - 2)
-		HeaderStyle = HeaderStyle.UnsetWidth().Width(m.windowWidth - 2)
-		errorStatusStyle = errorStatusStyle.UnsetWidth().Width(m.windowWidth - 2)
-		m.viewport.Width = m.windowWidth
-		m.viewport.Height = msg.Height - headerHeight - statusBarStyle.GetHeight() - 4
+		statusBarStyle = statusBarStyle.UnsetWidth().Width(m.width - 2)
+		HeaderStyle = HeaderStyle.UnsetWidth().Width(m.width - 2)
+		errorStatusStyle = errorStatusStyle.UnsetWidth().Width(m.width - 2)
+		m.viewport.Width = m.width
+		m.viewport.Height = m.height - headerHeight - statusBarStyle.GetHeight() - 4
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -304,7 +299,7 @@ func (m model) renderStatusBar() string {
 	}
 
 	// Pad the status bar to full width
-	paddedStatus := statusText + strings.Repeat(" ", max(0, m.windowWidth-lipgloss.Width(statusText)))
+	paddedStatus := statusText + strings.Repeat(" ", max(0, m.width-lipgloss.Width(statusText)))
 
 	return style.Render(paddedStatus)
 }
@@ -324,7 +319,7 @@ func main() {
 
 	p := tea.NewProgram(
 		initialModel(contentChan),
-		tea.WithMouseCellMotion(),
+		// tea.WithMouseCellMotion(),
 	)
 
 	if _, err := p.Run(); err != nil {
