@@ -17,7 +17,6 @@ import (
 type markdownModel struct {
 	viewport.Model
 	content *strings.Builder
-	style   lipgloss.Style
 }
 
 type statusModel struct {
@@ -26,6 +25,8 @@ type statusModel struct {
 	style      lipgloss.Style
 	errorStyle lipgloss.Style
 	isActive   bool
+	profile    string
+	model      string
 }
 
 type promptModel struct {
@@ -47,19 +48,20 @@ type ui struct {
 
 func (u *ui) setSize(w, h int) {
 	u.help.style = u.help.style.Width(w)
-	u.markdownView.Width = w
+	u.markdownView.Width = w + 2
 	u.markdownView.Height = h - u.help.style.GetHeight() - u.status.style.GetHeight() - 4
-	u.status.style.Width(w)
-	u.status.errorStyle.Width(w)
+	u.status.style = u.status.style.Width(w)
+	u.status.errorStyle = u.status.errorStyle.Width(w)
 }
 
 type model struct {
-	ui           *ui
-	width        int
-	height       int
-	ctx          context.Context
-	cancel       context.CancelFunc
-	responseChan <-chan complete.Response
+	ui              *ui
+	width           int
+	height          int
+	ctx             context.Context
+	cancel          context.CancelFunc
+	responseChan    <-chan complete.Response
+	isDoneAnswering bool
 }
 
 func (m *model) setSize(w, h int) {
@@ -68,13 +70,6 @@ func (m *model) setSize(w, h int) {
 	m.ui.setSize(m.width, m.height)
 }
 
-var HeaderStyle = lipgloss.NewStyle().
-	Foreground(lipgloss.Color("60")).
-	Border(lipgloss.RoundedBorder()).
-	BorderForeground(lipgloss.Color("60")).
-	Margin(1, 0, 0, 0).
-	Padding(0, 1)
-
 func newStatusView(height int) *statusModel {
 	spin := spinner.New()
 	spin.Spinner = spinner.Dot
@@ -82,10 +77,9 @@ func newStatusView(height int) *statusModel {
 
 	statusStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("15")).
-		Border(lipgloss.RoundedBorder()).
+		Border(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("15")).
-		Margin(0, 0, 1, 0).
-		Padding(0, 1).
+		Padding(0, 2).
 		Height(height)
 
 	return &statusModel{
@@ -108,24 +102,23 @@ func NewPromptModel() *promptModel {
 }
 
 func newMarkdownModel() *markdownModel {
-	return &markdownModel{
+	mv := &markdownModel{
 		Model:   viewport.New(80, 20),
 		content: &strings.Builder{},
-		style: lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("15")).
-			Padding(0, 1).
-			Margin(0),
 	}
+	mv.Style = lipgloss.NewStyle().
+		Border(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color("15")).
+		Padding(0, 1)
+
+	return mv
 }
 
 func newHelpView(height int) *helpView {
 	return &helpView{
 		text: "Press q or ctrl+c to exit | j,k or arrows to scroll | f to follow up question",
 		style: lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("9")).
-			Foreground(lipgloss.Color("9")).
+			Foreground(lipgloss.Color("#BBBBBB")).
 			Height(height),
 	}
 }
@@ -133,8 +126,8 @@ func newHelpView(height int) *helpView {
 func newUi() *ui {
 	ui := &ui{
 		prompt:       NewPromptModel(),
-		help:         newHelpView(4),
-		status:       newStatusView(4),
+		help:         newHelpView(1),
+		status:       newStatusView(1),
 		markdownView: newMarkdownModel(),
 	}
 
@@ -154,17 +147,19 @@ func newModel(responseChan <-chan complete.Response) model {
 	}
 }
 
+type DoneAnswer string
+
 func waitForContent(ctx context.Context, responseChan <-chan complete.Response) tea.Cmd {
 	return func() tea.Msg {
 		select {
 		case content, ok := <-responseChan:
 			if !ok {
-				return nil
+				return DoneAnswer("done")
 			}
 			return content
 
 		case <-ctx.Done():
-			return nil
+			return DoneAnswer("done")
 		}
 	}
 }
@@ -184,16 +179,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.setSize(msg.Width, msg.Height)
 
+	case DoneAnswer:
+		m.isDoneAnswering = true
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "ctrl+c", "esc":
 			m.cancel()
 			return m, tea.Quit
-
-			// case "j", "down":
-			// 	m.markdownView.ScrollDown(2)
-			// case "k", "up":
-			// 	m.markdownView.ScrollUp(2)
 
 			// case "p":
 			// 	m.status = statusAskConfirm
@@ -209,11 +202,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.ui.markdownView.content.WriteString(msg.Data)
 			m.ui.markdownView.SetContent(m.ui.markdownView.content.String())
 			m.ui.markdownView.GotoBottom()
+		case complete.RtLoading:
+			m.ui.status.message = msg.Data
+		case complete.RtModel:
+			m.ui.status.model = msg.Data
+		case complete.RtProfile:
+			m.ui.status.profile = msg.Data
 		}
+		cmds = append(cmds, waitForContent(m.ctx, m.responseChan))
 
 	case spinner.TickMsg:
-		m.ui.status.Model, cmd = m.ui.status.Model.Update(msg)
-		cmds = append(cmds, cmd)
+		if !m.isDoneAnswering {
+			m.ui.status.Model, cmd = m.ui.status.Model.Update(msg)
+			cmds = append(cmds, cmd)
+		}
 	}
 
 	// Always update viewport
@@ -235,8 +237,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	// Header
-	help := m.ui.help.style.Render(m.ui.help.text)
+	var help string
+	statusBar := m.ui.status.style.Render(fmt.Sprintf("%s %s | Model: %s | Profile: %s", m.ui.status.View(), m.ui.status.message, m.ui.status.model, m.ui.status.profile))
+	help = m.ui.help.style.Render(m.ui.help.text)
+
+	if m.isDoneAnswering {
+		statusBar = m.ui.status.style.Render(fmt.Sprintf("Model: %s | Profile: %s", m.ui.status.model, m.ui.status.profile))
+	}
 
 	// Main viewport
 	// var viewportView string
@@ -248,57 +255,43 @@ func (m model) View() string {
 	// 	viewportView = lipgloss.Place(m.markdownView.Width, m.markdownView.Height, lipgloss.Center, lipgloss.Center, m.prompt.View())
 	// }
 
-	// Status bar
-	// statusBar := m.renderStatusBar()
-	//
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
-		// statusBar,
-		help,
+		statusBar,
 		m.ui.markdownView.View(),
+		help,
 	)
 }
 
-func (m model) renderStatusBar() string {
-	return ""
-	// var statusText string
-	// var style lipgloss.Style
-	//
-	// switch m.status {
-	// case statusError:
-	// 	style = errorStatusStyle
-	// 	statusText = m.status.String()
-	// case statusIdle:
-	// 	style = statusBarStyle
-	// 	statusText = fmt.Sprintf("%s | Lines: %d | Scroll: %d/%d",
-	// 		m.status.String(),
-	// 		strings.Count(m.content.String(), "\n"),
-	// 		m.markdownView.YOffset,
-	// 		max(0, m.markdownView.TotalLineCount()-m.markdownView.Height))
-	// case statusAskConfirm:
-	// 	style = statusBarStyle
-	// 	statusText = "Waiting for confirmation..."
-	// default:
-	// 	style = statusBarStyle
-	// 	statusText = fmt.Sprintf("%s %s", m.spinner.View(), m.status.String())
-	// }
-	//
-	// // Pad the status bar to full width
-	// paddedStatus := statusText + strings.Repeat(" ", max(0, m.width-lipgloss.Width(statusText)))
-	//
-	// return style.Render(paddedStatus)
-}
-
 func main() {
-	// Create content channel
 	contentChan := make(chan complete.Response, 10)
 
-	// Start content producer
 	go func() {
 		defer close(contentChan)
 		for i := 0; i < 100; i++ {
+			if i == 40 {
+				contentChan <- complete.Response{
+					Data: fmt.Sprintf("Asking the model"),
+					Err:  nil,
+					Type: complete.RtLoading,
+				}
+			}
+			if i == 1 {
+				contentChan <- complete.Response{
+					Data: fmt.Sprintf("gpt-4.1-mini"),
+					Err:  nil,
+					Type: complete.RtModel,
+				}
+			}
+			if i == 2 {
+				contentChan <- complete.Response{
+					Data: fmt.Sprintf("personal"),
+					Err:  nil,
+					Type: complete.RtProfile,
+				}
+			}
 			contentChan <- complete.Response{
-				Data: fmt.Sprintf("%d - message", i),
+				Data: fmt.Sprintf("%d - message\n", i),
 				Err:  nil,
 				Type: complete.RtLlmAnswer,
 			}
