@@ -43,22 +43,19 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 						return data.Err
 					}
 
-					if !isTerminalFlag {
-						if data.IsApprovalRequest() {
-							return errors.New("tool use approval is required. Please run the command in a terminal to approve the request or set in the profile the `requires_approval` flag to false")
-						}
-						// When piping we only print the models answer
-						if data.IsAnswer() {
-							cmd.Print(data.Data)
-						}
-						continue
+					if data.IsApprovalRequest() {
+						return errors.New("tool use approval is required. Please run the command in a terminal to approve the request or set in the profile the `requires_approval` flag to false")
 					}
+					// When piping we only print the models answer
+					if data.IsAnswer() {
+						cmd.Print(data.Data)
+					}
+					continue
 				}
 				return nil
 			}
 
 			return ui.Run(responseChan)
-
 		},
 	}
 
