@@ -1,26 +1,16 @@
-package main
+package ui
 
 import (
 	"context"
 	"fmt"
-	"log"
-	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/robertoseba/gennie/internal/core/usecases/complete"
 )
-
-type markdownModel struct {
-	viewport.Model
-	content  *strings.Builder
-	renderer *glamour.TermRenderer
-}
 
 type statusModel struct {
 	spinner.Model
@@ -51,17 +41,10 @@ type ui struct {
 
 func (u *ui) setSize(w, h int) {
 	u.help.style = u.help.style.Width(w)
-	u.markdownView.Width = w + 2
-	u.markdownView.Height = h - u.help.style.GetHeight() - u.status.style.GetHeight() - 4
 	u.status.style = u.status.style.Width(w)
 	u.status.errorStyle = u.status.errorStyle.Width(w)
+	u.markdownView.setSize(w, h-u.help.style.GetHeight()-u.status.style.GetHeight()-4)
 
-	var err error
-	u.markdownView.renderer, err = glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithWordWrap(w-2), glamour.WithPreservedNewLines())
-	//TODO: review log fatal
-	if err != nil {
-		log.Fatal("Failed to initialize markdown renderer")
-	}
 }
 
 type model struct {
@@ -72,6 +55,8 @@ type model struct {
 	cancel          context.CancelFunc
 	responseChan    <-chan complete.Response
 	isDoneAnswering bool
+	startedAt       time.Time
+	finishedAt      time.Time
 }
 
 func (m *model) setSize(w, h int) {
@@ -111,25 +96,6 @@ func NewPromptModel() *promptModel {
 	}
 }
 
-func newMarkdownModel() *markdownModel {
-	mv := &markdownModel{
-		Model:   viewport.New(80, 20),
-		content: &strings.Builder{},
-	}
-	mv.Style = lipgloss.NewStyle().
-		Border(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("15")).
-		Padding(0, 1)
-
-	var err error
-	mv.renderer, err = glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithWordWrap(80), glamour.WithPreservedNewLines())
-	if err != nil {
-		log.Fatal("Failed to initialize markdown renderer")
-	}
-
-	return mv
-}
-
 func newHelpView(height int) *helpView {
 	return &helpView{
 		text: "Press q or ctrl+c to exit | j,k or arrows to scroll | f to follow up question",
@@ -150,7 +116,7 @@ func newUi() *ui {
 	return ui
 }
 
-func newModel(responseChan <-chan complete.Response) model {
+func NewModel(responseChan <-chan complete.Response) model {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return model{
@@ -160,6 +126,7 @@ func newModel(responseChan <-chan complete.Response) model {
 		height:       20,
 		ui:           newUi(),
 		responseChan: responseChan,
+		startedAt:    time.Now(),
 	}
 }
 
@@ -197,6 +164,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case DoneAnswer:
 		m.isDoneAnswering = true
+		m.finishedAt = time.Now()
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -215,13 +183,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Append new content
 		switch msg.Type {
 		case complete.RtLlmAnswer:
-			m.ui.markdownView.content.WriteString(msg.Data)
-			mdRender, err := m.ui.markdownView.renderer.Render(m.ui.markdownView.content.String())
-			if err != nil {
-				mdRender = m.ui.markdownView.content.String()
-			}
-			m.ui.markdownView.SetContent(mdRender)
-			m.ui.markdownView.GotoBottom()
+			m.ui.markdownView.appendContent(msg.Data)
 		case complete.RtLoading:
 			m.ui.status.message = msg.Data
 		case complete.RtModel:
@@ -248,7 +210,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// 	return m, tea.Batch(cmds...)
 	// }
 
-	m.ui.markdownView.Model, cmd = m.ui.markdownView.Model.Update(msg)
+	m.ui.markdownView.Model, cmd = m.ui.markdownView.Update(msg)
 	if cmd != nil {
 		cmds = append(cmds, cmd)
 	}
@@ -283,67 +245,14 @@ func (m model) View() string {
 	)
 }
 
-func main() {
-	contentChan := make(chan complete.Response, 10)
-
-	go func() {
-		defer close(contentChan)
-		for i := 0; i < 100; i++ {
-			if i == 40 {
-				contentChan <- complete.Response{
-					Data: fmt.Sprintf("Asking the model"),
-					Err:  nil,
-					Type: complete.RtLoading,
-				}
-				contentChan <- complete.Response{
-					Data: fmt.Sprintf("## Bob"),
-					Err:  nil,
-					Type: complete.RtLlmAnswer,
-				}
-			}
-			if i == 1 {
-				contentChan <- complete.Response{
-					Data: fmt.Sprintf("gpt-4.1-mini"),
-					Err:  nil,
-					Type: complete.RtModel,
-				}
-			}
-			if i == 2 {
-				contentChan <- complete.Response{
-					Data: fmt.Sprintf("personal"),
-					Err:  nil,
-					Type: complete.RtProfile,
-				}
-			}
-			contentChan <- complete.Response{
-				Data: fmt.Sprintf("%d - message\n", i),
-				Err:  nil,
-				Type: complete.RtLlmAnswer,
-			}
-			time.Sleep(100 * time.Millisecond)
-		}
-	}()
-
+func Run(contentChan <-chan complete.Response) error {
 	p := tea.NewProgram(
-		newModel(contentChan),
+		NewModel(contentChan),
 		// tea.WithMouseCellMotion(),
 	)
 
 	if _, err := p.Run(); err != nil {
-		fmt.Printf("Error: %v", err)
+		return fmt.Errorf("failed to start ui: %w", err)
 	}
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
+	return nil
 }
