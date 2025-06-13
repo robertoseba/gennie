@@ -24,12 +24,6 @@ func NewAskCmd(askCmd *complete.CompleteService, p *output.Printer) *cobra.Comma
 		RunE: func(cmd *cobra.Command, args []string) error {
 			isTerminalFlag, _ := cmd.Flags().GetBool("terminal")
 
-			// if isTerminalFlag {
-			// 	spinner = output.NewSpinner("Starting...")
-			// 	spinner.Start()
-			// }
-			// startProcessingTime := time.Now()
-
 			req := complete.Request{
 				Question:       strings.Join(args, " "),
 				ProfileSlug:    profileFlag,

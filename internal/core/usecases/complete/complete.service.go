@@ -102,7 +102,7 @@ func (s *CompleteService) Execute(ctx context.Context, req Request) (<-chan Resp
 						toolReq.Name, toolReq.Arguments))
 				}
 
-				outputChan <- NewLoadingResponse(fmt.Sprintf("Using tool: %s -> (%s)", toolReq.Name, toolReq.Arguments))
+				outputChan <- NewLoadingResponse(fmt.Sprintf("Using tool: %s", toolReq.Name))
 
 				result := s.callTool(ctx, toolReq, mcpGroup)
 				toolResults = append(toolResults, *result)
