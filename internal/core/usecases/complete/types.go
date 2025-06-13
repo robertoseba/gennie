@@ -46,10 +46,11 @@ const (
 	RtProfile     ResponseType = "profile_info"
 	RtApprovalReq ResponseType = "approval_request"
 	RtLlmAnswer   ResponseType = "llm_answer"
+	RtError       ResponseType = "error"
 )
 
 func NewErrorResponse(err error) Response {
-	return Response{Err: err}
+	return Response{Err: err, Type: RtError}
 }
 
 func NewLoadingResponse(data string) Response {

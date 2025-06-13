@@ -44,7 +44,6 @@ func (u *ui) setSize(w, h int) {
 	u.status.style = u.status.style.Width(w)
 	u.status.errorStyle = u.status.errorStyle.Width(w)
 	u.markdownView.setSize(w, h-u.help.style.GetHeight()-u.status.style.GetHeight()-4)
-
 }
 
 type model struct {
@@ -162,25 +161,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.setSize(msg.Width, msg.Height)
 
-	case DoneAnswer:
-		m.isDoneAnswering = true
-		m.finishedAt = time.Now()
-
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "ctrl+c", "esc":
 			m.cancel()
 			return m, tea.Quit
+		}
 
-			// case "p":
-			// 	m.status = statusAskConfirm
-			// 	m.prompt = m.prompt.Title("Can I run this tool?")
-			// 	cmd = m.prompt.Focus()
-			// 	cmds = append(cmds, cmd)
+	case DoneAnswer:
+		m.isDoneAnswering = true
+		m.finishedAt = time.Now()
+
+	case spinner.TickMsg:
+		if !m.isDoneAnswering {
+			m.ui.status.Model, cmd = m.ui.status.Model.Update(msg)
+			cmds = append(cmds, cmd)
 		}
 
 	case complete.Response:
-		// Append new content
 		switch msg.Type {
 		case complete.RtLlmAnswer:
 			m.ui.markdownView.appendContent(msg.Data)
@@ -190,14 +188,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.ui.status.model = msg.Data
 		case complete.RtProfile:
 			m.ui.status.profile = msg.Data
+		case complete.RtApprovalReq:
+			m.ui.prompt.Confirm = m.ui.prompt.Title("Approval Request").Description(msg.Data)
+			m.ui.prompt.isActive = true
+			cmd = m.ui.prompt.Focus()
+			cmds = append(cmds, cmd)
+		case complete.RtError:
+			m.ui.markdownView.appendContent(fmt.Sprintf("---\n## Error\n %s", msg.Err))
+			return m, tea.Quit
 		}
 		cmds = append(cmds, waitForContent(m.ctx, m.responseChan))
-
-	case spinner.TickMsg:
-		if !m.isDoneAnswering {
-			m.ui.status.Model, cmd = m.ui.status.Model.Update(msg)
-			cmds = append(cmds, cmd)
-		}
 	}
 
 	// Always update viewport
@@ -214,7 +214,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if cmd != nil {
 		cmds = append(cmds, cmd)
 	}
-
 	return m, tea.Batch(cmds...)
 }
 
@@ -226,16 +225,6 @@ func (m model) View() string {
 	if m.isDoneAnswering {
 		statusBar = m.ui.status.style.Render(fmt.Sprintf("Model: %s | Profile: %s", m.ui.status.model, m.ui.status.profile))
 	}
-
-	// Main viewport
-	// var viewportView string
-	// // if m.status != statusAskConfirm {
-	// 	viewportView = m.markdownView.View()
-	// } else {
-	// 	m.status = statusIdle
-	// 	m.prompt = m.prompt.Title("Confirm Action")
-	// 	viewportView = lipgloss.Place(m.markdownView.Width, m.markdownView.Height, lipgloss.Center, lipgloss.Center, m.prompt.View())
-	// }
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,

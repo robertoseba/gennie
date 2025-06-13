@@ -17,7 +17,7 @@ type markdownModel struct {
 
 func newMarkdownModel() *markdownModel {
 	mv := &markdownModel{
-		Model:   viewport.New(80, 20),
+		Model:   viewport.New(80, 40),
 		content: &strings.Builder{},
 	}
 	mv.Style = lipgloss.NewStyle().
@@ -26,7 +26,7 @@ func newMarkdownModel() *markdownModel {
 		Padding(0, 1)
 
 	var err error
-	mv.renderer, err = glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithWordWrap(80), glamour.WithPreservedNewLines())
+	mv.renderer, err = glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithPreservedNewLines())
 	if err != nil {
 		log.Fatal("Failed to initialize markdown renderer")
 	}
@@ -38,14 +38,13 @@ func (m *markdownModel) setSize(w, h int) {
 	m.Width = w + 2
 	m.Height = h
 
-	//Replaces glamour renderer with new size
-	var err error
-	m.renderer, err = glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithWordWrap(w-2), glamour.WithPreservedNewLines())
-
-	//TODO: review log fatal
-	if err != nil {
-		log.Fatal("Failed to initialize markdown renderer")
-	}
+	// Replaces glamour renderer with new size
+	// var err error
+	// m.renderer, err = glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithWordWrap(w-2), glamour.WithPreservedNewLines())
+	// // TODO: review log fatal
+	// if err != nil {
+	// 	log.Fatal("Failed to initialize markdown renderer")
+	// }
 }
 
 // Appends the content to the viewport and renders the markdown
