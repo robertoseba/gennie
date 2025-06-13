@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/robertoseba/gennie/internal/core/usecases/complete"
@@ -16,7 +18,8 @@ import (
 
 type markdownModel struct {
 	viewport.Model
-	content *strings.Builder
+	content  *strings.Builder
+	renderer *glamour.TermRenderer
 }
 
 type statusModel struct {
@@ -52,6 +55,13 @@ func (u *ui) setSize(w, h int) {
 	u.markdownView.Height = h - u.help.style.GetHeight() - u.status.style.GetHeight() - 4
 	u.status.style = u.status.style.Width(w)
 	u.status.errorStyle = u.status.errorStyle.Width(w)
+
+	var err error
+	u.markdownView.renderer, err = glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithWordWrap(w-2), glamour.WithPreservedNewLines())
+	//TODO: review log fatal
+	if err != nil {
+		log.Fatal("Failed to initialize markdown renderer")
+	}
 }
 
 type model struct {
@@ -110,6 +120,12 @@ func newMarkdownModel() *markdownModel {
 		Border(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("15")).
 		Padding(0, 1)
+
+	var err error
+	mv.renderer, err = glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithWordWrap(80), glamour.WithPreservedNewLines())
+	if err != nil {
+		log.Fatal("Failed to initialize markdown renderer")
+	}
 
 	return mv
 }
@@ -200,7 +216,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.Type {
 		case complete.RtLlmAnswer:
 			m.ui.markdownView.content.WriteString(msg.Data)
-			m.ui.markdownView.SetContent(m.ui.markdownView.content.String())
+			mdRender, err := m.ui.markdownView.renderer.Render(m.ui.markdownView.content.String())
+			if err != nil {
+				mdRender = m.ui.markdownView.content.String()
+			}
+			m.ui.markdownView.SetContent(mdRender)
 			m.ui.markdownView.GotoBottom()
 		case complete.RtLoading:
 			m.ui.status.message = msg.Data
@@ -274,6 +294,11 @@ func main() {
 					Data: fmt.Sprintf("Asking the model"),
 					Err:  nil,
 					Type: complete.RtLoading,
+				}
+				contentChan <- complete.Response{
+					Data: fmt.Sprintf("## Bob"),
+					Err:  nil,
+					Type: complete.RtLlmAnswer,
 				}
 			}
 			if i == 1 {
