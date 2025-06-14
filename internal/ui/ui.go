@@ -12,20 +12,15 @@ import (
 	"github.com/robertoseba/gennie/internal/core/usecases/complete"
 )
 
-type statusModel struct {
-	spinner.Model
-	message    string
-	style      lipgloss.Style
-	errorStyle lipgloss.Style
-	isActive   bool
-	profile    string
-	model      string
-}
+type (
+	DoneAnswer  string
+	promptModel struct {
+		*huh.Confirm
+		isActive bool
+	}
+)
 
-type promptModel struct {
-	*huh.Confirm
-	isActive bool
-}
+var maxWidth = 120
 
 type helpView struct {
 	text  string
@@ -33,17 +28,16 @@ type helpView struct {
 }
 
 type ui struct {
-	prompt       *promptModel
-	help         *helpView
-	status       *statusModel
-	markdownView *markdownModel
+	prompt   *promptModel
+	help     *helpView
+	status   *statusModel
+	markdown *markdownModel
 }
 
 func (u *ui) setSize(w, h int) {
 	u.help.style = u.help.style.Width(w)
-	u.status.style = u.status.style.Width(w)
-	u.status.errorStyle = u.status.errorStyle.Width(w)
-	u.markdownView.setSize(w, h-u.help.style.GetHeight()-u.status.style.GetHeight()-4)
+	u.status.setSize(w, h)
+	u.markdown.setSize(w, h-u.help.style.GetHeight()-u.status.borderStyle.GetHeight()-4)
 }
 
 type model struct {
@@ -59,30 +53,9 @@ type model struct {
 }
 
 func (m *model) setSize(w, h int) {
-	m.width = min(w, 120)
+	m.width = min(w, maxWidth)
 	m.height = h - 2
 	m.ui.setSize(m.width, m.height)
-}
-
-func newStatusView(height int) *statusModel {
-	spin := spinner.New()
-	spin.Spinner = spinner.Dot
-	spin.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-
-	statusStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("15")).
-		Border(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("15")).
-		Padding(0, 2).
-		Height(height)
-
-	return &statusModel{
-		Model:      spin,
-		message:    "Starting...",
-		style:      statusStyle,
-		errorStyle: statusStyle.Foreground(lipgloss.Color("205")).Bold(true),
-		isActive:   true,
-	}
 }
 
 func NewPromptModel() *promptModel {
@@ -106,10 +79,10 @@ func newHelpView(height int) *helpView {
 
 func newUi() *ui {
 	ui := &ui{
-		prompt:       NewPromptModel(),
-		help:         newHelpView(1),
-		status:       newStatusView(1),
-		markdownView: newMarkdownModel(),
+		prompt:   NewPromptModel(),
+		help:     newHelpView(1),
+		status:   newStatusView(),
+		markdown: newMarkdownModel(),
 	}
 
 	return ui
@@ -128,8 +101,6 @@ func NewModel(responseChan <-chan complete.Response) model {
 		startedAt:    time.Now(),
 	}
 }
-
-type DoneAnswer string
 
 func waitForContent(ctx context.Context, responseChan <-chan complete.Response) tea.Cmd {
 	return func() tea.Msg {
@@ -181,7 +152,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case complete.Response:
 		switch msg.Type {
 		case complete.RtLlmAnswer:
-			m.ui.markdownView.appendContent(msg.Data)
+			m.ui.markdown.appendContent(msg.Data)
 		case complete.RtLoading:
 			m.ui.status.message = msg.Data
 		case complete.RtModel:
@@ -194,7 +165,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmd = m.ui.prompt.Focus()
 			cmds = append(cmds, cmd)
 		case complete.RtError:
-			m.ui.markdownView.appendContent(fmt.Sprintf("---\n## Error\n %s", msg.Err))
+			m.ui.markdown.appendContent(fmt.Sprintf("---\n## Error\n %s", msg.Err))
 			return m, tea.Quit
 		}
 		cmds = append(cmds, waitForContent(m.ctx, m.responseChan))
@@ -210,7 +181,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// 	return m, tea.Batch(cmds...)
 	// }
 
-	m.ui.markdownView.Model, cmd = m.ui.markdownView.Update(msg)
+	m.ui.markdown.viewport, cmd = m.ui.markdown.viewport.Update(msg)
 	if cmd != nil {
 		cmds = append(cmds, cmd)
 	}
@@ -219,17 +190,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	var help string
-	statusBar := m.ui.status.style.Render(fmt.Sprintf("%s %s | Model: %s | Profile: %s", m.ui.status.View(), m.ui.status.message, m.ui.status.model, m.ui.status.profile))
 	help = m.ui.help.style.Render(m.ui.help.text)
-
-	if m.isDoneAnswering {
-		statusBar = m.ui.status.style.Render(fmt.Sprintf("Model: %s | Profile: %s", m.ui.status.model, m.ui.status.profile))
-	}
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
-		statusBar,
-		m.ui.markdownView.View(),
+		m.ui.status.View(),
+		m.ui.markdown.View(),
 		help,
 	)
 }

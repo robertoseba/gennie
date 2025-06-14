@@ -10,23 +10,24 @@ import (
 )
 
 type markdownModel struct {
-	viewport.Model
-	content  *strings.Builder
-	renderer *glamour.TermRenderer
+	viewport        viewport.Model
+	content         *strings.Builder
+	renderedContent string
+	renderer        *glamour.TermRenderer
 }
 
 func newMarkdownModel() *markdownModel {
 	mv := &markdownModel{
-		Model:   viewport.New(80, 40),
-		content: &strings.Builder{},
+		viewport: viewport.New(80, 40),
+		content:  &strings.Builder{},
 	}
-	mv.Style = lipgloss.NewStyle().
-		Border(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("15")).
+	mv.viewport.Style = lipgloss.NewStyle().
+		// Border(lipgloss.NormalBorder()).
+		// BorderForeground(borderColor).
 		Padding(0, 1)
 
 	var err error
-	mv.renderer, err = glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithPreservedNewLines())
+	mv.renderer, err = glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithPreservedNewLines(), glamour.WithWordWrap(maxWidth))
 	if err != nil {
 		log.Fatal("Failed to initialize markdown renderer")
 	}
@@ -35,16 +36,8 @@ func newMarkdownModel() *markdownModel {
 }
 
 func (m *markdownModel) setSize(w, h int) {
-	m.Width = w + 2
-	m.Height = h
-
-	// Replaces glamour renderer with new size
-	// var err error
-	// m.renderer, err = glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithWordWrap(w-2), glamour.WithPreservedNewLines())
-	// // TODO: review log fatal
-	// if err != nil {
-	// 	log.Fatal("Failed to initialize markdown renderer")
-	// }
+	m.viewport.Width = w + 2
+	m.viewport.Height = h
 }
 
 // Appends the content to the viewport and renders the markdown
@@ -56,6 +49,16 @@ func (m *markdownModel) appendContent(newContent string) {
 	if err != nil {
 		mdRender = m.content.String()
 	}
-	m.SetContent(mdRender)
-	m.GotoBottom()
+	// currHeight := lipgloss.Height(mdRender)
+	// if currHeight < m.viewport.Height {
+	// 	m.renderedContent = mdRender
+	// 	return
+	// }
+
+	m.viewport.SetContent(mdRender)
+	m.viewport.GotoBottom()
+}
+
+func (m *markdownModel) View() string {
+	return m.viewport.View()
 }
