@@ -60,9 +60,8 @@ func (m *markdownModel) appendContent(newContent string) {
 }
 
 func (m *markdownModel) View() string {
-	return m.viewport.View()
-}
-
-func (m *markdownModel) ViewNoViewport() string {
+	if m.height() > m.viewport.Height {
+		return m.viewport.View()
+	}
 	return m.renderedContent
 }

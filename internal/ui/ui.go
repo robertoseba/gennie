@@ -175,18 +175,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	var help, content string
+	var help string
 	if m.isViewportActive() {
 		help = m.ui.help.View()
-		content = m.ui.markdown.View()
-	} else {
-		content = m.ui.markdown.ViewNoViewport()
 	}
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		m.ui.status.View(),
-		content,
+		m.ui.markdown.View(),
 		help,
 	)
 }
