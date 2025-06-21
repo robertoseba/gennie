@@ -9,7 +9,7 @@ type helpView struct {
 
 func newHelpView() *helpView {
 	return &helpView{
-		text: "Press q or ctrl+c to exit | j,k or arrows to scroll | f to follow up question",
+		text: "Press q or ctrl+c to exit | j,k or arrows to scroll",
 		style: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#BBBBBB")).
 			Height(1),

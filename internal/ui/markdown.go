@@ -44,6 +44,10 @@ func (m *markdownModel) height() int {
 	return lipgloss.Height(m.renderedContent)
 }
 
+func (m *markdownModel) isViewportActive() bool {
+	return m.height() > m.viewport.Height
+}
+
 // Appends the content to the viewport and renders the markdown
 // If we have a problem rendering the markdown we fallback to
 // the basic string
@@ -60,7 +64,7 @@ func (m *markdownModel) appendContent(newContent string) {
 }
 
 func (m *markdownModel) View() string {
-	if m.height() > m.viewport.Height {
+	if m.isViewportActive() {
 		return m.viewport.View()
 	}
 	return m.renderedContent

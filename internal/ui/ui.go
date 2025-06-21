@@ -16,6 +16,7 @@ type (
 	promptModel struct {
 		*huh.Confirm
 		isActive bool
+		answer   bool
 	}
 )
 
@@ -54,10 +55,13 @@ func newPromptModel() *promptModel {
 	prompt := huh.NewConfirm()
 	prompt.Negative("Cancel").Affirmative("Continue")
 	prompt.WithTheme(huh.ThemeDracula())
-	return &promptModel{
+	model := &promptModel{
 		Confirm:  prompt,
 		isActive: false,
 	}
+	model.Confirm.Value(&model.answer)
+
+	return model
 }
 
 func newUi() *ui {
@@ -103,6 +107,7 @@ func (m model) Init() tea.Cmd {
 	return tea.Batch(
 		waitForContent(m.ctx, m.responseChan),
 		m.ui.status.Tick,
+		m.ui.prompt.Confirm.Init(),
 	)
 }
 
@@ -144,26 +149,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case complete.RtApprovalReq:
 			m.ui.prompt.Confirm = m.ui.prompt.Title("Approval Request").Description(msg.Data)
 			m.ui.prompt.isActive = true
-			cmd = m.ui.prompt.Focus()
-			cmds = append(cmds, cmd)
+			m.ui.status.message = "Waiting for approval..."
 		case complete.RtError:
 			m.ui.markdown.appendContent(fmt.Sprintf("---\n## Error\n %s", msg.Err))
 			return m, tea.Quit
 		}
-		cmds = append(cmds, waitForContent(m.ctx, m.responseChan))
+
+		// we have to wait for approval before proceeding
+		if !m.ui.prompt.isActive {
+			cmds = append(cmds, waitForContent(m.ctx, m.responseChan))
+		}
 	}
 
-	// Always update viewport
-	// if m.status == statusAskConfirm {
-	// 	prompt, cmd := m.prompt.Update(msg)
-	// 	m.prompt = prompt.(*huh.Confirm)
-	// 	if cmd != nil {
-	// 		cmds = append(cmds, cmd)
-	// 	}
-	// 	return m, tea.Batch(cmds...)
-	// }
-
-	if m.isDoneAnswering && !m.isViewportActive() {
+	if m.isDoneAnswering && !m.ui.markdown.isViewportActive() {
 		return m, tea.Quit
 	}
 
@@ -171,13 +169,31 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if cmd != nil {
 		cmds = append(cmds, cmd)
 	}
+
+	if m.ui.prompt.isActive {
+		model, cmd := m.ui.prompt.Confirm.Update(msg)
+		m.ui.prompt.Confirm = model.(*huh.Confirm)
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+	}
+
 	return m, tea.Batch(cmds...)
 }
 
 func (m model) View() string {
 	var help string
-	if m.isViewportActive() {
+	if m.ui.markdown.isViewportActive() {
 		help = m.ui.help.View()
+	}
+
+	if m.ui.prompt.isActive {
+		return lipgloss.JoinVertical(
+			lipgloss.Left,
+			m.ui.status.View(),
+			m.ui.prompt.Confirm.View(),
+			help,
+		)
 	}
 
 	return lipgloss.JoinVertical(
@@ -186,10 +202,6 @@ func (m model) View() string {
 		m.ui.markdown.View(),
 		help,
 	)
-}
-
-func (m *model) isViewportActive() bool {
-	return m.ui.markdown.height() > m.height-10
 }
 
 func Run(contentChan <-chan complete.Response) error {
