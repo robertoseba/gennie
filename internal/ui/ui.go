@@ -11,14 +11,7 @@ import (
 	"github.com/robertoseba/gennie/internal/core/usecases/complete"
 )
 
-type (
-	DoneAnswer  string
-	promptModel struct {
-		*huh.Confirm
-		isActive bool
-		answer   bool
-	}
-)
+type DoneAnswer string
 
 var maxWidth = 120
 
@@ -49,19 +42,6 @@ func (m *model) setSize(w, h int) {
 	m.width = min(w, maxWidth)
 	m.height = h - 2
 	m.ui.setSize(m.width, m.height)
-}
-
-func newPromptModel() *promptModel {
-	prompt := huh.NewConfirm()
-	prompt.Negative("Cancel").Affirmative("Continue")
-	prompt.WithTheme(huh.ThemeDracula())
-	model := &promptModel{
-		Confirm:  prompt,
-		isActive: false,
-	}
-	model.Confirm.Value(&model.answer)
-
-	return model
 }
 
 func newUi() *ui {
@@ -107,7 +87,7 @@ func (m model) Init() tea.Cmd {
 	return tea.Batch(
 		waitForContent(m.ctx, m.responseChan),
 		m.ui.status.Tick,
-		m.ui.prompt.Confirm.Init(),
+		m.ui.prompt.form.Init(),
 	)
 }
 
@@ -147,7 +127,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case complete.RtProfile:
 			m.ui.status.profile = msg.Data
 		case complete.RtApprovalReq:
-			m.ui.prompt.Confirm = m.ui.prompt.Title("Approval Request").Description(msg.Data)
 			m.ui.prompt.isActive = true
 			m.ui.status.message = "Waiting for approval..."
 		case complete.RtError:
@@ -171,8 +150,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	if m.ui.prompt.isActive {
-		model, cmd := m.ui.prompt.Confirm.Update(msg)
-		m.ui.prompt.Confirm = model.(*huh.Confirm)
+		model, cmd := m.ui.prompt.form.Update(msg)
+		m.ui.prompt.form = model.(*huh.Form)
+		if m.ui.prompt.answer {
+			m.ui.prompt.isActive = false
+			cmds = append(cmds, waitForContent(m.ctx, m.responseChan))
+		}
 		if cmd != nil {
 			cmds = append(cmds, cmd)
 		}
@@ -191,7 +174,7 @@ func (m model) View() string {
 		return lipgloss.JoinVertical(
 			lipgloss.Left,
 			m.ui.status.View(),
-			m.ui.prompt.Confirm.View(),
+			m.ui.prompt.form.View(),
 			help,
 		)
 	}
