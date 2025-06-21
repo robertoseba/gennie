@@ -40,25 +40,29 @@ func (m *markdownModel) setSize(w, h int) {
 	m.viewport.Height = h
 }
 
+func (m *markdownModel) height() int {
+	return lipgloss.Height(m.renderedContent)
+}
+
 // Appends the content to the viewport and renders the markdown
 // If we have a problem rendering the markdown we fallback to
 // the basic string
 func (m *markdownModel) appendContent(newContent string) {
 	m.content.WriteString(newContent)
-	mdRender, err := m.renderer.Render(m.content.String())
+	var err error
+	m.renderedContent, err = m.renderer.Render(m.content.String())
 	if err != nil {
-		mdRender = m.content.String()
+		m.renderedContent = m.content.String()
 	}
-	// currHeight := lipgloss.Height(mdRender)
-	// if currHeight < m.viewport.Height {
-	// 	m.renderedContent = mdRender
-	// 	return
-	// }
 
-	m.viewport.SetContent(mdRender)
+	m.viewport.SetContent(m.renderedContent)
 	m.viewport.GotoBottom()
 }
 
 func (m *markdownModel) View() string {
 	return m.viewport.View()
+}
+
+func (m *markdownModel) ViewNoViewport() string {
+	return m.renderedContent
 }

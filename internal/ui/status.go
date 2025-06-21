@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"time"
+
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -14,6 +16,8 @@ type statusModel struct {
 	isActive    bool
 	profile     string
 	model       string
+	startedAt   time.Time
+	finishedAt  time.Time
 }
 
 func newStatusView() *statusModel {
@@ -34,7 +38,15 @@ func newStatusView() *statusModel {
 		textStyle:   textStyle,
 		errorStyle:  textStyle.Foreground(lipgloss.Color("205")).Bold(true),
 		isActive:    true,
+		startedAt:   time.Now(),
+		finishedAt:  time.Now(),
 	}
+}
+
+func (m *statusModel) finishNow() {
+	m.finishedAt = time.Now()
+	m.isActive = false
+	m.message = ""
 }
 
 func (m *statusModel) setSize(w, h int) {
@@ -43,5 +55,9 @@ func (m *statusModel) setSize(w, h int) {
 }
 
 func (m *statusModel) View() string {
+	if !m.isActive {
+		elapsed := m.finishedAt.Sub(m.startedAt)
+		return m.borderStyle.Render(m.textStyle.Render("Finished in  -> ", elapsed.String(), " | ", m.model, m.profile))
+	}
 	return m.borderStyle.Render(m.Model.View() + m.textStyle.Render(m.message, " -> ", m.model, m.profile))
 }

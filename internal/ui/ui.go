@@ -3,7 +3,6 @@ package ui
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
@@ -21,11 +20,6 @@ type (
 )
 
 var maxWidth = 120
-
-type helpView struct {
-	text  string
-	style lipgloss.Style
-}
 
 type ui struct {
 	prompt   *promptModel
@@ -48,8 +42,6 @@ type model struct {
 	cancel          context.CancelFunc
 	responseChan    <-chan complete.Response
 	isDoneAnswering bool
-	startedAt       time.Time
-	finishedAt      time.Time
 }
 
 func (m *model) setSize(w, h int) {
@@ -58,7 +50,7 @@ func (m *model) setSize(w, h int) {
 	m.ui.setSize(m.width, m.height)
 }
 
-func NewPromptModel() *promptModel {
+func newPromptModel() *promptModel {
 	prompt := huh.NewConfirm()
 	prompt.Negative("Cancel").Affirmative("Continue")
 	prompt.WithTheme(huh.ThemeDracula())
@@ -68,19 +60,10 @@ func NewPromptModel() *promptModel {
 	}
 }
 
-func newHelpView(height int) *helpView {
-	return &helpView{
-		text: "Press q or ctrl+c to exit | j,k or arrows to scroll | f to follow up question",
-		style: lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#BBBBBB")).
-			Height(height),
-	}
-}
-
 func newUi() *ui {
 	ui := &ui{
-		prompt:   NewPromptModel(),
-		help:     newHelpView(1),
+		prompt:   newPromptModel(),
+		help:     newHelpView(),
 		status:   newStatusView(),
 		markdown: newMarkdownModel(),
 	}
@@ -98,7 +81,6 @@ func NewModel(responseChan <-chan complete.Response) model {
 		height:       20,
 		ui:           newUi(),
 		responseChan: responseChan,
-		startedAt:    time.Now(),
 	}
 }
 
@@ -141,7 +123,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case DoneAnswer:
 		m.isDoneAnswering = true
-		m.finishedAt = time.Now()
+		m.ui.status.finishNow()
 
 	case spinner.TickMsg:
 		if !m.isDoneAnswering {
@@ -181,6 +163,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// 	return m, tea.Batch(cmds...)
 	// }
 
+	if m.isDoneAnswering && !m.isViewportActive() {
+		return m, tea.Quit
+	}
+
 	m.ui.markdown.viewport, cmd = m.ui.markdown.viewport.Update(msg)
 	if cmd != nil {
 		cmds = append(cmds, cmd)
@@ -189,15 +175,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	var help string
-	help = m.ui.help.style.Render(m.ui.help.text)
+	var help, content string
+	if m.isViewportActive() {
+		help = m.ui.help.View()
+		content = m.ui.markdown.View()
+	} else {
+		content = m.ui.markdown.ViewNoViewport()
+	}
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		m.ui.status.View(),
-		m.ui.markdown.View(),
+		content,
 		help,
 	)
+}
+
+func (m *model) isViewportActive() bool {
+	return m.ui.markdown.height() > m.height-10
 }
 
 func Run(contentChan <-chan complete.Response) error {
