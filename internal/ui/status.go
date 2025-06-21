@@ -56,7 +56,7 @@ func (m *statusModel) setSize(w, h int) {
 
 func (m *statusModel) View() string {
 	if !m.isActive {
-		elapsed := m.finishedAt.Sub(m.startedAt)
+		elapsed := m.finishedAt.Sub(m.startedAt).Round(time.Second)
 		return m.borderStyle.Render(m.textStyle.Render("Finished in  -> ", elapsed.String(), " | ", m.model, m.profile))
 	}
 	return m.borderStyle.Render(m.Model.View() + m.textStyle.Render(m.message, " -> ", m.model, m.profile))
